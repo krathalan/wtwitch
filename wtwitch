@@ -1,0 +1,151 @@
+#!/bin/bash
+#
+# Description: Browse and watch Twitch without being tracked.
+#
+# Homepage: https://gitlab.com/krathalan
+#
+# Copyright (C) 2019 krathalan
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ------------------
+# --- Guidelines ---
+# ------------------
+
+# This script follows the Google Shell Style Guide: 
+# https://google.github.io/styleguide/shell.xml
+
+# This script uses shellcheck: https://www.shellcheck.net/
+
+# This script spawns subshell processes (see check_twitch_streams function)
+trap "kill 0" SIGINT
+
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -uo pipefail
+
+# -----------------------------
+# ----- Program variables -----
+# -----------------------------
+
+# Colors
+readonly RED="\033[1;31m"
+readonly ORANGE="\033[0;33m"
+readonly TURQOISE="\033[0;36m"
+readonly NC="\033[0m" # No Color
+
+readonly streamTextFile="/tmp/.stream.txt"
+
+# -----------------------------------------
+# ----------- Internal Functions ----------
+# -----------------------------------------
+
+#######################################
+# Checks to see which of my favorite twitch streams are online.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+internal_check_twitch_streams()
+{
+	local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
+
+	echo -e "\n Streams online:"
+
+	for stream in "${streamsToCheck[@]}"
+  do
+		# { command & disown; } 2>/dev/null; prevents bash from printing information about background processes created with &
+		{ internal_check_twitch_streams_helper "${stream}" & disown; } 2>/dev/null;
+	done
+
+	wait
+
+	sort "${streamTextFile}" 2> /dev/null
+
+	# Clean up
+	rm -f /tmp/twitch*
+	rm -f "${streamTextFile}"
+}
+
+internal_check_twitch_streams_helper()
+{
+	local streamlinkResponse
+	streamlinkResponse=$(streamlink "https://www.twitch.tv/$1" && wait)
+
+	local grepHelper
+	grepHelper=$(echo "${streamlinkResponse}" | grep -i error)
+
+	if [[ -z "${grepHelper}" ]]; then
+		# Filter away hosting streams
+		grepHelper=$(echo "${streamlinkResponse}" | grep -i hosting)
+
+		if [[ -z "${grepHelper}" ]]; then
+			# Get current game of streamer
+			local -r twitchjson="/tmp/twitch-$1.json"
+			rm -f "/tmp/twitch-$1.json"
+			curl -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${twitchjson}"
+
+			local -r playingGame=$(jq -r ".stream.game" "${twitchjson}")
+
+			local streamType
+			streamType=$(jq -r ".stream.stream_type" "${twitchjson}")
+
+			local streamName
+			streamName=$(jq -r ".stream.channel.status" "${twitchjson}")
+
+			# Truncate stream name; some streamers have excessively long titles
+			local streamNameLength=${#streamName}
+
+			if [[ "${streamNameLength}" -gt 40 ]]; then
+				streamName=$(echo "${streamName}" | cut -c 1-40)
+				streamName="${streamName}…"
+			fi
+
+			if [[ "${streamType}" == "live" ]]; then
+			 streamType=""
+			else
+				streamType=", ${RED}${streamType}${NC}"
+			fi
+
+			echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${streamTextFile}"
+		fi
+	fi
+}
+
+# --------------------------------------
+# --------------- Script ---------------
+# --------------------------------------
+
+exitBool="false"
+
+# Parse flags. From:
+# https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
+while test $# -gt 0; do
+	case "$1" in
+		-c|--check)
+			internal_check_twitch_streams;
+			exitBool="true"
+			break
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+if [[ ! "${exitBool}" == "true" ]]; then
+	streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best
+fi
