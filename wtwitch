@@ -65,8 +65,7 @@ internal_check_twitch_streams()
 
 	echo -en "\n Streams online:"
 
-	for stream in "${streamsToCheck[@]}"
-  	do
+	for stream in "${streamsToCheck[@]}"; do
 		(internal_check_twitch_streams_helper "${stream}") &
 	done
 
@@ -137,8 +136,7 @@ internal_list_games()
 
 	echo -e "\n Top games:"
 
-	for game in {1..20}
-	do
+	for game in {1..20}; do
 		gameName=$(jq -r ".streams[${game}].game" "${twitchjson}")
 		viewers=$(jq -r ".streams[${game}].viewers" "${twitchjson}")
 
