@@ -63,15 +63,16 @@ internal_check_twitch_streams()
 {
 	local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
 
-	echo -e "\n Streams online:"
+	echo -en "\n Streams online:"
 
 	for stream in "${streamsToCheck[@]}"
-  do
-		# { command & disown; } 2>/dev/null; prevents bash from printing information about background processes created with &
-		{ internal_check_twitch_streams_helper "${stream}" & disown; } 2>/dev/null;
+  	do
+		(internal_check_twitch_streams_helper "${stream}") &
 	done
 
 	wait
+	
+	echo ""
 
 	sort "${streamTextFile}" 2> /dev/null
 
@@ -82,47 +83,67 @@ internal_check_twitch_streams()
 
 internal_check_twitch_streams_helper()
 {
-	local streamlinkResponse
-	streamlinkResponse=$(streamlink "https://www.twitch.tv/$1" && wait)
+	# Get current info of streamer
+	local -r twitchjson="/tmp/twitch-$1.json"
+	rm -f "/tmp/twitch-$1.json"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${twitchjson}"
 
-	local grepHelper
-	grepHelper=$(echo "${streamlinkResponse}" | grep -i error)
+	local streamType
+	streamType=$(jq -r ".stream.stream_type" "${twitchjson}")
 
-	if [[ -z "${grepHelper}" ]]; then
-		# Filter away hosting streams
-		grepHelper=$(echo "${streamlinkResponse}" | grep -i hosting)
+	# Check if stream is online 
+	if [[ "${streamType}" != "null" ]]; then
+		local -r playingGame=$(jq -r ".stream.game" "${twitchjson}")
 
-		if [[ -z "${grepHelper}" ]]; then
-			# Get current game of streamer
-			local -r twitchjson="/tmp/twitch-$1.json"
-			rm -f "/tmp/twitch-$1.json"
-			curl -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${twitchjson}"
+		local streamName
+		streamName=$(jq -r ".stream.channel.status" "${twitchjson}")
 
-			local -r playingGame=$(jq -r ".stream.game" "${twitchjson}")
+		# Truncate stream name if necessary; some streamers have excessively long stream titles
+		local streamNameLength=${#streamName}
 
-			local streamType
-			streamType=$(jq -r ".stream.stream_type" "${twitchjson}")
-
-			local streamName
-			streamName=$(jq -r ".stream.channel.status" "${twitchjson}")
-
-			# Truncate stream name; some streamers have excessively long titles
-			local streamNameLength=${#streamName}
-
-			if [[ "${streamNameLength}" -gt 40 ]]; then
-				streamName=$(echo "${streamName}" | cut -c 1-40)
-				streamName="${streamName}…"
-			fi
-
-			if [[ "${streamType}" == "live" ]]; then
-			 streamType=""
-			else
-				streamType=", ${RED}${streamType}${NC}"
-			fi
-
-			echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${streamTextFile}"
+		if [[ "${streamNameLength}" -gt 50 ]]; then
+			streamName=$(echo "${streamName}" | cut -c 1-50)
+			streamName="${streamName}…"
 		fi
+
+		if [[ "${streamType}" == "live" ]]; then
+			streamType=""
+		else
+			streamType=", ${RED}${streamType}${NC}"
+		fi
+
+		echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${streamTextFile}"
 	fi
+}
+
+#######################################
+# Lists the top 20 games on Twitch.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+internal_list_games()
+{
+	# Get current top games
+	local -r twitchjson="/tmp/twitch.json"
+	rm -f "/tmp/twitch.json"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/" > "${twitchjson}"
+
+	local gameName=""
+	local viewers=""
+
+	echo -e "\n Top games:"
+
+	for game in {1..20}
+	do
+		gameName=$(jq -r ".streams[${game}].game" "${twitchjson}")
+		viewers=$(jq -r ".streams[${game}].viewers" "${twitchjson}")
+
+		echo -e "   ${TURQOISE}${game}. ${gameName}${NC}, ${ORANGE}${viewers} viewers${NC}"
+	done
 }
 
 # --------------------------------------
@@ -137,6 +158,11 @@ while test $# -gt 0; do
 	case "$1" in
 		-c|--check)
 			internal_check_twitch_streams;
+			exitBool="true"
+			break
+			;;
+		-l|--list-games)
+			internal_list_games;
 			exitBool="true"
 			break
 			;;
