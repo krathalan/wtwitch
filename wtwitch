@@ -38,18 +38,35 @@ set -Eeuo pipefail
 # ----- Program variables -----
 # -----------------------------
 
+readonly SCRIPT_NAME=$(basename "$0")
+readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
+readonly TWITCH_JSON="/tmp/twitch.json"
+
 # Colors
 readonly RED="\033[1;31m"
 readonly ORANGE="\033[0;33m"
 readonly TURQOISE="\033[0;36m"
 readonly NC="\033[0m" # No Color
 
-readonly TWITCH_JSON="/tmp/twitch.json"
-readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
-
 # -----------------------------------------
 # --------------- Functions ---------------
 # -----------------------------------------
+
+#######################################
+# Checks to see if a specified command is available.
+# Globals:
+#   none
+# Arguments:
+#   $1: command to test
+# Returns:
+#   none
+#######################################
+check_command()
+{
+  if [[ ! -x "$(command -v "$1")" ]]; then
+        exit_script_on_failure "Package $1 not installed. Install with apt or dnf.\n More information: https://gitlab.com/krathalan/wtwitch#dependencies"
+  fi
+}
 
 #######################################
 # Checks to see which favorite Twitch streams are online.
@@ -62,19 +79,19 @@ readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
 #######################################
 check_twitch_streams()
 {
-	local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
+  local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
 
-	echo -en "\n Streams online:"
+  echo -en "\n Streams online:"
 
-	for stream in "${streamsToCheck[@]}"; do
-		(check_twitch_streams_helper "${stream}") &
-	done
+  for stream in "${streamsToCheck[@]}"; do
+    (check_twitch_streams_helper "${stream}") &
+  done
 
-	wait
-	
-	echo ""
+  wait
+  
+  echo ""
 
-	sort "${STREAM_TEXT_FILE}" 2> /dev/null
+  sort "${STREAM_TEXT_FILE}" 2> /dev/null
 }
 
 #######################################
@@ -89,92 +106,110 @@ check_twitch_streams()
 #######################################
 check_twitch_streams_helper()
 {
-	# Get current info of streamer
-	local -r streamerJSON="/tmp/twitch-$1.json"
-	rm -f "/tmp/twitch-$1.json"
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${streamerJSON}"
+  # Get current info of streamer
+  local -r streamerJSON="/tmp/twitch-$1.json"
+  rm -f "/tmp/twitch-$1.json"
+  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${streamerJSON}"
 
-	local streamType
-	streamType=$(jq -r ".stream.stream_type" "${streamerJSON}")
+  local streamType
+  streamType=$(jq -r ".stream.stream_type" "${streamerJSON}")
 
-	# Check if stream is online 
-	if [[ "${streamType}" != "null" ]]; then
-		local -r playingGame=$(jq -r ".stream.game" "${streamerJSON}")
+  # Check if stream is online 
+  if [[ "${streamType}" != "null" ]]; then
+    local -r playingGame=$(jq -r ".stream.game" "${streamerJSON}")
 
-		local streamName
-		streamName=$(jq -r ".stream.channel.status" "${streamerJSON}")
+    local streamName
+    streamName=$(jq -r ".stream.channel.status" "${streamerJSON}")
 
-		# Truncate stream name if necessary; some streamers have excessively long stream titles
-		local streamNameLength=${#streamName}
+    # Truncate stream name if necessary; some streamers have excessively long stream titles
+    local streamNameLength=${#streamName}
 
-		if [[ "${streamNameLength}" -gt 50 ]]; then
-			streamName=$(echo "${streamName}" | cut -c 1-50)
-			streamName="${streamName}…"
-		fi
+    if [[ "${streamNameLength}" -gt 50 ]]; then
+      streamName=$(echo "${streamName}" | cut -c 1-50)
+      streamName="${streamName}…"
+    fi
 
-		if [[ "${streamType}" == "live" ]]; then
-			streamType=""
-		else
-			streamType=", ${RED}${streamType}${NC}"
-		fi
+    if [[ "${streamType}" == "live" ]]; then
+      streamType=""
+    else
+      streamType=", ${RED}${streamType}${NC}"
+    fi
 
-		echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_TEXT_FILE}"
-	fi
+    echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_TEXT_FILE}"
+  fi
 }
 
 clean_up()
 {
-	# Clean up
-	rm -f /tmp/twitch*
-	rm -f "${STREAM_TEXT_FILE}"
+  # Clean up
+  rm -f /tmp/twitch*
+  rm -f "${STREAM_TEXT_FILE}"
+}
+
+#######################################
+# Prints passed error message before premature exit.
+# Prints everything to >&2 (STDERR).
+# Globals:
+#   SCRIPT_NAME
+# Arguments:
+#   $1: error message to print
+# Returns:
+#   none
+#######################################
+exit_script_on_failure() {
+  echo -e "\n ${RED}Error${NC}: $1" >&2
+  echo -e " Exiting ${SCRIPT_NAME} Bash script." >&2
+  
+  clean_up
+  exit 1
 }
 
 list_streamers_of_game()
 {
-	# Fix spaces in game name
-	local gameName="$1"
-	gameName=${gameName// /%20}
+  # Fix spaces in game name
+  local gameName="$1"
+  gameName=${gameName// /%20}
 
-	# Get game_id
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}" > "${TWITCH_JSON}"
+  # Get game_id
+  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}" > "${TWITCH_JSON}"
 
-	local gameID
-	gameID=$(jq -r ".data[0].id" "${TWITCH_JSON}")
+  local gameID
+  gameID=$(jq -r ".data[0].id" "${TWITCH_JSON}")
 
-	# Get streamers
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}" > "${TWITCH_JSON}"
+  # Get streamers
+  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}" > "${TWITCH_JSON}"
 
-	local streamerName=""
-	streamerName=$(jq -r ".data[0].user_name" "${TWITCH_JSON}")
+  local streamerName=""
+  streamerName=$(jq -r ".data[0].user_name" "${TWITCH_JSON}")
 
-	local streamTitle=""
-	streamTitle=$(jq -r ".data[0].title" "${TWITCH_JSON}")
+  local streamTitle=""
+  streamTitle=$(jq -r ".data[0].title" "${TWITCH_JSON}")
 
-	local viewers=""
-	viewers=$(jq -r ".data[0].viewer_count" "${TWITCH_JSON}")
+  local viewers=""
+  viewers=$(jq -r ".data[0].viewer_count" "${TWITCH_JSON}")
 
-	local streamTitleLength
+  local streamTitleLength
 
-	echo -e "\n $1 streamers:"
+  echo -e "\n $1 streamers:"
 
-	local whileCounter=1;
-	while [[ "${streamerName}" != "null" ]]; do
-		# Truncate title if necessary
-		streamTitleLength=${#streamTitle}
+  local whileCounter=1;
+  while [[ "${streamerName}" != "null" ]]; do
+    # Truncate title if necessary
+    streamTitleLength=${#streamTitle}
 
-		if [[ "${streamTitleLength}" -gt 50 ]]; then
-			streamTitle=$(echo "${streamTitle}" | cut -c 1-50)
-			streamTitle="${streamTitle}…"
-		fi
+    if [[ "${streamTitleLength}" -gt 50 ]]; then
+      streamTitle=$(echo "${streamTitle}" | cut -c 1-50)
+      streamTitle="${streamTitle}…"
+    fi
 
-		echo -e "   ${TURQOISE}${streamerName}${NC}: ${streamTitle} ${ORANGE}(${viewers} viewers)${NC}"
+    echo -e "   ${TURQOISE}${streamerName}${NC}: ${streamTitle} ${ORANGE}(${viewers} viewers)${NC}"
 
-		# Refresh data
-		streamerName=$(jq -r ".data[${whileCounter}].user_name" "${TWITCH_JSON}")
-		streamTitle=$(jq -r ".data[${whileCounter}].title" "${TWITCH_JSON}")
-		viewers=$(jq -r ".data[${whileCounter}].viewer_count" "${TWITCH_JSON}")
-		whileCounter=$(( whileCounter + 1 ))
-	done
+    # Refresh data
+    streamerName=$(jq -r ".data[${whileCounter}].user_name" "${TWITCH_JSON}")
+    streamTitle=$(jq -r ".data[${whileCounter}].title" "${TWITCH_JSON}")
+    viewers=$(jq -r ".data[${whileCounter}].viewer_count" "${TWITCH_JSON}")
+    whileCounter=$(( whileCounter + 1 ))
+  done
 }
 
 #######################################
@@ -188,71 +223,73 @@ list_streamers_of_game()
 #######################################
 list_top_games()
 {
-	# Get current top games
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${TWITCH_JSON}"
+  # Get current top games
+  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${TWITCH_JSON}"
 
-	# Get first game name. While loop uses the game name to list every game in the json file. Number of games given by
-	# the Twitch API is variable, so we should account for that and list every game in the file; not just "top 10 games"
-	# or whatever arbitrary number. 
+  # Get first game name. While loop uses the game name to list every game in the json file. Number of games given by
+  # the Twitch API is variable, so we should account for that and list every game in the file; not just "top 10 games"
+  # or whatever arbitrary number. 
 
-	local gameName=""
-	gameName=$(jq -r ".data[0].name" "${TWITCH_JSON}")
+  local gameName=""
+  gameName=$(jq -r ".data[0].name" "${TWITCH_JSON}")
 
-	echo -e "\n Top games:"
+  echo -e "\n Top games:"
 
-	local whileCounter=1;
-	while [[ "${gameName}" != "null" ]]; do
-		echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
+  local whileCounter=1;
+  while [[ "${gameName}" != "null" ]]; do
+    echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
 
-		# Refresh data
-		gameName=$(jq -r ".data[${whileCounter}].name" "${TWITCH_JSON}")
-		whileCounter=$(( whileCounter + 1 ))
-	done
+    # Refresh data
+    gameName=$(jq -r ".data[${whileCounter}].name" "${TWITCH_JSON}")
+    whileCounter=$(( whileCounter + 1 ))
+  done
 }
 
 # --------------------------------------
 # --------------- Script ---------------
 # --------------------------------------
 
+check_command "streamlink"
+check_command "jq"
+
 # Parse flags. From:
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
 while test $# -gt 0; do
-	case "$1" in
-		-c|--check)
-			check_twitch_streams
-			clean_up
-			exit 0
-			break
-			;;
-		-g)
-			shift
-			if test $# -gt 0; then
-				list_streamers_of_game "$1"
-				clean_up
-				exit 0
-			else
-				echo "Error: No game specified"
-				exit 1
-			fi
-			break
-			;;
-		--get-streamers*)
-			shift
-			gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
-			list_streamers_of_game "${gameToCheck}"
-			exit 0
-			break
-			;;
-		-l|--list-games)
-			list_top_games
-			clean_up
-			exit 0
-			break
-			;;
-		*)
-			break
-			;;
-	esac
+  case "$1" in
+    -c|--check)
+      check_twitch_streams
+      clean_up
+      exit 0
+      break
+      ;;
+    -g)
+      shift
+      if test $# -gt 0; then
+        list_streamers_of_game "$1"
+        clean_up
+        exit 0
+      else
+        exit_script_on_failure "No game specified."
+      fi
+      break
+      ;;
+    --get-streamers*)
+      shift
+      gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
+      list_streamers_of_game "${gameToCheck}"
+      exit 0
+      break
+      ;;
+    -l|--list-games)
+      list_top_games
+      clean_up
+      exit 0
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
 done
 
 (streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
