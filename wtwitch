@@ -44,7 +44,8 @@ readonly ORANGE="\033[0;33m"
 readonly TURQOISE="\033[0;36m"
 readonly NC="\033[0m" # No Color
 
-readonly streamTextFile="/tmp/.stream.txt"
+readonly TWITCH_JSON="/tmp/twitch.json"
+readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
 
 # -----------------------------------------
 # --------------- Functions ---------------
@@ -73,11 +74,7 @@ check_twitch_streams()
 	
 	echo ""
 
-	sort "${streamTextFile}" 2> /dev/null
-
-	# Clean up
-	rm -f /tmp/twitch*
-	rm -f "${streamTextFile}"
+	sort "${STREAM_TEXT_FILE}" 2> /dev/null
 }
 
 #######################################
@@ -93,19 +90,19 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
 	# Get current info of streamer
-	local -r twitchjson="/tmp/twitch-$1.json"
+	local -r streamerJSON="/tmp/twitch-$1.json"
 	rm -f "/tmp/twitch-$1.json"
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${twitchjson}"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${streamerJSON}"
 
 	local streamType
-	streamType=$(jq -r ".stream.stream_type" "${twitchjson}")
+	streamType=$(jq -r ".stream.stream_type" "${streamerJSON}")
 
 	# Check if stream is online 
 	if [[ "${streamType}" != "null" ]]; then
-		local -r playingGame=$(jq -r ".stream.game" "${twitchjson}")
+		local -r playingGame=$(jq -r ".stream.game" "${streamerJSON}")
 
 		local streamName
-		streamName=$(jq -r ".stream.channel.status" "${twitchjson}")
+		streamName=$(jq -r ".stream.channel.status" "${streamerJSON}")
 
 		# Truncate stream name if necessary; some streamers have excessively long stream titles
 		local streamNameLength=${#streamName}
@@ -121,8 +118,59 @@ check_twitch_streams_helper()
 			streamType=", ${RED}${streamType}${NC}"
 		fi
 
-		echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${streamTextFile}"
+		echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_TEXT_FILE}"
 	fi
+}
+
+clean_up()
+{
+	# Clean up
+	rm -f /tmp/twitch*
+	rm -f "${STREAM_TEXT_FILE}"
+}
+
+list_streamers_of_game()
+{
+	# Get game_id
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=$1" > "${TWITCH_JSON}"
+
+	local gameID
+	gameID=$(jq -r ".data[0].id" "${TWITCH_JSON}")
+
+	# Get streamers
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}" > "${TWITCH_JSON}"
+
+	local streamerName=""
+	streamerName=$(jq -r ".data[0].user_name" "${TWITCH_JSON}")
+
+	local streamTitle=""
+	streamTitle=$(jq -r ".data[0].title" "${TWITCH_JSON}")
+
+	local viewers=""
+	viewers=$(jq -r ".data[0].viewer_count" "${TWITCH_JSON}")
+
+	local streamTitleLength
+
+	echo -e "\n $1 streamers:"
+
+	local whileCounter=1;
+	while [[ "${streamerName}" != "null" ]]; do
+		# Truncate title if necessary
+		streamTitleLength=${#streamTitle}
+
+		if [[ "${streamTitleLength}" -gt 50 ]]; then
+			streamTitle=$(echo "${streamTitle}" | cut -c 1-50)
+			streamTitle="${streamTitle}…"
+		fi
+
+		echo -e "   ${TURQOISE}${streamerName}${NC}: ${streamTitle} ${ORANGE}(${viewers} viewers)${NC}"
+
+		# Refresh data
+		streamerName=$(jq -r ".data[${whileCounter}].user_name" "${TWITCH_JSON}")
+		streamTitle=$(jq -r ".data[${whileCounter}].title" "${TWITCH_JSON}")
+		viewers=$(jq -r ".data[${whileCounter}].viewer_count" "${TWITCH_JSON}")
+		whileCounter=$(( whileCounter + 1 ))
+	done
 }
 
 #######################################
@@ -137,24 +185,24 @@ check_twitch_streams_helper()
 list_top_games()
 {
 	# Get current top games
-	local -r twitchjson="/tmp/twitch.json"
-	rm -f "/tmp/twitch.json"
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${twitchjson}"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${TWITCH_JSON}"
 
 	# Get first game name. While loop uses the game name to list every game in the json file. Number of games given by
 	# the Twitch API is variable, so we should account for that and list every game in the file; not just "top 10 games"
 	# or whatever arbitrary number. 
 
 	local gameName=""
-	gameName=$(jq -r ".data[0].name" "${twitchjson}")
+	gameName=$(jq -r ".data[0].name" "${TWITCH_JSON}")
 
 	echo -e "\n Top games:"
 
 	local whileCounter=1;
 	while [[ "${gameName}" != "null" ]]; do
 		echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
-		gameName=$(jq -r ".data[${whileCounter}].name" "${twitchjson}")
-		whileCounter=$(( ${whileCounter} + 1 ))
+
+		# Refresh data
+		gameName=$(jq -r ".data[${whileCounter}].name" "${TWITCH_JSON}")
+		whileCounter=$(( whileCounter + 1 ))
 	done
 }
 
@@ -167,12 +215,33 @@ list_top_games()
 while test $# -gt 0; do
 	case "$1" in
 		-c|--check)
-			check_twitch_streams;
+			check_twitch_streams
+			clean_up
+			exit 0
+			break
+			;;
+		-g)
+			shift
+			if test $# -gt 0; then
+				list_streamers_of_game "$1"
+				clean_up
+				exit 0
+			else
+				echo "Error: No game specified"
+				exit 1
+			fi
+			break
+			;;
+		--get-streamers*)
+			shift
+			gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
+			list_streamers_of_game "${gameToCheck}"
 			exit 0
 			break
 			;;
 		-l|--list-games)
-			list_top_games;
+			list_top_games
+			clean_up
 			exit 0
 			break
 			;;
