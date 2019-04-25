@@ -251,4 +251,4 @@ while test $# -gt 0; do
 	esac
 done
 
-streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best
+(streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
