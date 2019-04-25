@@ -18,3 +18,8 @@ Check to see the status of your favorite streams. To list your favorite streams,
 Look at what the top streamed games on Twitch at the moment are. 
 
 ![Screenshot](Images/Screenshot3.png)
+
+### wtwitch -g [GAME], --get-streamers [GAME]
+Look at the top streamers for a specified game.
+
+![Screenshot](Images/Screenshot4.png)
