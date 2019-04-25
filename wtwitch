@@ -32,7 +32,7 @@
 trap "kill 0" SIGINT
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -uo pipefail
+set -Eeuo pipefail
 
 # -----------------------------
 # ----- Program variables -----
@@ -47,11 +47,11 @@ readonly NC="\033[0m" # No Color
 readonly streamTextFile="/tmp/.stream.txt"
 
 # -----------------------------------------
-# ----------- Internal Functions ----------
+# --------------- Functions ---------------
 # -----------------------------------------
 
 #######################################
-# Checks to see which of my favorite twitch streams are online.
+# Checks to see which favorite Twitch streams are online.
 # Globals:
 #   none
 # Arguments:
@@ -59,14 +59,14 @@ readonly streamTextFile="/tmp/.stream.txt"
 # Returns:
 #   none
 #######################################
-internal_check_twitch_streams()
+check_twitch_streams()
 {
 	local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
 
 	echo -en "\n Streams online:"
 
 	for stream in "${streamsToCheck[@]}"; do
-		(internal_check_twitch_streams_helper "${stream}") &
+		(check_twitch_streams_helper "${stream}") &
 	done
 
 	wait
@@ -80,7 +80,17 @@ internal_check_twitch_streams()
 	rm -f "${streamTextFile}"
 }
 
-internal_check_twitch_streams_helper()
+#######################################
+# Used by check_twitch_streams to facilitate multi-process
+# fetching and parsing of Twitch json files.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+check_twitch_streams_helper()
 {
 	# Get current info of streamer
 	local -r twitchjson="/tmp/twitch-$1.json"
@@ -124,23 +134,27 @@ internal_check_twitch_streams_helper()
 # Returns:
 #   none
 #######################################
-internal_list_games()
+list_top_games()
 {
 	# Get current top games
 	local -r twitchjson="/tmp/twitch.json"
 	rm -f "/tmp/twitch.json"
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/" > "${twitchjson}"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${twitchjson}"
+
+	# Get first game name. While loop uses the game name to list every game in the json file. Number of games given by
+	# the Twitch API is variable, so we should account for that and list every game in the file; not just "top 10 games"
+	# or whatever arbitrary number. 
 
 	local gameName=""
-	local viewers=""
+	gameName=$(jq -r ".data[0].name" "${twitchjson}")
 
 	echo -e "\n Top games:"
 
-	for game in {1..20}; do
-		gameName=$(jq -r ".streams[${game}].game" "${twitchjson}")
-		viewers=$(jq -r ".streams[${game}].viewers" "${twitchjson}")
-
-		echo -e "   ${TURQOISE}${game}. ${gameName}${NC}, ${ORANGE}${viewers} viewers${NC}"
+	local whileCounter=1;
+	while [[ "${gameName}" != "null" ]]; do
+		echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
+		gameName=$(jq -r ".data[${whileCounter}].name" "${twitchjson}")
+		whileCounter=$(( ${whileCounter} + 1 ))
 	done
 }
 
@@ -148,20 +162,18 @@ internal_list_games()
 # --------------- Script ---------------
 # --------------------------------------
 
-exitBool="false"
-
 # Parse flags. From:
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
 while test $# -gt 0; do
 	case "$1" in
 		-c|--check)
-			internal_check_twitch_streams;
-			exitBool="true"
+			check_twitch_streams;
+			exit 0
 			break
 			;;
 		-l|--list-games)
-			internal_list_games;
-			exitBool="true"
+			list_top_games;
+			exit 0
 			break
 			;;
 		*)
@@ -170,6 +182,4 @@ while test $# -gt 0; do
 	esac
 done
 
-if [[ ! "${exitBool}" == "true" ]]; then
-	streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best
-fi
+streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best
