@@ -15,6 +15,6 @@ Check to see the status of your favorite streams. To list your favorite streams,
 ![Screenshot](Images/Screenshot2.png)
 
 ### wtwitch -l, --list-games
-Look at what the top streamed games on Twitch at the moment are. The data pulled from Twitch doesn't seem to be very accurate and there's a fair number of duplicates or missing information. Strange output is not wtwitch's fault.
+Look at what the top streamed games on Twitch at the moment are. 
 
 ![Screenshot](Images/Screenshot3.png)
