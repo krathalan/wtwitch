@@ -3,6 +3,9 @@ A terminal-based Twitch app. Watch Twitch without proprietary JavaScript and wit
 
 Usage of a config file (e.g. `~/.config/wtwitch/config.txt`) should be coming soon and should make customizing the script much easier.
 
+## Dependencies
+You must have [Streamlink](https://streamlink.github.io/) and [jq](https://stedolan.github.io/jq/) installed.
+
 ## Usage
 ### wtwitch [STREAMER]
 Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically.
