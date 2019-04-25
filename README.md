@@ -20,6 +20,6 @@ View the top streamed games on Twitch at the moment.
 ![Screenshot](Images/Screenshot3.png)
 
 ### wtwitch -g [GAME], --get-streamers [GAME]
-View the top streamers for a specified game.
+View the top streamers for a specified game. If the game name has spaces in it, like "World of Warcraft", you'll have to quote the game name or put a backslash before every space. For example, `wtwitch -g world\ of\ warcraft` or `wtwitch -g "world of warcraft"`. The game name is case insensitive.
 
 ![Screenshot](Images/Screenshot4.png)
