@@ -131,8 +131,12 @@ clean_up()
 
 list_streamers_of_game()
 {
+	# Fix spaces in game name
+	local gameName="$1"
+	gameName=${gameName// /%20}
+
 	# Get game_id
-	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=$1" > "${TWITCH_JSON}"
+	curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}" > "${TWITCH_JSON}"
 
 	local gameID
 	gameID=$(jq -r ".data[0].id" "${TWITCH_JSON}")
