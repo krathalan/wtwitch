@@ -138,7 +138,7 @@ check_twitch_streams_helper()
     echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_TEXT_FILE}"
   fi
 }
-
+  
 clean_up()
 {
   # Clean up
@@ -292,4 +292,14 @@ while test $# -gt 0; do
   esac
 done
 
-(streamlink --player-continuous-http -p gnome-mpv --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
+# Use GNOME MPV over VLC if it's installed
+player="gnome-mpv"
+if [[ ! -x "$(command -v "gnome-mpv")" ]]; then
+  player="vlc"
+
+  if [[ ! -x "$(command -v "vlc")" ]]; then
+    exit_script_on_failure "No media player found. Install GNOME MPV or VLC."
+  fi
+fi
+
+(streamlink --player-continuous-http -p "${player}" --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
