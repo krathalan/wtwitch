@@ -41,7 +41,8 @@ set -Eeuo pipefail
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
-readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
+readonly STREAM_OFFLINE_TEXT_FILE="/tmp/.stream_offline.txt"
+readonly STREAM_ONLINE_TEXT_FILE="/tmp/.stream_online.txt"
 readonly TWITCH_JSON="/tmp/twitch.json"
 
 # Colors
@@ -62,19 +63,26 @@ userSubscriptions=()
 # --------------- Functions ---------------
 # -----------------------------------------
 
+#######################################
+# Changes the default player in ~/.config/wtwitch/config.json that 
+# gets passed to streamlink.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 change_player()
 {
-  #jq '.address = "abcde"'
   # Convert to lowercase
-  local playerName="$1"
-  playerName="${playerName,,}"
+  local -r playerName="${1,,}"
 
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
     exit_script_on_failure "Media player ${playerName} not found."
   fi
 
-  local tempJson
-  tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
+  local -r tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
 }
 
@@ -95,7 +103,7 @@ check_command()
 }
 
 #######################################
-# Checks to see which favorite Twitch streams are online.
+# Checks to see which subscribed Twitch streams are online.
 # Globals:
 #   none
 # Arguments:
@@ -106,14 +114,13 @@ check_command()
 check_twitch_streams()
 {
   # Check to make sure there is at least 1 subscription
-  local subscriptionArrayLength
-  subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
+  local -r subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
 
-  if [[ "${subscriptionArrayLength}" -eq 0 ]]; then
+  if [[ -z "${subscriptionArrayLength}" ]]; then
     exit_script_on_failure "No subscriptions to check the status of. Use \"wtwitch -s [STREAMER]\" to subscribe to a streamer."
   fi
 
-  echo -en "\n Streams online:"
+  echo -en "\n Streamers online:"
 
   for stream in "${userSubscriptions[@]}"; do
     (check_twitch_streams_helper "${stream}") &
@@ -123,7 +130,15 @@ check_twitch_streams()
   
   echo ""
 
-  sort "${STREAM_TEXT_FILE}" 2> /dev/null
+  if [[ -f "${STREAM_ONLINE_TEXT_FILE}" ]]; then
+    sort "${STREAM_ONLINE_TEXT_FILE}" 2> /dev/null
+  fi
+
+  echo -e "\n Streamers offline:"
+
+  if [[ -f "${STREAM_OFFLINE_TEXT_FILE}" ]]; then
+    sort "${STREAM_OFFLINE_TEXT_FILE}" 2> /dev/null
+  fi
 }
 
 #######################################
@@ -139,8 +154,7 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
   # Get current info of streamer
-  local streamerJson
-  streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
 
   local streamType
   streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
@@ -166,14 +180,26 @@ check_twitch_streams_helper()
       streamType=", ${RED}${streamType}${NC}"
     fi
 
-    echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_TEXT_FILE}"
+    echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_ONLINE_TEXT_FILE}"
+  else
+    echo -e "   ${TURQOISE}$1${NC}" >> "${STREAM_OFFLINE_TEXT_FILE}"
   fi
 }
-  
+
+#######################################
+# Cleans up temporary file(s).
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 clean_up()
 {
   # Clean up
-  rm -f "${STREAM_TEXT_FILE}"
+  rm -f "${STREAM_ONLINE_TEXT_FILE}"
+  rm -f "${STREAM_OFFLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -194,18 +220,25 @@ exit_script_on_failure() {
   exit 1
 }
 
+#######################################
+# Lists the top streamers for a specified game.
+# Globals:
+#   none
+# Arguments:
+#   $1: game to list top streamers of
+# Returns:
+#   none
+#######################################
 list_streamers_of_game()
 {
   # Replace spaces in game name with %20
-  local gameName="$1"
-  gameName=${gameName// /%20}
+  local -r gameName=${1// /%20}
 
   # Get game_id
   local twitchJson
   twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}")
-
-  local gameID
-  gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
+  
+  local -r gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
 
   # Get streamers
   twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}")
@@ -244,7 +277,7 @@ list_streamers_of_game()
 }
 
 #######################################
-# Lists the top 20 games on Twitch.
+# Lists the top games on Twitch.
 # Globals:
 #   none
 # Arguments:
@@ -254,16 +287,15 @@ list_streamers_of_game()
 #######################################
 list_top_games()
 {
-  # Get current top games
-  local twitchJson
-  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top")
+  echo -e "\n Top games:"
+  
+  local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top")
 
   local gameName=""
   gameName=$(jq -r ".data[0].name" <<< "${twitchJson}")
 
-  echo -e "\n Top games:"
-
   local whileCounter=1
+
   while [[ "${gameName}" != "null" ]]; do
     echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
 
@@ -273,6 +305,15 @@ list_top_games()
   done
 }
 
+#######################################
+# Loads user configuration from ~/.config/wtwitch/config.json.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 load_config()
 {
   # Create config file if it doesnt exist
@@ -298,33 +339,65 @@ load_config()
   done
 }
 
+#######################################
+# Subscribes to a specific streamer.
+# Globals:
+#   none
+# Arguments:
+#   $1: streamer to subscribe to
+# Returns:
+#   none
+#######################################
 subscribe()
 {
   # Convert to lowercase
-  local streamerToSubscribeTo="$1"
-  streamerToSubscribeTo="${streamerToSubscribeTo,,}"
+  local -r streamerToSubscribeTo="${1,,}"
+
+  # Check to make sure user isn't already subscribed
+  local -r subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
+
+  if [[ -n "${subscriptionArrayLength}" ]]; then
+    local currentSubscription
+    currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+
+    local whileCounter=1
+
+    while [[ "${currentSubscription}" != "null" ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
+      # Refresh data
+      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
+      whileCounter=$(( whileCounter + 1))
+    done
+
+    if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
+      exit_script_on_failure "You are already subscribed to ${streamerToSubscribeTo}."
+    fi
+  fi
 
   # Check to make sure streamer exists before subscribing
-  local streamerJson
-  streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/${streamerToSubscribeTo}")
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/channels/${streamerToSubscribeTo}")
+  local -r streamerStatus=$(jq -r ".status" <<< "${streamerJson}")
 
-  local streamerStatus
-  streamerStatus=$(jq -r ".stream" <<< "${streamerJson}")
-
-  if [[ "${streamerStatus}" == "null" ]]; then
+  if [[ "${streamerStatus}" == "404" ]]; then
     exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
   fi
 
-  local tempJson
-  tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
 }
 
+#######################################
+# Unsubscribes from a specific streamer.
+# Globals:
+#   none
+# Arguments:
+#   $1: streamer to unsubscribe from
+# Returns:
+#   none
+#######################################
 unsubscribe()
 {
   # Convert to lowercase
-  local streamerToUnsubscribeFrom="$1"
-  streamerToUnsubscribeFrom="${streamerToUnsubscribeFrom,,}"
+  local -r streamerToUnsubscribeFrom="${1,,}"
 
   # Find index of streamer in .subscriptions[]
   local currentSubscription
@@ -342,8 +415,7 @@ unsubscribe()
 
   whileCounter=$(( whileCounter - 1 ))
   
-  local tempJson
-  tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
+  local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
 }
 
@@ -369,7 +441,6 @@ while test $# -gt 0; do
       shift
       if test $# -gt 0; then
         list_streamers_of_game "$1"
-        clean_up
         exit 0
       else
         exit_script_on_failure "No game specified."
@@ -431,7 +502,6 @@ while test $# -gt 0; do
       ;;
     -t|--top-games)
       list_top_games
-      clean_up
       exit 0
       break
       ;;
