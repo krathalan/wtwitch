@@ -139,19 +139,18 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
   # Get current info of streamer
-  local -r streamerJSON="/tmp/twitch-$1.json"
-  rm -f "/tmp/twitch-$1.json"
-  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1" > "${streamerJSON}"
+  local streamerJson
+  streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
 
   local streamType
-  streamType=$(jq -r ".stream.stream_type" "${streamerJSON}")
+  streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
 
   # Check if stream is online 
   if [[ "${streamType}" != "null" ]]; then
-    local -r playingGame=$(jq -r ".stream.game" "${streamerJSON}")
+    local -r playingGame=$(jq -r ".stream.game" <<< "${streamerJson}")
 
     local streamName
-    streamName=$(jq -r ".stream.channel.status" "${streamerJSON}")
+    streamName=$(jq -r ".stream.channel.status" <<< "${streamerJson}")
 
     # Truncate stream name if necessary; some streamers have excessively long stream titles
     local streamNameLength=${#streamName}
@@ -174,7 +173,6 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f /tmp/twitch*
   rm -f "${STREAM_TEXT_FILE}"
 }
 
@@ -203,22 +201,23 @@ list_streamers_of_game()
   gameName=${gameName// /%20}
 
   # Get game_id
-  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}" > "${TWITCH_JSON}"
+  local twitchJson
+  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}")
 
   local gameID
-  gameID=$(jq -r ".data[0].id" "${TWITCH_JSON}")
+  gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
 
   # Get streamers
-  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}" > "${TWITCH_JSON}"
+  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}")
 
   local streamerName=""
-  streamerName=$(jq -r ".data[0].user_name" "${TWITCH_JSON}")
+  streamerName=$(jq -r ".data[0].user_name" <<< "${twitchJson}")
 
   local streamTitle=""
-  streamTitle=$(jq -r ".data[0].title" "${TWITCH_JSON}")
+  streamTitle=$(jq -r ".data[0].title" <<< "${twitchJson}")
 
   local viewers=""
-  viewers=$(jq -r ".data[0].viewer_count" "${TWITCH_JSON}")
+  viewers=$(jq -r ".data[0].viewer_count" <<< "${twitchJson}")
 
   local streamTitleLength
 
@@ -237,9 +236,9 @@ list_streamers_of_game()
     echo -e "   ${TURQOISE}${streamerName}${NC}: ${streamTitle} ${ORANGE}(${viewers} viewers)${NC}"
 
     # Refresh data
-    streamerName=$(jq -r ".data[${whileCounter}].user_name" "${TWITCH_JSON}")
-    streamTitle=$(jq -r ".data[${whileCounter}].title" "${TWITCH_JSON}")
-    viewers=$(jq -r ".data[${whileCounter}].viewer_count" "${TWITCH_JSON}")
+    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+    streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
+    viewers=$(jq -r ".data[${whileCounter}].viewer_count" <<< "${twitchJson}")
     whileCounter=$(( whileCounter + 1 ))
   done
 }
@@ -256,10 +255,11 @@ list_streamers_of_game()
 list_top_games()
 {
   # Get current top games
-  curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${TWITCH_JSON}"
+  local twitchJson
+  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top")
 
   local gameName=""
-  gameName=$(jq -r ".data[0].name" "${TWITCH_JSON}")
+  gameName=$(jq -r ".data[0].name" <<< "${twitchJson}")
 
   echo -e "\n Top games:"
 
@@ -268,7 +268,7 @@ list_top_games()
     echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
 
     # Refresh data
-    gameName=$(jq -r ".data[${whileCounter}].name" "${TWITCH_JSON}")
+    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
     whileCounter=$(( whileCounter + 1 ))
   done
 }
