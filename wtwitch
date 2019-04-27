@@ -34,10 +34,11 @@ trap "kill 0" SIGINT
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuo pipefail
 
-# -----------------------------
-# ----- Program variables -----
-# -----------------------------
+# -----------------------------------------
+# ----------- Program variables -----------
+# -----------------------------------------
 
+readonly CONFIG_FILE="${HOME}/.config/wtwitch/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
 readonly TWITCH_JSON="/tmp/twitch.json"
@@ -47,6 +48,14 @@ readonly RED="\033[1;31m"
 readonly ORANGE="\033[0;33m"
 readonly TURQOISE="\033[0;36m"
 readonly NC="\033[0m" # No Color
+
+# -----------------------------------------
+# ------------- User variables ------------
+# -----------------------------------------
+
+# Values are loaded from ~/.config/wtwitch/config.json
+userPlayer=""
+userSubscriptions=()
 
 # -----------------------------------------
 # --------------- Functions ---------------
@@ -79,11 +88,9 @@ check_command()
 #######################################
 check_twitch_streams()
 {
-  local -r streamsToCheck=("a_seagull" "agilities" "asmongold" "aspen" "bobross" "custa" "drjayfisto" "emongg" "jdotb" "overwatchleague" "preachlfw")
-
   echo -en "\n Streams online:"
 
-  for stream in "${streamsToCheck[@]}"; do
+  for stream in "${userSubscriptions[@]}"; do
     (check_twitch_streams_helper "${stream}") &
   done
 
@@ -235,7 +242,7 @@ list_top_games()
 
   echo -e "\n Top games:"
 
-  local whileCounter=1;
+  local whileCounter=1
   while [[ "${gameName}" != "null" ]]; do
     echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
 
@@ -245,12 +252,42 @@ list_top_games()
   done
 }
 
+load_config()
+{
+  # Player
+  userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
+
+  # Subscriptions
+  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+
+  local whileCounter=1
+  while [[ "${currentSubscription}" != "null" ]]; do
+    userSubscriptions+=("${currentSubscription}")
+
+    # Refresh data
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+    whileCounter=$(( whileCounter + 1 ))
+  done
+}
+
+subscribe()
+{
+  # jq '. + { "key4": "value4" }'
+  # jq '.data.messages[.data.messages| length] |= . + {"date": "2010-01-07T19:55:99.999Z", "xml": "xml_samplesheet_2017_01_07_run_09.xml", "status": "OKKK", "message": "metadata loaded into iRODS successfullyyyyy"}' inputJson
+  
+  local tempJson
+  tempJson=$(jq ".subscriptions[.subscriptions| length] |= . + {\"streamer\":\"$1\"}" "${CONFIG_FILE}")
+  echo "${tempJson}" > "${CONFIG_FILE}"
+}
+
 # --------------------------------------
 # --------------- Script ---------------
 # --------------------------------------
 
 check_command "streamlink"
 check_command "jq"
+
+load_config
 
 # Parse flags. From:
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
@@ -275,8 +312,12 @@ while test $# -gt 0; do
       ;;
     --get-streamers*)
       shift
-      gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
-      list_streamers_of_game "${gameToCheck}"
+      if test $# -gt 0; then
+        gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        list_streamers_of_game "${gameToCheck}"
+      else
+        exit_script_on_failure "No game specified."
+      fi
       exit 0
       break
       ;;
@@ -286,20 +327,40 @@ while test $# -gt 0; do
       exit 0
       break
       ;;
+    -s)
+      shift
+      if test $# -gt 0; then
+        subscribe "$1"
+        exit 0
+      else
+        exit_script_on_failure "No streamer specified."
+      fi
+      break
+      ;;
+    --subscribe*)
+      shift
+      if test $# -gt 0; then
+        streamerToSubscribeTo=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        subscribe "${streamerToSubscribeTo}"
+      else
+        exit_script_on_failure "No streamer specified."
+      fi
+      exit 0
+      break
+      ;;
     *)
       break
       ;;
   esac
 done
 
-# Use GNOME MPV over VLC if it's installed
-player="gnome-mpv"
-if [[ ! -x "$(command -v "gnome-mpv")" ]]; then
-  player="vlc"
-
-  if [[ ! -x "$(command -v "vlc")" ]]; then
+if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
+  if [[ "${userPlayer}" == "gnome-mpv" ]] && [[ -x "$(command -v "vlc")" ]]; then
+    echo -e "\n GNOME MPV not found. Using VLC instead..."
+    userPlayer="vlc"
+  else
     exit_script_on_failure "No media player found. Install GNOME MPV or VLC."
   fi
 fi
 
-(streamlink --player-continuous-http -p "${player}" --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
+(streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 

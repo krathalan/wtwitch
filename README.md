@@ -1,6 +1,8 @@
 # wtwitch
 A terminal-based Twitch app. Watch Twitch without proprietary JavaScript and without being tracked.
 
+Wtwitch will tell Streamlink to use GNOME MPV. If GNOME MPV is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors GNOME MPV because GNOME MPV supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet).
+
 Usage of a config file (e.g. `~/.config/wtwitch/config.txt`) should be coming soon and should make customizing the script much easier.
 
 ## Dependencies
