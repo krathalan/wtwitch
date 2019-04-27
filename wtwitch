@@ -38,7 +38,8 @@ set -Eeuo pipefail
 # ----------- Program variables -----------
 # -----------------------------------------
 
-readonly CONFIG_FILE="${HOME}/.config/wtwitch/config.json"
+readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
+readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly STREAM_TEXT_FILE="/tmp/.stream.txt"
 readonly TWITCH_JSON="/tmp/twitch.json"
@@ -60,6 +61,22 @@ userSubscriptions=()
 # -----------------------------------------
 # --------------- Functions ---------------
 # -----------------------------------------
+
+change_player()
+{
+  #jq '.address = "abcde"'
+  # Convert to lowercase
+  local playerName="$1"
+  playerName="${playerName,,}"
+
+  if [[ ! -x "$(command -v "${playerName}")" ]]; then
+    exit_script_on_failure "Media player ${playerName} not found."
+  fi
+
+  local tempJson
+  tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
+  echo "${tempJson}" > "${CONFIG_FILE}"
+}
 
 #######################################
 # Checks to see if a specified command is available.
@@ -88,6 +105,14 @@ check_command()
 #######################################
 check_twitch_streams()
 {
+  # Check to make sure there is at least 1 subscription
+  local subscriptionArrayLength
+  subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
+
+  if [[ "${subscriptionArrayLength}" -eq 0 ]]; then
+    exit_script_on_failure "No subscriptions to check the status of. Use \"wtwitch -s [STREAMER]\" to subscribe to a streamer."
+  fi
+
   echo -en "\n Streams online:"
 
   for stream in "${userSubscriptions[@]}"; do
@@ -173,7 +198,7 @@ exit_script_on_failure() {
 
 list_streamers_of_game()
 {
-  # Fix spaces in game name
+  # Replace spaces in game name with %20
   local gameName="$1"
   gameName=${gameName// /%20}
 
@@ -233,10 +258,6 @@ list_top_games()
   # Get current top games
   curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top" > "${TWITCH_JSON}"
 
-  # Get first game name. While loop uses the game name to list every game in the json file. Number of games given by
-  # the Twitch API is variable, so we should account for that and list every game in the file; not just "top 10 games"
-  # or whatever arbitrary number. 
-
   local gameName=""
   gameName=$(jq -r ".data[0].name" "${TWITCH_JSON}")
 
@@ -254,10 +275,17 @@ list_top_games()
 
 load_config()
 {
+  # Create config file if it doesnt exist
+  if [[ ! -f "${CONFIG_FILE}" ]]; then
+    mkdir "${CONFIG_FILE_DIRECTORY}"
+    echo -e "{\"player\": \"gnome-mpv\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+  fi
+
   # Player
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
 
   # Subscriptions
+  local currentSubscription
   currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
 
   local whileCounter=1
@@ -272,11 +300,50 @@ load_config()
 
 subscribe()
 {
-  # jq '. + { "key4": "value4" }'
-  # jq '.data.messages[.data.messages| length] |= . + {"date": "2010-01-07T19:55:99.999Z", "xml": "xml_samplesheet_2017_01_07_run_09.xml", "status": "OKKK", "message": "metadata loaded into iRODS successfullyyyyy"}' inputJson
+  # Convert to lowercase
+  local streamerToSubscribeTo="$1"
+  streamerToSubscribeTo="${streamerToSubscribeTo,,}"
+
+  # Check to make sure streamer exists before subscribing
+  local streamerJson
+  streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/${streamerToSubscribeTo}")
+
+  local streamerStatus
+  streamerStatus=$(jq -r ".stream" <<< "${streamerJson}")
+
+  if [[ "${streamerStatus}" == "null" ]]; then
+    exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
+  fi
+
+  local tempJson
+  tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  echo "${tempJson}" > "${CONFIG_FILE}"
+}
+
+unsubscribe()
+{
+  # Convert to lowercase
+  local streamerToUnsubscribeFrom="$1"
+  streamerToUnsubscribeFrom="${streamerToUnsubscribeFrom,,}"
+
+  # Find index of streamer in .subscriptions[]
+  local currentSubscription
+  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+
+  local whileCounter=1
+
+  while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
+    userSubscriptions+=("${currentSubscription}")
+
+    # Refresh data
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+    whileCounter=$(( whileCounter + 1 ))
+  done
+
+  whileCounter=$(( whileCounter - 1 ))
   
   local tempJson
-  tempJson=$(jq ".subscriptions[.subscriptions| length] |= . + {\"streamer\":\"$1\"}" "${CONFIG_FILE}")
+  tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
 }
 
@@ -286,7 +353,6 @@ subscribe()
 
 check_command "streamlink"
 check_command "jq"
-
 load_config
 
 # Parse flags. From:
@@ -321,9 +387,24 @@ while test $# -gt 0; do
       exit 0
       break
       ;;
-    -l|--list-games)
-      list_top_games
-      clean_up
+    -p)
+      shift
+      if test $# -gt 0; then
+        change_player "$1"
+        exit 0
+      else
+        exit_script_on_failure "No media player specified."
+      fi
+      break
+      ;;
+    --player*)
+      shift
+      if test $# -gt 0; then
+        player=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        change_player "${player}"
+      else
+        exit_script_on_failure "No media player specified."
+      fi
       exit 0
       break
       ;;
@@ -348,6 +429,33 @@ while test $# -gt 0; do
       exit 0
       break
       ;;
+    -t|--top-games)
+      list_top_games
+      clean_up
+      exit 0
+      break
+      ;;
+    -u)
+      shift
+      if test $# -gt 0; then
+        unsubscribe "$1"
+        exit 0
+      else
+        exit_script_on_failure "No streamer specified."
+      fi
+      break
+      ;;
+    --unsubscribe*)
+      shift
+      if test $# -gt 0; then
+        streamerToUnsubscribeFrom=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        unsubscribe "${streamerToUnsubscribeFrom}"
+      else
+        exit_script_on_failure "No streamer specified."
+      fi
+      exit 0
+      break
+      ;;
     *)
       break
       ;;
@@ -359,7 +467,7 @@ if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     echo -e "\n GNOME MPV not found. Using VLC instead..."
     userPlayer="vlc"
   else
-    exit_script_on_failure "No media player found. Install GNOME MPV or VLC."
+    exit_script_on_failure "Media player ${userPlayer} not found. Change which media player is used with \"wtwitch -p [PLAYER]\"."
   fi
 fi
 
