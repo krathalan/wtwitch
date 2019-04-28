@@ -494,7 +494,7 @@ stream()
   local -r streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
 
   if [[ "${streamType}" == "null" ]]; then
-    notify-send -i "gnome-twitch" "Wtwitch" "Streamer $1 is not online."
+    notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Streamer $1 is not online."
     exit_script_on_failure
   fi
 
