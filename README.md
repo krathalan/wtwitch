@@ -26,7 +26,7 @@ Option | Description | Example
 -t, --top-games | lists the top games on twitch | `bash wtwitch -t`
 -u [STREAMER], --unsubscribe=[STREAMER] | unsubscribes from a specified streamer | `bash wtwitch -u overwatchleague`
 
-### Additional information with screenshots
+### Additional usage information with screenshots
 #### wtwtich -h, --help
 
 ![Screenshot](Images/Screenshot0.png)
@@ -46,7 +46,7 @@ View the top streamers for a specified game. If the game name has spaces in it, 
 
 ![Screenshot](Images/Screenshot4.png)
 
-#### wtwitch -p [PLAYER], wtwitch --player=[PLAYER]
+#### wtwitch -p [PLAYER], --player=[PLAYER]
 Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html). Be aware that wtwitch passes the flag `--player-continuous-http` to Streamlink. Quicktime is the only player that doesn't support the HTTP transport mode, so wtwitch is incompatible with Quicktime (unless you modify the source code).
 
 The preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
