@@ -59,6 +59,7 @@ readonly TWITCH_JSON="/tmp/twitch.json"
 
 # Values are loaded from ~/.config/wtwitch/config.json
 userPlayer=""
+userQuality=""
 userSubscriptions=()
 
 # -----------------------------------------
@@ -87,6 +88,36 @@ change_player()
   local -r tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
   echo -e "\n ${CHECK_MARK} Successfully changed default player to ${playerName}."
+}
+
+change_quality()
+{
+  # Convert to lowercase
+  local -r specifiedQuality="${1,,}"
+  local -r acceptableQualities=("worst" "160p" "360p" "480p" "720p" "720p60" "1080p60" "best")
+  local passedCheckMarkerArray=()
+
+  # User may try and enter fallback qualities; we should account for this
+  IFS=',' read -r -a qualityArray <<< "$specifiedQuality"
+
+  # For each quality the user has specified
+  for i in  "${qualityArray[@]}"; do
+    # Check to make sure it's an acceptable quality
+    for j in "${acceptableQualities[@]}"; do
+      if [[ "${i}" == "${j}" ]]; then
+        passedCheckMarkerArray+=("true")
+      fi
+    done
+  done
+
+  # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
+  if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
+    local -r tempJson=$(jq ".quality = \"${specifiedQuality}\"" "${CONFIG_FILE}")
+    echo "${tempJson}" > "${CONFIG_FILE}"
+    echo -e "\n ${CHECK_MARK} Successfully changed default quality to ${specifiedQuality}."
+  else
+    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality.\n Acceptable qualities: worst, 160p, 360p, 480p, 720p, 720p60, 1080p60, best."
+  fi
 }
 
 #######################################
@@ -322,11 +353,14 @@ load_config()
   # Create config file if it doesnt exist
   if [[ ! -f "${CONFIG_FILE}" ]]; then
     mkdir "${CONFIG_FILE_DIRECTORY}"
-    echo -e "{\"player\": \"gnome-mpv\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+    echo -e "{\"player\": \"gnome-mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
   fi
 
   # Player
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
+
+  # Quality
+  userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
 
   # Subscriptions
   local currentSubscription
@@ -364,7 +398,8 @@ print_help()
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
   print_help_helper "-c, --check" "view which subscribed Twitch streams are online" "bash wtwitch -c"
   print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
-  print_help_helper "-p [PLAYER], --player=[GAME]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
+  print_help_helper "-p [PLAYER], --change-player=[PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
+  print_help_helper "-q [QUALITY], --change-quality=[QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
   print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
   print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
   print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
@@ -384,6 +419,27 @@ print_help_helper()
   local -r description="Description: "${NC}
   local -r usage="Usage: "
   printf "   ${TURQOISE}%s${NC}\n     ${ORANGE}${description}${NC}%s\n     ${ORANGE}${usage}${NC}%s\n" "$1" "$2" "$3"
+}
+
+stream()
+{
+  # Check to make sure streamer is online 
+  # Get current info of streamer
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
+
+  local -r streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
+
+  if [[ "${streamType}" == "null" ]]; then
+    exit_script_on_failure "Streamer $1 is not online."
+  fi
+
+  {
+    # Try
+    streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}"
+  } || {
+    # Catch
+    exit_script_on_failure "Streaming $1 failed.\n It's possible that $1's stream does not support quality ${userQuality}. Change default quality with wtwitch -q [QUALITY]."
+  }
 }
 
 #######################################
@@ -529,13 +585,34 @@ while test $# -gt 0; do
       fi
       break
       ;;
-    --player*)
+    --change-player*)
       shift
       if test $# -gt 0; then
         player=$(echo "$1" | sed -e 's/^[^=]*=//g')
         change_player "${player}"
       else
         exit_script_on_failure "No media player specified."
+      fi
+      exit 0
+      break
+      ;;
+    -q)
+      shift
+      if test $# -gt 0; then
+        change_quality "$1"
+        exit 0
+      else
+        exit_script_on_failure "No quality specified."
+      fi
+      break
+      ;;
+    --change-quality*)
+      shift
+      if test $# -gt 0; then
+        quality=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        change_quality "${quality}"
+      else
+        exit_script_on_failure "No quality specified."
       fi
       exit 0
       break
@@ -598,8 +675,8 @@ if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     echo -e "\n GNOME MPV not found. Using VLC instead..."
     userPlayer="vlc"
   else
-    exit_script_on_failure "Media player ${userPlayer} not found. Change which media player is used with \"wtwitch -p [PLAYER]\"."
+    exit_script_on_failure "Media player ${userPlayer} not found. Change default media player with \"wtwitch -p [PLAYER]\"."
   fi
 fi
 
-(streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" best > /dev/null) & 
+stream "$1"
