@@ -39,13 +39,13 @@ set -Eeuo pipefail
 # -----------------------------------------
 
 # Colors
-readonly GREEN="\033[1;32m"
-readonly RED="\033[1;31m"
-readonly ORANGE="\033[0;33m"
-readonly TURQOISE="\033[0;36m"
-readonly NC="\033[0m" # No Color
+readonly GREEN=$(tput bold && tput setaf 2)
+readonly RED=$(tput bold && tput setaf 1)
+readonly ORANGE=$(tput setaf 3)
+readonly TURQOISE=$(tput setaf 6)
+readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
-readonly CHECK_MARK="${GREEN}\u2714${NC}"
+readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
@@ -96,12 +96,12 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    echo -e "\n ${ORANGE}Warning${NC}: player ${playerName} may not work properly with Streamlink."
+    printf "\n %sWarning%s: player %s may not work properly with Streamlink.\n" "${ORANGE}" "${NC}" "${playerName}"
   fi
 
   local -r tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
-  echo "${tempJson}" > "${CONFIG_FILE}"
-  echo -e "\n ${CHECK_MARK} Successfully changed default player to ${playerName}."
+  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  printf "\n %s Successfully changed default player to %s.\n" "${CHECK_MARK}" "${playerName}"
 }
 
 #######################################
@@ -138,10 +138,10 @@ change_quality()
   # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     local -r tempJson=$(jq ".quality = \"${specifiedQuality}\"" "${CONFIG_FILE}")
-    echo "${tempJson}" > "${CONFIG_FILE}"
-    echo -e "\n ${CHECK_MARK} Successfully changed default quality to ${specifiedQuality}."
+    printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+    printf "\n %s Successfully changed default quality to %s.\n" "${CHECK_MARK}" "${specifiedQuality}"
   else
-    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality.\n Acceptable qualities: worst, 160p, 360p, 480p, 720p, 720p60, 1080p60, best."
+    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. See https://gitlab.com/krathalan/wtwitch#wtwitch-q-quality-change-qualityquality for more information."
   fi
 }
 
@@ -182,7 +182,7 @@ check_twitch_streams()
     exit_script_on_failure "No subscriptions to check the status of. Use \"wtwitch -s [STREAMER]\" to subscribe to a streamer."
   fi
 
-  echo -en "\n Streamers online:"
+  printf "\n Streamers online:"
 
   for stream in "${userSubscriptions[@]}"; do
     (check_twitch_streams_helper "${stream}") &
@@ -190,13 +190,13 @@ check_twitch_streams()
 
   wait
   
-  echo ""
+  printf "\n"
 
   if [[ -f "${STREAM_ONLINE_TEXT_FILE}" ]]; then
     sort "${STREAM_ONLINE_TEXT_FILE}" 2> /dev/null
   fi
 
-  echo -e "\n Streamers offline:"
+  printf "\n Streamers offline:\n"
 
   if [[ -f "${STREAM_OFFLINE_TEXT_FILE}" ]]; then
     sort "${STREAM_OFFLINE_TEXT_FILE}" 2> /dev/null
@@ -236,7 +236,7 @@ check_twitch_streams_helper()
     local streamNameLength=${#streamName}
 
     if [[ "${streamNameLength}" -gt 50 ]]; then
-      streamName=$(echo "${streamName}" | cut -c 1-50)
+      streamName=$(printf "%s" "${streamName}" | cut -c 1-50)
       streamName="${streamName}…"
     fi
 
@@ -246,9 +246,9 @@ check_twitch_streams_helper()
       streamType=", ${RED}${streamType}${NC}"
     fi
 
-    echo -e "   ${TURQOISE}$1${NC}: ${streamName} ${ORANGE}(playing ${playingGame}${streamType}${ORANGE})${NC}" >> "${STREAM_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${playingGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${STREAM_ONLINE_TEXT_FILE}"
   else
-    echo -e "   ${TURQOISE}$1${NC}" >> "${STREAM_OFFLINE_TEXT_FILE}"
+    printf "   %s%s%s\n" "${TURQOISE}" "$1" "${NC}" >> "${STREAM_OFFLINE_TEXT_FILE}"
   fi
 }
 
@@ -281,8 +281,8 @@ clean_up()
 #   none
 #######################################
 exit_script_on_failure() {
-  echo -e "\n ${RED}Error${NC}: $1" >&2
-  echo -e " Exiting ${SCRIPT_NAME} Bash script." >&2
+  printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
+  printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
   
   clean_up
   exit 1
@@ -324,7 +324,7 @@ list_streamers_of_game()
 
   local streamTitleLength
 
-  echo -e "\n $1 streamers:"
+  printf "\n %s streamers:\n" "$1"
 
   local whileCounter=1
 
@@ -333,11 +333,11 @@ list_streamers_of_game()
     streamTitleLength=${#streamTitle}
 
     if [[ "${streamTitleLength}" -gt 50 ]]; then
-      streamTitle=$(echo "${streamTitle}" | cut -c 1-50)
+      streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-50)
       streamTitle="${streamTitle}…"
     fi
 
-    echo -e "   ${TURQOISE}${streamerName}${NC}: ${streamTitle} ${ORANGE}(${viewers} viewers)${NC}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "${viewers}" "${NC}"
 
     # Refresh data
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
@@ -360,7 +360,7 @@ list_streamers_of_game()
 #######################################
 list_top_games()
 {
-  echo -e "\n Top games:"
+  printf "\n Top games:\n"
   
   local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/games/top")
 
@@ -370,7 +370,7 @@ list_top_games()
   local whileCounter=1
 
   while [[ "${gameName}" != "null" ]]; do
-    echo -e "   ${whileCounter}. ${TURQOISE}${gameName}${NC}"
+    printf "   %s. %s%s%s\n" "${whileCounter}" "${TURQOISE}" "${gameName}" "${NC}"
 
     # Refresh data
     gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
@@ -395,8 +395,10 @@ load_config()
 {
   # Create config file if it doesnt exist
   if [[ ! -f "${CONFIG_FILE}" ]]; then
-    mkdir "${CONFIG_FILE_DIRECTORY}"
-    echo -e "{\"player\": \"gnome-mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+    if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
+      mkdir "${CONFIG_FILE_DIRECTORY}"
+    fi
+    printf "{\"player\": \"gnome-mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
   fi
 
   # Player
@@ -432,22 +434,22 @@ load_config()
 #######################################
 print_help()
 {
-  echo -e "\n ${GREEN}${SCRIPT_NAME}${NC} - browse and watch Twitch streams without being tracked."
-  echo -e " Copyright (C) 2019 krathalan"
-  echo -e " This is free software: you are free to change and redistribute it."
-  echo -e " There is NO WARRANTY, to the extent permitted by law.\n"
-  echo -e " Homepage: https://gitlab.com/krathalan/wtwitch\n"
-  echo -e " Usage: bash ${SCRIPT_NAME} [OPTION] [ARG]\n"
-  echo -e " Options:"
+  printf "\n %s%s%s - browse and watch Twitch streams without being tracked.\n" "${GREEN}" "${SCRIPT_NAME}" "${NC}"
+  printf " Copyright (C) 2019 krathalan\n"
+  printf " This is free software: you are free to change and redistribute it.\n"
+  printf " There is NO WARRANTY, to the extent permitted by law.\n\n"
+  printf " Homepage: https://gitlab.com/krathalan/wtwitch\n\n"
+  printf " Usage: bash %s [OPTION] [ARG]\n\n" "${SCRIPT_NAME}"
+  printf " Options:\n"
 
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
   print_help_helper "-c, --check" "view which subscribed Twitch streams are online" "bash wtwitch -c"
-  print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
-  print_help_helper "-p [PLAYER], --change-player=[PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
-  print_help_helper "-q [QUALITY], --change-quality=[QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
-  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
+  print_help_helper "-g [GAME], --get-streamers [GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
+  print_help_helper "-p [PLAYER], --change-player [PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
+  print_help_helper "-q [QUALITY], --change-quality [QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
+  print_help_helper "-s [STREAMER], --subscribe [STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
   print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
-  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
+  print_help_helper "-u [STREAMER], --unsubscribe [STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
 }
 
 #######################################
@@ -465,7 +467,7 @@ print_help_helper()
 {
   local -r description="Description: "${NC}
   local -r usage="Usage: "
-  printf "   ${TURQOISE}%s${NC}\n     ${ORANGE}${description}${NC}%s\n     ${ORANGE}${usage}${NC}%s\n" "$1" "$2" "$3"
+  printf "   %s%s%s\n     %s%s%s%s\n     %s%s%s%s\n" "${TURQOISE}" "$1" "${NC}" "${ORANGE}" "${description}" "${NC}" "$2" "${ORANGE}" "${usage}" "${NC}" "$3"
 }
 
 #######################################
@@ -547,8 +549,8 @@ subscribe()
   fi
 
   local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
-  echo "${tempJson}" > "${CONFIG_FILE}"
-  echo -e "\n ${CHECK_MARK} Successfully subscribed to ${streamerToSubscribeTo}."
+  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  printf "\n %s Successfully subscribed to %s.\n" "${CHECK_MARK}" "${streamerToSubscribeTo}"
 }
 
 #######################################
@@ -588,8 +590,8 @@ unsubscribe()
   fi
 
   local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
-  echo "${tempJson}" > "${CONFIG_FILE}"
-  echo -e "\n ${CHECK_MARK} Successfully unsubscribed from ${streamerToUnsubscribeFrom}."
+  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  printf "\n %s Successfully unsubscribed from %s.\n" "${CHECK_MARK}" "${streamerToUnsubscribeFrom}"
 }
 
 # --------------------------------------
@@ -628,7 +630,7 @@ while test $# -gt 0; do
     --get-streamers*)
       shift
       if test $# -gt 0; then
-        gameToCheck=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        gameToCheck=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         list_streamers_of_game "${gameToCheck}"
       else
         exit_script_on_failure "No game specified."
@@ -649,7 +651,7 @@ while test $# -gt 0; do
     --change-player*)
       shift
       if test $# -gt 0; then
-        player=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        player=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         change_player "${player}"
       else
         exit_script_on_failure "No media player specified."
@@ -670,7 +672,7 @@ while test $# -gt 0; do
     --change-quality*)
       shift
       if test $# -gt 0; then
-        quality=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        quality=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         change_quality "${quality}"
       else
         exit_script_on_failure "No quality specified."
@@ -691,7 +693,7 @@ while test $# -gt 0; do
     --subscribe*)
       shift
       if test $# -gt 0; then
-        streamerToSubscribeTo=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        streamerToSubscribeTo=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         subscribe "${streamerToSubscribeTo}"
       else
         exit_script_on_failure "No streamer specified."
@@ -717,7 +719,7 @@ while test $# -gt 0; do
     --unsubscribe*)
       shift
       if test $# -gt 0; then
-        streamerToUnsubscribeFrom=$(echo "$1" | sed -e 's/^[^=]*=//g')
+        streamerToUnsubscribeFrom=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         unsubscribe "${streamerToUnsubscribeFrom}"
       else
         exit_script_on_failure "No streamer specified."
@@ -733,7 +735,7 @@ done
 
 if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
   if [[ "${userPlayer}" == "gnome-mpv" ]] && [[ -x "$(command -v "vlc")" ]]; then
-    echo -e "\n GNOME MPV not found. Using VLC instead..."
+    printf "\n GNOME MPV not found. Using VLC instead...\n"
     userPlayer="vlc"
   else
     exit_script_on_failure "Media player ${userPlayer} not found. Change default media player with \"wtwitch -p [PLAYER]\"."
