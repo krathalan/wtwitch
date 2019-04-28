@@ -38,18 +38,20 @@ set -Eeuo pipefail
 # ----------- Program variables -----------
 # -----------------------------------------
 
+# Colors
+readonly GREEN="\033[1;32m"
+readonly RED="\033[1;31m"
+readonly ORANGE="\033[0;33m"
+readonly TURQOISE="\033[0;36m"
+readonly NC="\033[0m" # No Color
+
+readonly CHECK_MARK="${GREEN}\u2714${NC}"
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly STREAM_OFFLINE_TEXT_FILE="/tmp/.stream_offline.txt"
 readonly STREAM_ONLINE_TEXT_FILE="/tmp/.stream_online.txt"
 readonly TWITCH_JSON="/tmp/twitch.json"
-
-# Colors
-readonly RED="\033[1;31m"
-readonly ORANGE="\033[0;33m"
-readonly TURQOISE="\033[0;36m"
-readonly NC="\033[0m" # No Color
 
 # -----------------------------------------
 # ------------- User variables ------------
@@ -114,9 +116,9 @@ check_command()
 check_twitch_streams()
 {
   # Check to make sure there is at least 1 subscription
-  local -r subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
+  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
 
-  if [[ -z "${subscriptionArrayLength}" ]]; then
+  if [[ ${subscriptionArrayLength} -eq 0 ]]; then
     exit_script_on_failure "No subscriptions to check the status of. Use \"wtwitch -s [STREAMER]\" to subscribe to a streamer."
   fi
 
@@ -340,6 +342,50 @@ load_config()
 }
 
 #######################################
+# Prints information about how to use this script.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+print_help()
+{
+  echo -e "\n ${GREEN}${SCRIPT_NAME}${NC} - browse and watch Twitch streams without being tracked."
+  echo -e " Copyright (C) 2019 krathalan"
+  echo -e " This is free software: you are free to change and redistribute it."
+  echo -e " There is NO WARRANTY, to the extent permitted by law.\n"
+  echo -e " Homepage: https://gitlab.com/krathalan/wtwitch\n"
+  echo -e " Usage: bash ${SCRIPT_NAME} [OPTION] [ARG]\n"
+  echo -e " Options:"
+
+  print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
+  print_help_helper "-c, --check" "view which subscribed Twitch streams are online" "bash wtwitch -c"
+  print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
+  print_help_helper "-p [PLAYER], --player=[GAME]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
+  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
+  print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
+  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
+}
+
+#######################################
+# Formats strings nicely for print_help().
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+print_help_helper()
+{
+  local -r description="Description: "${NC}
+  local -r usage="Usage: "
+  printf "   ${TURQOISE}%s${NC}\n     ${ORANGE}${description}${NC}%s\n     ${ORANGE}${usage}${NC}%s\n" "$1" "$2" "$3"
+}
+
+#######################################
 # Subscribes to a specific streamer.
 # Globals:
 #   none
@@ -354,9 +400,9 @@ subscribe()
   local -r streamerToSubscribeTo="${1,,}"
 
   # Check to make sure user isn't already subscribed
-  local -r subscriptionArrayLength=$(jq ".subscriptions[] | length" "${CONFIG_FILE}")
+  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
 
-  if [[ -n "${subscriptionArrayLength}" ]]; then
+  if [[ ${subscriptionArrayLength} -gt 0 ]]; then
     local currentSubscription
     currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
 
@@ -383,6 +429,7 @@ subscribe()
 
   local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
+  echo -e "\n ${CHECK_MARK} Successfully subscribed to ${streamerToSubscribeTo}."
 }
 
 #######################################
@@ -414,9 +461,17 @@ unsubscribe()
   done
 
   whileCounter=$(( whileCounter - 1 ))
-  
+
+  # Check to make sure user is subscribed before unsubscribing
+  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
+
+  if [[ ! $whileCounter -lt $subscriptionArrayLength ]]; then
+    exit_script_on_failure "You weren't subscribed to ${streamerToUnsubscribeFrom} in the first place."
+  fi
+
   local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
+  echo -e "\n ${CHECK_MARK} Successfully unsubscribed from ${streamerToUnsubscribeFrom}."
 }
 
 # --------------------------------------
@@ -431,6 +486,11 @@ load_config
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
 while test $# -gt 0; do
   case "$1" in
+    -h|--help)
+      print_help
+      exit 0
+      break
+      ;;
     -c|--check)
       check_twitch_streams
       clean_up
