@@ -446,6 +446,7 @@ print_help()
   printf " Options:\n"
 
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
+  print_help_helper "(no option) [STREAMER]" "watch the specified streamer" "bash wtwitch overwatchleague"
   print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
   print_help_helper "-g [GAME], --get-streamers [GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
   print_help_helper "-p [PLAYER], --change-player [PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
@@ -606,6 +607,11 @@ unsubscribe()
 check_command "streamlink"
 check_command "jq"
 load_config
+
+if [[ $# -eq 0 ]]; then
+  print_help
+  exit 0
+fi
 
 # Parse flags. From:
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
