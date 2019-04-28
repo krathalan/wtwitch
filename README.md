@@ -37,7 +37,7 @@ Option | Description | Example
 ![Screenshot](Images/Screenshot-Help.png)
 
 #### wtwitch [STREAMER]
-Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically. Wtwitch creates the streamlink process as a background process, so you don't have to open a new terminal tab to keep using Bash. 
+Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically. 
 
 Wtwitch will make sure the specified streamer is actually live before starting Streamlink.
 
