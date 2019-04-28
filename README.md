@@ -21,7 +21,7 @@ Option | Description | Example
 (no option) [STREAMER] | watch the specified streamer | `bash wtwitch overwatchleague`
 -c, --check | view which subscribed Twitch streams are online | `bash wtwitch -c`
 -g [GAME], --get-streamers=[GAME] | view the top streamers for a specified game | `bash wtwitch -g "world of warcraft"`
--p [PLAYER], --player=[GAME] | changes the default player in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -p gnome-mpv`
+-p [PLAYER], --player=[PLAYER] | changes the default player in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -p gnome-mpv`
 -s [STREAMER], --subscribe=[STREAMER] | subscribes to a specific streamer | `bash wtwitch -s overwatchleague`
 -t, --top-games | lists the top games on twitch | `bash wtwitch -t`
 -u [STREAMER], --unsubscribe=[STREAMER] | unsubscribes from a specified streamer | `bash wtwitch -u overwatchleague`
@@ -46,7 +46,7 @@ View the top streamers for a specified game. If the game name has spaces in it, 
 
 ![Screenshot](Images/Screenshot4.png)
 
-#### wtwitch -p [PLAYER]
+#### wtwitch -p [PLAYER], wtwitch --player=[PLAYER]
 Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html). Be aware that wtwitch passes the flag `--player-continuous-http` to Streamlink. Quicktime is the only player that doesn't support the HTTP transport mode, so wtwitch is incompatible with Quicktime (unless you modify the source code).
 
 The preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
