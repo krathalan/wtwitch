@@ -80,9 +80,22 @@ change_player()
 {
   # Convert to lowercase
   local -r playerName="${1,,}"
+  local -r workingPlayers=("gnome-mpv" "mpv" "mplayer" "vlc")
+  local passedCheckMarker="false"
 
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
     exit_script_on_failure "Media player ${playerName} not installed."
+  fi
+
+  # Check against known working players
+  for i in "${workingPlayers[@]}"; do
+    if [[ "${playerName}" == "${i}" ]]; then
+      passedCheckMarker="true"
+    fi
+  done
+
+  if [[ "${passedCheckMarker}" != "true" ]]; then
+    echo -e "\n ${ORANGE}Warning${NC}: player ${playerName} may not work properly with Streamlink."
   fi
 
   local -r tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
@@ -101,7 +114,7 @@ change_quality()
   IFS=',' read -r -a qualityArray <<< "$specifiedQuality"
 
   # For each quality the user has specified
-  for i in  "${qualityArray[@]}"; do
+  for i in "${qualityArray[@]}"; do
     # Check to make sure it's an acceptable quality
     for j in "${acceptableQualities[@]}"; do
       if [[ "${i}" == "${j}" ]]; then
