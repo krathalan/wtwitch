@@ -51,7 +51,6 @@ readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly STREAM_OFFLINE_TEXT_FILE="/tmp/.stream_offline.txt"
 readonly STREAM_ONLINE_TEXT_FILE="/tmp/.stream_online.txt"
-readonly TWITCH_JSON="/tmp/twitch.json"
 
 # -----------------------------------------
 # ------------- User variables ------------
