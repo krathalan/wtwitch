@@ -31,7 +31,7 @@ Option | Description | Example
 --- | --- | ---
 -h, --help | show brief help | `bash wtwitch -h`
 (no option) [STREAMER] | watch the specified streamer | `bash wtwitch overwatchleague`
--c, --check | view which subscribed Twitch streams are online | `bash wtwitch -c`
+-c, --check | view which subscribed Twitch streams are online and your settings | `bash wtwitch -c`
 -g [GAME], --get-streamers=[GAME] | view the top streamers for a specified game | `bash wtwitch -g "world of warcraft"`
 -p [PLAYER], --change-player=[PLAYER] | changes the default player in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -p gnome-mpv`
 -q [QUALITY], --change-quality=[QUALITY] | changes the default quality in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -q "720p,480p,worst"`
@@ -45,7 +45,7 @@ Option | Description | Example
 ![Screenshot](Images/Screenshot-Help.png)
 
 #### wtwitch [STREAMER]
-Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically. 
+Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically. Wtwitch creates the streamlink process as a background process, so you don't have to open a new terminal tab to keep using Bash.
 
 Wtwitch will make sure the specified streamer is actually live before starting Streamlink.
 

@@ -162,7 +162,8 @@ check_command()
 }
 
 #######################################
-# Checks to see which subscribed Twitch streams are online.
+# Checks to see which subscribed Twitch streams are online
+# and prints the user's settings.
 # Globals:
 #   CONFIG_FILE
 #   userSubscriptions
@@ -177,10 +178,6 @@ check_twitch_streams()
 {
   # Check to make sure there is at least 1 subscription
   local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
-
-  if [[ ${subscriptionArrayLength} -eq 0 ]]; then
-    exit_script_on_failure "No subscriptions to check the status of. Use \"wtwitch -s [STREAMER]\" to subscribe to a streamer."
-  fi
 
   printf "\n Streamers online:"
 
@@ -201,6 +198,10 @@ check_twitch_streams()
   if [[ -f "${STREAM_OFFLINE_TEXT_FILE}" ]]; then
     sort "${STREAM_OFFLINE_TEXT_FILE}" 2> /dev/null
   fi
+
+  printf "\n Settings:"
+  printf "\n   Player set to %s" "${userPlayer}"
+  printf "\n   Quality set to %s\n" "${userQuality}"
 }
 
 #######################################
@@ -281,8 +282,10 @@ clean_up()
 #   none
 #######################################
 exit_script_on_failure() {
-  printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
-  printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
+  if [[ $# -gt 0 ]]; then
+    printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
+    printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
+  fi
   
   clean_up
   exit 1
@@ -443,7 +446,7 @@ print_help()
   printf " Options:\n"
 
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
-  print_help_helper "-c, --check" "view which subscribed Twitch streams are online" "bash wtwitch -c"
+  print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
   print_help_helper "-g [GAME], --get-streamers [GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
   print_help_helper "-p [PLAYER], --change-player [PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
   print_help_helper "-q [QUALITY], --change-quality [QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
@@ -491,7 +494,8 @@ stream()
   local -r streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
 
   if [[ "${streamType}" == "null" ]]; then
-    exit_script_on_failure "Streamer $1 is not online."
+    notify-send -i "gnome-twitch" "Wtwitch" "Streamer $1 is not online."
+    exit_script_on_failure
   fi
 
   {
@@ -499,7 +503,8 @@ stream()
     streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}"
   } || {
     # Catch
-    exit_script_on_failure "Streaming $1 failed.\n It's possible that $1's stream does not support quality ${userQuality}. Change default quality with wtwitch -q [QUALITY]."
+    notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
+    exit_script_on_failure
   }
 }
 
@@ -742,4 +747,4 @@ if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
   fi
 fi
 
-stream "$1"
+(stream "$1" > /dev/null) &
