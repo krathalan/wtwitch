@@ -29,7 +29,7 @@
 # This script uses shellcheck: https://www.shellcheck.net/
 
 # This script spawns subshell processes (see check_twitch_streams function)
-trap "kill 0" SIGINT
+trap "clean_up && kill 0" SIGINT
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuo pipefail
