@@ -1,9 +1,17 @@
 # wtwitch
 A terminal-based Twitch app. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
-Wtwitch will tell Streamlink to use GNOME MPV by default. If GNOME MPV is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors GNOME MPV because GNOME MPV supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`.
+Table of contents:
+
+1. [Dependencies](https://gitlab.com/krathalan/wtwitch#dependencies)
+2. [Usage](https://gitlab.com/krathalan/wtwitch#usage)
+2. [FAQ](https://gitlab.com/krathalan/wtwitch#faq)
+
+Wtwitch will tell Streamlink to use GNOME MPV by default. If GNOME MPV is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors GNOME MPV because GNOME MPV supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`. You can pass [any player you'd pass to Streamlink](https://streamlink.github.io/players.html#player-compatibility), and wtwitch will make sure the player you're trying to set as the default player is installed.
 
 Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with `wtwitch -q [QUALITY]`. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is correct.
+
+Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as [Twitch takes 50% of the subscription fee](https://www.polygon.com/2018/6/25/17502380/monteization-youtube-channel-memberships-patreon-twitch-affiliate-partner).
 
 The configuration file is located at `~/.config/wtwitch/config.json`. It should rarely take more than a few kilobytes of space (dependent on how many streamers you're subscribed to), at most.
 
@@ -91,3 +99,26 @@ You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitc
 Wtwitch will make sure the streamer exists before allowing you to subscribe to them.
 
 Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
+
+## FAQ
+### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
+Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it for a number of reasons.
+
+To start, when uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up around ~236.4 MB. Wtwitch and its dependencies (Streamlink and jq), when installed, take up around 12 MB.
+
+> "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
+
+Streamlink Twitch GUI is built on NW.js, which is similar to Electron. I'd rather not use Chrome/Chromium if I don't have to. Given the existence of projects like [ungoogled-chromium](https://github.com/Eloston/ungoogled-chromium#motivation-and-philosophy), it's clear that Chromium automatically makes a multitude of non-user-initiated connections to Google, which I'd rather my computer *not* do. Additionally, [JavaScript sucks](https://whydoesitsuck.com/why-does-javascript-suck/). 
+
+Finally, security seems to be a sore point with NW.js:
+> "Node frames have following extra capabilities than normal frames: ... Bypass all security restrictions, such as sandboxing, same origin policy etc. For example, you can make cross origin XHR to any remote sites, or access to \<iframe\> element whose src points to remote sites in node frames." ([from the NW.js documentation](http://docs.nwjs.io/en/latest/For%20Users/Advanced/Security%20in%20NW.js/))
+
+Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. This design makes wtwitch much more resource efficient than Streamlink Twitch GUI.
+
+Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in: 
+
+- [cURL](https://github.com/curl/curl), written mostly in C
+- [GNU coreutils](https://github.com/coreutils/coreutils), written nearly entirely in C and shell
+- [jq](https://github.com/stedolan/jq), written nearly entirely in C
+
+Wtwitch utilizes [Streamlink](https://github.com/streamlink/streamlink), which is written in Python, but it's only opened when the user actually opens a stream. Streamlink isn't used when viewing top streams, the status of subscribed streams, or while doing anything else in wtwitch.
