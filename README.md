@@ -46,7 +46,7 @@ View the top streamers for a specified game. If the game name has spaces in it, 
 
 ![Screenshot](Images/Screenshot4.png)
 
-#### wtwitch -p
+#### wtwitch -p [PLAYER]
 Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html). Be aware that wtwitch passes the flag `--player-continuous-http` to Streamlink. Quicktime is the only player that doesn't support the HTTP transport mode, so wtwitch is incompatible with Quicktime (unless you modify the source code).
 
 The preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
