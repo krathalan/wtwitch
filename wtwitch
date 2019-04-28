@@ -51,6 +51,7 @@ readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly STREAM_OFFLINE_TEXT_FILE="/tmp/.stream_offline.txt"
 readonly STREAM_ONLINE_TEXT_FILE="/tmp/.stream_online.txt"
+readonly TWITCH_API_URL="https://api.twitch.tv"
 
 # -----------------------------------------
 # ------------- User variables ------------
@@ -69,9 +70,10 @@ userSubscriptions=()
 # Changes the default player in ~/.config/wtwitch/config.json that 
 # gets passed to streamlink.
 # Globals:
-#   none
+#   ORANGE, NC, CHECK_MARK
+#   CONFIG_FILE
 # Arguments:
-#   none
+#   $1: player to set as default
 # Returns:
 #   none
 #######################################
@@ -102,6 +104,17 @@ change_player()
   echo -e "\n ${CHECK_MARK} Successfully changed default player to ${playerName}."
 }
 
+#######################################
+# Changes the default quality in ~/.config/wtwitch/config.json that 
+# gets passed to streamlink.
+# Globals:
+#   CHECK_MARK
+#   CONFIG_FILE
+# Arguments:
+#   $1: quality to set as default
+# Returns:
+#   none
+#######################################
 change_quality()
 {
   # Convert to lowercase
@@ -151,7 +164,10 @@ check_command()
 #######################################
 # Checks to see which subscribed Twitch streams are online.
 # Globals:
-#   none
+#   CONFIG_FILE
+#   userSubscriptions
+#   STREAM_ONLINE_TEXT_FILE
+#   STREAM_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -191,7 +207,11 @@ check_twitch_streams()
 # Used by check_twitch_streams to facilitate multi-process
 # fetching and parsing of Twitch json files.
 # Globals:
-#   none
+#   RED, NC, TURQOISE, ORANGE
+#   TWITCH_API_KEY
+#   TWITCH_API_URL
+#   STREAM_ONLINE_TEXT_FILE
+#   STREAM_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -200,7 +220,7 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
   # Get current info of streamer
-  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/streams/$1")
 
   local streamType
   streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
@@ -235,7 +255,8 @@ check_twitch_streams_helper()
 #######################################
 # Cleans up temporary file(s).
 # Globals:
-#   none
+#   STREAM_ONLINE_TEXT_FILE
+#   STREAM_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -252,6 +273,7 @@ clean_up()
 # Prints passed error message before premature exit.
 # Prints everything to >&2 (STDERR).
 # Globals:
+#   RED, NC
 #   SCRIPT_NAME
 # Arguments:
 #   $1: error message to print
@@ -269,7 +291,9 @@ exit_script_on_failure() {
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
-#   none
+#   TURQOISE, NC, ORANGE
+#   TWITCH_API_KEY
+#   TWITCH_API_URL
 # Arguments:
 #   $1: game to list top streamers of
 # Returns:
@@ -282,12 +306,12 @@ list_streamers_of_game()
 
   # Get game_id
   local twitchJson
-  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games?name=${gameName}")
+  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/games?name=${gameName}")
   
   local -r gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
 
   # Get streamers
-  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/streams?game_id=${gameID}")
+  twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")
 
   local streamerName=""
   streamerName=$(jq -r ".data[0].user_name" <<< "${twitchJson}")
@@ -302,7 +326,8 @@ list_streamers_of_game()
 
   echo -e "\n $1 streamers:"
 
-  local whileCounter=1;
+  local whileCounter=1
+
   while [[ "${streamerName}" != "null" ]]; do
     # Truncate title if necessary
     streamTitleLength=${#streamTitle}
@@ -325,7 +350,9 @@ list_streamers_of_game()
 #######################################
 # Lists the top games on Twitch.
 # Globals:
-#   none
+#   TURQOISE, NC
+#   TWITCH_API_KEY
+#   TWITCH_API_URL
 # Arguments:
 #   none
 # Returns:
@@ -335,7 +362,7 @@ list_top_games()
 {
   echo -e "\n Top games:"
   
-  local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/helix/games/top")
+  local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/games/top")
 
   local gameName=""
   gameName=$(jq -r ".data[0].name" <<< "${twitchJson}")
@@ -354,7 +381,11 @@ list_top_games()
 #######################################
 # Loads user configuration from ~/.config/wtwitch/config.json.
 # Globals:
-#   none
+#   CONFIG_FILE
+#   CONFIG_FILE_DIRECTORY
+#   userPlayer
+#   userQuality
+#   userSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -379,6 +410,7 @@ load_config()
   currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
 
   local whileCounter=1
+
   while [[ "${currentSubscription}" != "null" ]]; do
     userSubscriptions+=("${currentSubscription}")
 
@@ -391,7 +423,8 @@ load_config()
 #######################################
 # Prints information about how to use this script.
 # Globals:
-#   none
+#   GREEN, NC
+#   SCRIPT_NAME
 # Arguments:
 #   none
 # Returns:
@@ -420,9 +453,11 @@ print_help()
 #######################################
 # Formats strings nicely for print_help().
 # Globals:
-#   none
+#   NC, TURQOISE, ORANGE
 # Arguments:
-#   none
+#   $1: option
+#   $2: description of option
+#   $3: example usage of option
 # Returns:
 #   none
 #######################################
@@ -433,11 +468,23 @@ print_help_helper()
   printf "   ${TURQOISE}%s${NC}\n     ${ORANGE}${description}${NC}%s\n     ${ORANGE}${usage}${NC}%s\n" "$1" "$2" "$3"
 }
 
+#######################################
+# Opens a stream with Streamlink.
+# Globals:
+#   TWITCH_API_KEY
+#   TWITCH_API_URL
+#   userPlayer
+#   userQuality
+# Arguments:
+#   $1: name of streamer to watch
+# Returns:
+#   none
+#######################################
 stream()
 {
   # Check to make sure streamer is online 
   # Get current info of streamer
-  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/streams/$1")
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/streams/$1")
 
   local -r streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
 
@@ -457,7 +504,10 @@ stream()
 #######################################
 # Subscribes to a specific streamer.
 # Globals:
-#   none
+#   CHECK_MARK
+#   CONFIG_FILE
+#   TWITCH_API_KEY
+#   TWITCH_API_URL
 # Arguments:
 #   $1: streamer to subscribe to
 # Returns:
@@ -489,7 +539,7 @@ subscribe()
   fi
 
   # Check to make sure streamer exists before subscribing
-  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "https://api.twitch.tv/kraken/channels/${streamerToSubscribeTo}")
+  local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/channels/${streamerToSubscribeTo}")
   local -r streamerStatus=$(jq -r ".status" <<< "${streamerJson}")
 
   if [[ "${streamerStatus}" == "404" ]]; then
@@ -504,7 +554,8 @@ subscribe()
 #######################################
 # Unsubscribes from a specific streamer.
 # Globals:
-#   none
+#   CONFIG_FILE
+#   CHECK_MARK
 # Arguments:
 #   $1: streamer to unsubscribe from
 # Returns:
@@ -522,8 +573,6 @@ unsubscribe()
   local whileCounter=1
 
   while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
-    userSubscriptions+=("${currentSubscription}")
-
     # Refresh data
     currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
     whileCounter=$(( whileCounter + 1 ))
