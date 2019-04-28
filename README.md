@@ -56,5 +56,5 @@ View the top streamed games on Twitch at the moment.
 
 ![Screenshot](Images/Screenshot3.png)
 
-#### wtwitch -s, --subscribe AND wtwitch -u, unsubscribe
+#### wtwitch -s, --subscribe; wtwitch -u, unsubscribe
 You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitch -c`, the status of your subscribed streamers will be printed. 
