@@ -81,11 +81,12 @@ change_player()
   local -r playerName="${1,,}"
 
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
-    exit_script_on_failure "Media player ${playerName} not found."
+    exit_script_on_failure "Media player ${playerName} not installed."
   fi
 
   local -r tempJson=$(jq ".player = \"${playerName}\"" "${CONFIG_FILE}")
   echo "${tempJson}" > "${CONFIG_FILE}"
+  echo -e "\n ${CHECK_MARK} Successfully changed default player to ${playerName}."
 }
 
 #######################################
