@@ -45,12 +45,14 @@ readonly ORANGE=$(tput setaf 3)
 readonly TURQOISE=$(tput setaf 6)
 readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
+readonly CACHE_EXPIRY_TIME="60" # In seconds
+readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/wtwitch"
+readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_offline.txt"
+readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_online.txt"
 readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly SCRIPT_NAME=$(basename "$0")
-readonly STREAM_OFFLINE_TEXT_FILE="/tmp/.stream_offline.txt"
-readonly STREAM_ONLINE_TEXT_FILE="/tmp/.stream_online.txt"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 
 # -----------------------------------------
@@ -167,8 +169,8 @@ check_command()
 # Globals:
 #   CONFIG_FILE
 #   userSubscriptions
-#   STREAM_ONLINE_TEXT_FILE
-#   STREAM_OFFLINE_TEXT_FILE
+#   CACHE_ONLINE_TEXT_FILE
+#   CACHE_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -176,27 +178,50 @@ check_command()
 #######################################
 check_twitch_streams()
 {
-  # Check to make sure there is at least 1 subscription
-  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
-
   printf "\n Streamers online:"
 
-  for stream in "${userSubscriptions[@]}"; do
-    (check_twitch_streams_helper "${stream}") &
-  done
+  # Check cache expiry time
+  local dateDiff="0"
+  local lastSubscriptionUpdate
+  lastSubscriptionUpdate=$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")
 
-  wait
+  if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
+    local -r currentDate=$(date +%s -d "now")
+    lastSubscriptionUpdate=$(date +%s -d "${lastSubscriptionUpdate}")
+    dateDiff=$(( currentDate - lastSubscriptionUpdate ))
+  fi
+
+  if  [[ "${lastSubscriptionUpdate}" == "null" ]] || [[ $dateDiff -gt $CACHE_EXPIRY_TIME ]] \
+  || [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
+    # Remove old cache files
+    clean_up
+
+    # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to;
+    # sometimes all streamers are online or offline
+    touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
+
+    for stream in "${userSubscriptions[@]}"; do
+      (check_twitch_streams_helper "${stream}") &
+    done
+
+    wait
+
+    # Update lastSubscriptionUpdate time
+    local -r subscriptionUpdateTime=$(date -d "now")
+    local -r tempJson=$(jq ".lastSubscriptionUpdate = \"${subscriptionUpdateTime}\"" "${CONFIG_FILE}")
+    printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  fi
   
   printf "\n"
 
-  if [[ -f "${STREAM_ONLINE_TEXT_FILE}" ]]; then
-    sort "${STREAM_ONLINE_TEXT_FILE}" 2> /dev/null
+  if [[ -f "${CACHE_ONLINE_TEXT_FILE}" ]]; then
+    sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
   fi
 
   printf "\n Streamers offline:\n"
 
-  if [[ -f "${STREAM_OFFLINE_TEXT_FILE}" ]]; then
-    sort "${STREAM_OFFLINE_TEXT_FILE}" 2> /dev/null
+  if [[ -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
+    sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
   fi
 
   printf "\n Settings:"
@@ -211,8 +236,8 @@ check_twitch_streams()
 #   RED, NC, TURQOISE, ORANGE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
-#   STREAM_ONLINE_TEXT_FILE
-#   STREAM_OFFLINE_TEXT_FILE
+#   CACHE_ONLINE_TEXT_FILE
+#   CACHE_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -247,17 +272,17 @@ check_twitch_streams_helper()
       streamType=", ${RED}${streamType}${NC}"
     fi
 
-    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${playingGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${STREAM_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${playingGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
-    printf "   %s%s%s\n" "${TURQOISE}" "$1" "${NC}" >> "${STREAM_OFFLINE_TEXT_FILE}"
+    printf "   %s%s%s\n" "${TURQOISE}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
 }
 
 #######################################
 # Cleans up temporary file(s).
 # Globals:
-#   STREAM_ONLINE_TEXT_FILE
-#   STREAM_OFFLINE_TEXT_FILE
+#   CACHE_ONLINE_TEXT_FILE
+#   CACHE_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -266,8 +291,8 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f "${STREAM_ONLINE_TEXT_FILE}"
-  rm -f "${STREAM_OFFLINE_TEXT_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}"
+  rm -f "${CACHE_OFFLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -402,6 +427,11 @@ load_config()
       mkdir "${CONFIG_FILE_DIRECTORY}"
     fi
     printf "{\"player\": \"gnome-mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+  fi
+
+  # Create cache folder if it doesn't exist
+  if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
+    mkdir "${CACHE_FILE_DIRECTORY}"
   fi
 
   # Player
@@ -554,8 +584,15 @@ subscribe()
     exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
   fi
 
-  local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  # Add subscription
+  local tempJson
+  tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
   printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+
+  # Invalidate cache
+  tempJson=$(jq ".lastSubscriptionUpdate = \"null\"" "${CONFIG_FILE}")
+  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+
   printf "\n %s Successfully subscribed to %s.\n" "${CHECK_MARK}" "${streamerToSubscribeTo}"
 }
 
@@ -595,8 +632,15 @@ unsubscribe()
     exit_script_on_failure "You weren't subscribed to ${streamerToUnsubscribeFrom} in the first place."
   fi
 
-  local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
+  # Remove subscription
+  local tempJson
+  tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
   printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+
+  # Invalidate cache
+  tempJson=$(jq ".lastSubscriptionUpdate = \"null\"" "${CONFIG_FILE}")
+  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+
   printf "\n %s Successfully unsubscribed from %s.\n" "${CHECK_MARK}" "${streamerToUnsubscribeFrom}"
 }
 
@@ -624,7 +668,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     -c|--check)
       check_twitch_streams
-      clean_up
       exit 0
       break
       ;;
