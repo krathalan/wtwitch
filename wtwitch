@@ -448,12 +448,12 @@ print_help()
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
   print_help_helper "(no option) [STREAMER]" "watch the specified streamer" "bash wtwitch overwatchleague"
   print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
-  print_help_helper "-g [GAME], --get-streamers [GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
-  print_help_helper "-p [PLAYER], --change-player [PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
-  print_help_helper "-q [QUALITY], --change-quality [QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
-  print_help_helper "-s [STREAMER], --subscribe [STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
+  print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
+  print_help_helper "-p [PLAYER], --change-player=[PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
+  print_help_helper "-q [QUALITY], --change-quality=[QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
+  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
   print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
-  print_help_helper "-u [STREAMER], --unsubscribe [STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
+  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
 }
 
 #######################################
@@ -615,7 +615,7 @@ fi
 
 # Parse flags. From:
 # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
-while test $# -gt 0; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       print_help
@@ -630,7 +630,7 @@ while test $# -gt 0; do
       ;;
     -g)
       shift
-      if test $# -gt 0; then
+      if [[ $# -gt 0 ]]; then
         list_streamers_of_game "$1"
         exit 0
       else
@@ -639,8 +639,10 @@ while test $# -gt 0; do
       break
       ;;
     --get-streamers*)
-      shift
-      if test $# -gt 0; then
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]]; then
         gameToCheck=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         list_streamers_of_game "${gameToCheck}"
       else
@@ -651,7 +653,7 @@ while test $# -gt 0; do
       ;;
     -p)
       shift
-      if test $# -gt 0; then
+      if [[ $# -gt 0 ]]; then
         change_player "$1"
         exit 0
       else
@@ -660,8 +662,10 @@ while test $# -gt 0; do
       break
       ;;
     --change-player*)
-      shift
-      if test $# -gt 0; then
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]]; then
         player=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         change_player "${player}"
       else
@@ -672,7 +676,7 @@ while test $# -gt 0; do
       ;;
     -q)
       shift
-      if test $# -gt 0; then
+      if [[ $# -gt 0 ]]; then
         change_quality "$1"
         exit 0
       else
@@ -681,8 +685,10 @@ while test $# -gt 0; do
       break
       ;;
     --change-quality*)
-      shift
-      if test $# -gt 0; then
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]]; then
         quality=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         change_quality "${quality}"
       else
@@ -693,7 +699,7 @@ while test $# -gt 0; do
       ;;
     -s)
       shift
-      if test $# -gt 0; then
+      if [[ $# -gt 0 ]]; then
         subscribe "$1"
         exit 0
       else
@@ -702,8 +708,10 @@ while test $# -gt 0; do
       break
       ;;
     --subscribe*)
-      shift
-      if test $# -gt 0; then
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]]; then
         streamerToSubscribeTo=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         subscribe "${streamerToSubscribeTo}"
       else
@@ -719,7 +727,7 @@ while test $# -gt 0; do
       ;;
     -u)
       shift
-      if test $# -gt 0; then
+      if [[ $# -gt 0 ]]; then
         unsubscribe "$1"
         exit 0
       else
@@ -728,8 +736,10 @@ while test $# -gt 0; do
       break
       ;;
     --unsubscribe*)
-      shift
-      if test $# -gt 0; then
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]]; then
         streamerToUnsubscribeFrom=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
         unsubscribe "${streamerToUnsubscribeFrom}"
       else

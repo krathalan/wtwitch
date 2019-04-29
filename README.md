@@ -32,12 +32,12 @@ Option | Description | Example
 -h, --help | show brief help | `bash wtwitch -h`
 (no option) [STREAMER] | watch the specified streamer | `bash wtwitch overwatchleague`
 -c, --check | view which subscribed Twitch streams are online and your settings | `bash wtwitch -c`
--g [GAME], --get-streamers [GAME] | view the top streamers for a specified game | `bash wtwitch -g "world of warcraft"`
--p [PLAYER], --change-player [PLAYER] | changes the default player in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -p gnome-mpv`
--q [QUALITY], --change-quality [QUALITY] | changes the default quality in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -q "720p,480p,worst"`
--s [STREAMER], --subscribe [STREAMER] | subscribes to a specific streamer | `bash wtwitch -s overwatchleague`
+-g [GAME], --get-streamers=[GAME] | view the top streamers for a specified game | `bash wtwitch -g "world of warcraft"`
+-p [PLAYER], --change-player=[PLAYER] | changes the default player in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -p gnome-mpv`
+-q [QUALITY], --change-quality=[QUALITY] | changes the default quality in `~/.config/wtwitch/config.json` that gets passed to Streamlink | `bash wtwitch -q "720p,480p,worst"`
+-s [STREAMER], --subscribe=[STREAMER] | subscribes to a specific streamer | `bash wtwitch -s overwatchleague`
 -t, --top-games | lists the top games on twitch | `bash wtwitch -t`
--u [STREAMER], --unsubscribe [STREAMER] | unsubscribes from a specified streamer | `bash wtwitch -u overwatchleague`
+-u [STREAMER], --unsubscribe=[STREAMER] | unsubscribes from a specified streamer | `bash wtwitch -u overwatchleague`
 
 ### Additional usage information with screenshots
 #### wtwtich -h, --help
@@ -58,19 +58,19 @@ Your subscriptions are stored in the configuration file at `~/.config/wtwitch/co
 
 ![Screenshot](Images/Screenshot-Check.png)
 
-#### wtwitch -g [GAME], --get-streamers [GAME]
+#### wtwitch -g [GAME], --get-streamers=[GAME]
 View the top streamers for a specified game. If the game name has spaces in it, like "World of Warcraft", you'll have to quote the game name or put a backslash before every space. For example, `wtwitch -g world\ of\ warcraft` or `wtwitch -g "world of warcraft"`. The game name is case insensitive.
 
 ![Screenshot](Images/Screenshot-Get-Streamers.png)
 
-#### wtwitch -p [PLAYER], --change-player [PLAYER]
+#### wtwitch -p [PLAYER], --change-player=[PLAYER]
 Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html). Be aware that wtwitch passes the flag `--player-continuous-http` to Streamlink. Quicktime is the only player that doesn't support the HTTP transport mode, so wtwitch is incompatible with Quicktime (unless you modify the source code).
 
 Wtwitch will make sure the player you're trying to set as the default player is installed.
 
 The player preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
 
-#### wtwitch -q [QUALITY], --change-quality [QUALITY]
+#### wtwitch -q [QUALITY], --change-quality=[QUALITY]
 Changes the quality that gets passed to Streamlink. You can specify [any quality that Streamlink supports](https://streamlink.github.io/cli.html#cmdoption-arg-stream), including fallback qualities, and wtwitch will make sure your input is correct.
 
 Full list of acceptable individual qualities: worst, 160p, 360p, 480p, 720p, 720p60, 1080p60, best.
@@ -93,7 +93,7 @@ View the top streamed games on Twitch at the moment.
 
 ![Screenshot](Images/Screenshot-Top-Games.png)
 
-#### wtwitch -s [STREAMER], --subscribe [STREAMER]; wtwitch -u [STREAMER], unsubscribe [STREAMER]
+#### wtwitch -s [STREAMER], --subscribe=[STREAMER]; wtwitch -u [STREAMER], unsubscribe=[STREAMER]
 You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitch -c`, the status of your subscribed streamers will be printed. 
 
 Wtwitch will make sure the streamer exists before allowing you to subscribe to them.
