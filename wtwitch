@@ -157,7 +157,7 @@ change_quality()
 check_command()
 {
   if [[ ! -x "$(command -v "$1")" ]]; then
-        exit_script_on_failure "Package $1 not installed. Install with apt or dnf.\n More information: https://gitlab.com/krathalan/wtwitch#dependencies"
+        exit_script_on_failure "Package $1 not installed. More information: https://gitlab.com/krathalan/wtwitch#dependencies"
   fi
 }
 
@@ -759,7 +759,7 @@ if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     printf "\n GNOME MPV not found. Using VLC instead...\n"
     userPlayer="vlc"
   else
-    exit_script_on_failure "Media player ${userPlayer} not found. Change default media player with \"wtwitch -p [PLAYER]\"."
+    exit_script_on_failure "Media player ${userPlayer} not found."
   fi
 fi
 
