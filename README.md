@@ -24,6 +24,8 @@ You must have [Streamlink](https://streamlink.github.io/) and [jq](https://stedo
 
 [jq is licensed under the MIT license](https://github.com/stedolan/jq/blob/master/COPYING) [(which is technically the Expat license)](https://en.wikipedia.org/wiki/MIT_License#Variants), which is [FSF approved](https://www.gnu.org/licenses/license-list.en.html#Expat).
 
+You'll also need a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility).
+
 ## Usage
 `bash wtwitch [OPTION] [ARG]`
 
