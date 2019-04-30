@@ -661,7 +661,6 @@ write_setting()
 # --------------- Script ---------------
 # --------------------------------------
 
-check_command "streamlink"
 check_command "jq"
 load_config
 
@@ -819,4 +818,5 @@ if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
   fi
 fi
 
+check_command "streamlink"
 (stream "$1" > /dev/null) &
