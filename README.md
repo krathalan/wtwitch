@@ -52,7 +52,9 @@ Wtwitch will make sure the specified streamer is actually live before starting S
 ![Screenshot](Images/Screenshot-No-Option.jpg)
 
 #### wtwitch -c, --check
-View the status the streamers you're subscribed to and your settings. To subscribe to a streamer, use `wtwitch -s [STREAMER]`. To unsubscribe from a streamer, use `wtwitch -u [STREAMER]`.
+View the status of the streamers you're subscribed to and your settings. To subscribe to a streamer, use `wtwitch -s [STREAMER]`. To unsubscribe from a streamer, use `wtwitch -u [STREAMER]`.
+
+Wtwitch caches the results of the check operation in `~/.cache/wtwitch/` to reduce Twitch API calls. The cache expires every 60 seconds. If you subscribe to or unsubscribe from a streamer, the cache becomes invalidated. The cache is only marked as updated if the full check operation completed successfully, and the cache files get deleted if wtwitch exits with an error.
 
 Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
 
