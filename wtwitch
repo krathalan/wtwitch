@@ -462,8 +462,15 @@ load_config()
 #######################################
 print_help()
 {
+  local copyrightDate
+  copyrightDate=$(date +%Y -d "now")
+
+  if [[ ! ${copyrightDate} -eq 2019 ]]; then
+    copyrightDate="2019-${copyrightDate}"
+  fi
+
   printf "\n %s%s%s - browse and watch Twitch streams without being tracked.\n" "${GREEN}" "${SCRIPT_NAME}" "${NC}"
-  printf " Copyright (C) 2019 krathalan\n"
+  printf " Copyright (C) %s krathalan\n" "${copyrightDate}"
   printf " This is free software: you are free to change and redistribute it.\n"
   printf " There is NO WARRANTY, to the extent permitted by law.\n\n"
   printf " Homepage: https://gitlab.com/krathalan/wtwitch\n\n"
