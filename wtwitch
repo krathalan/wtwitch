@@ -661,6 +661,7 @@ write_setting()
 # --------------- Script ---------------
 # --------------------------------------
 
+check_command "curl"
 check_command "jq"
 load_config
 
