@@ -18,13 +18,22 @@ The configuration file is located at `~/.config/wtwitch/config.json`. It should 
 You can make wtwitch executable with the command `chmod a+x wtwitch`. Additionally, you can [add the script to your $PATH](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path). Using both, you can use the command `wtwitch` in any directory in your terminal, instead of having to type `bash wtwitch [OPTION] [ARG]` in the directory the script is in every time.
 
 ## Dependencies
-You must have [Streamlink](https://streamlink.github.io/) and [jq](https://stedolan.github.io/jq/) installed. You can install both on Fedora with the command `sudo dnf install -y python3-streamlink jq`.
+You must have [Streamlink](https://streamlink.github.io/), [jq](https://stedolan.github.io/jq/), and [cURL](https://curl.haxx.se/) installed. cURL comes with most Linux installations, but some might be missing it.
 
-[Streamlink is licensed under the 2-clause BSD license](https://github.com/streamlink/streamlink/blob/master/LICENSE), which is [FSF approved](https://www.gnu.org/licenses/license-list.en.html#FreeBSD). 
-
-[jq is licensed under the MIT license](https://github.com/stedolan/jq/blob/master/COPYING) [(which is technically the Expat license)](https://en.wikipedia.org/wiki/MIT_License#Variants), which is [FSF approved](https://www.gnu.org/licenses/license-list.en.html#Expat).
+You can install all dependencies with the command...
+- Ubuntu: `sudo apt update && sudo apt install python3-streamlink jq curl`
+- Fedora: `sudo dnf install -y python3-streamlink jq curl`
+- Void: `sudo xbps-install -S streamlink jq curl`
 
 You'll also need a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility).
+
+### Licenses
+[Streamlink is licensed under the 2-clause BSD license](https://github.com/streamlink/streamlink/blob/master/LICENSE), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#FreeBSD). 
+
+[jq is licensed under the MIT license](https://github.com/stedolan/jq/blob/master/COPYING) [(which is technically the Expat license)](https://en.wikipedia.org/wiki/MIT_License#Variants), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#Expat).
+
+[cURL uses a slightly modified version of the MIT license](https://github.com/curl/curl/blob/master/COPYING). cURL's license is incompatible with the GPL because it prevents the names of copyright holders from being "used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization of the copyright holder." However, I believe the FSF would still classify this license as a free software license, as the Apache License (version 1) contains a similar advertising clause and is still categorized as a free software license. Since wtwitch is using cURL externally instead of borrowing some of cURL's code, wtwitch can still be licensed under the GPLv3.
 
 ## Usage
 `bash wtwitch [OPTION] [ARG]`
