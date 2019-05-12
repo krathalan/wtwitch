@@ -7,7 +7,7 @@ Table of contents:
 2. [Usage](https://gitlab.com/krathalan/wtwitch#usage)
 2. [FAQ](https://gitlab.com/krathalan/wtwitch#faq)
 
-Wtwitch will tell Streamlink to use GNOME MPV by default. If GNOME MPV is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors GNOME MPV because GNOME MPV supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`. You can pass [any player you'd pass to Streamlink](https://streamlink.github.io/players.html#player-compatibility), and wtwitch will make sure the player you're trying to set as the default player is installed.
+Wtwitch will tell Streamlink to use mpv by default. If mpv is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors mpv because mpv supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). However, wtwitch will use VLC if you have VLC installed and *don't* have mpv installed. You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`. You can pass [any player you'd pass to Streamlink](https://streamlink.github.io/players.html#player-compatibility), and wtwitch will make sure the player you're trying to set as the default player is installed.
 
 Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with `wtwitch -q [QUALITY]`. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is correct.
 

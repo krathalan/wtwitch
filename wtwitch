@@ -421,7 +421,7 @@ load_config()
     if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
       mkdir "${CONFIG_FILE_DIRECTORY}"
     fi
-    printf "{\"player\": \"gnome-mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
   fi
 
   # Create cache folder if it doesn't exist
@@ -811,8 +811,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
-  if [[ "${userPlayer}" == "gnome-mpv" ]] && [[ -x "$(command -v "vlc")" ]]; then
-    printf "\n GNOME MPV not found. Using VLC instead...\n"
+  if [[ -x "$(command -v "vlc")" ]]; then
+    printf "\n ${userPlayer} not found. Using VLC instead...\n"
     userPlayer="vlc"
   else
     exit_script_on_failure "Media player ${userPlayer} not found."
