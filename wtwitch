@@ -812,7 +812,7 @@ done
 
 if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
   if [[ -x "$(command -v "vlc")" ]]; then
-    printf "\n ${userPlayer} not found. Using VLC instead...\n"
+    printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
     userPlayer="vlc"
   else
     exit_script_on_failure "Media player ${userPlayer} not found."
