@@ -536,7 +536,7 @@ stream()
   {
     {
       # Try
-      streamlink --player-continuous-http -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (${userQuality})" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+      streamlink --player-continuous-http -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
     } || {
       # Catch
       notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
