@@ -531,14 +531,30 @@ stream()
     exit_script_on_failure
   fi
 
+  # Add title and enable hardware decoding if using mpv
+  if [[ "${userPlayer}" == "mpv" ]]; then
   {
-    # Try
-    streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-  } || {
-    # Catch
-    notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
-    exit_script_on_failure
+    {
+      # Try
+      streamlink --player-continuous-http -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (${userQuality})" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+    } || {
+      # Catch
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
+      exit_script_on_failure
+    }
   }
+  else
+  {
+    {
+      # Try
+      streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+    } || {
+      # Catch
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
+      exit_script_on_failure
+    }
+  }
+  fi
 }
 
 #######################################
