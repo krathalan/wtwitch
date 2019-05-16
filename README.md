@@ -3,11 +3,19 @@ A terminal-based Twitch app. Watch and browse Twitch without proprietary JavaScr
 
 Table of contents:
 
-1. [Dependencies](https://gitlab.com/krathalan/wtwitch#dependencies)
-2. [Usage](https://gitlab.com/krathalan/wtwitch#usage)
-2. [FAQ](https://gitlab.com/krathalan/wtwitch#faq)
+1. [Intro](https://gitlab.com/krathalan/wtwitch#intro)
+2. [Default behavior](https://gitlab.com/krathalan/wtwitch#default-behavior)
+3. [Dependencies](https://gitlab.com/krathalan/wtwitch#dependencies)
+4. [Usage](https://gitlab.com/krathalan/wtwitch#usage)
+5. [FAQ](https://gitlab.com/krathalan/wtwitch#faq)
 
-Wtwitch will tell Streamlink to use mpv by default. If mpv is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors mpv because mpv supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). However, wtwitch will use VLC if you have VLC installed and *don't* have mpv installed. You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`. You can pass [any player you'd pass to Streamlink](https://streamlink.github.io/players.html#player-compatibility), and wtwitch will make sure the player you're trying to set as the default player is installed.
+## Intro
+Wtwitch is a terminal-based app that uses the Twitch API and Streamlink to provide Twitch subscription and playback functionality without signing up for a Twitch account and without running Twitch's proprietary JavaScript.
+
+## Default behavior
+Wtwitch will tell Streamlink to use mpv by default. If mpv is not installed, wtwitch will tell Streamlink to use VLC -- the default Streamlink player. Wtwitch favors mpv because mpv supports [Wayland](https://wayland.freedesktop.org/), whereas VLC does not (yet). mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60fps)". 
+
+However, wtwitch will use VLC if you have VLC installed and *don't* have mpv installed. You can set which video player you'd like wtwitch to pass to Streamlink with `wtwitch -p [PLAYER]`. You can pass [any player you'd pass to Streamlink](https://streamlink.github.io/players.html#player-compatibility), and wtwitch will make sure the player you're trying to set as the default player is installed.
 
 Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with `wtwitch -q [QUALITY]`. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is correct.
 
@@ -18,14 +26,13 @@ The configuration file is located at `~/.config/wtwitch/config.json`. It should 
 You can make wtwitch executable with the command `chmod a+x wtwitch`. Additionally, you can [add the script to your $PATH](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path). Using both, you can use the command `wtwitch` in any directory in your terminal, instead of having to type `bash wtwitch [OPTION] [ARG]` in the directory the script is in every time.
 
 ## Dependencies
-You must have [Streamlink](https://streamlink.github.io/), [jq](https://stedolan.github.io/jq/), and [cURL](https://curl.haxx.se/) installed. cURL comes with most Linux installations, but some might be missing it.
+You must have [Streamlink](https://streamlink.github.io/), [jq](https://stedolan.github.io/jq/), [cURL](https://curl.haxx.se/), and a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility) installed (preferably [mpv](https://mpv.io/)). cURL comes with most Linux installations, but some might be missing it.
 
 You can install all dependencies with the command...
 - Ubuntu: `sudo apt update && sudo apt install python3-streamlink jq curl`
 - Fedora: `sudo dnf install -y python3-streamlink jq curl`
+- Arch: `sudo pacman -S streamlink jq curl`
 - Void: `sudo xbps-install -S streamlink jq curl`
-
-You'll also need a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility).
 
 ### Licenses
 [Streamlink is licensed under the 2-clause BSD license](https://github.com/streamlink/streamlink/blob/master/LICENSE), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#FreeBSD). 
@@ -34,6 +41,8 @@ You'll also need a [video player compatible with Streamlink](https://streamlink.
 
 [cURL uses a slightly modified version of the MIT license](https://github.com/curl/curl/blob/master/COPYING). cURL's license is incompatible with the GPL because it prevents the names of copyright holders from being "used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization of the copyright holder." However, I believe the FSF would still classify this license as a free software license, as the Apache License (version 1) contains a similar advertising clause and is still categorized as a free software license. Since wtwitch is using cURL externally instead of borrowing some of cURL's code, wtwitch can still be licensed under the GPLv3.
+
+[mpv is licensed under the GPLv2 and LGPLv2.1 licenses](https://github.com/mpv-player/mpv/blob/master/Copyright). Both are [FSF-approved](https://www.gnu.org/licenses/license-list.html#GPLv2).
 
 ## Usage
 `bash wtwitch [OPTION] [ARG]`
