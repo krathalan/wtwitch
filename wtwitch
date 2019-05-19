@@ -19,9 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# ------------------
-# --- Guidelines ---
-# ------------------
+# -----------------------------------------
+# -------------- Guidelines ---------------
+# -----------------------------------------
 
 # This script follows the Google Shell Style Guide: 
 # https://google.github.io/styleguide/shell.xml
@@ -673,9 +673,9 @@ write_setting()
   printf "%s" "${tempJson}" > "${CONFIG_FILE}"
 }
 
-# --------------------------------------
-# --------------- Script ---------------
-# --------------------------------------
+# -----------------------------------------
+# ---------------- Script -----------------
+# -----------------------------------------
 
 check_command "curl"
 check_command "jq"
