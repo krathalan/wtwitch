@@ -45,21 +45,27 @@ readonly ORANGE=$(tput setaf 3)
 readonly TURQOISE=$(tput setaf 6)
 readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
-readonly CACHE_EXPIRY_TIME="60" # In seconds
-readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/wtwitch"
-readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_offline.txt"
-readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_online.txt"
+# Other
 readonly CHECK_MARK="${GREEN}✔${NC}"
-readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/wtwitch"
-readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
+readonly PROJECT_URL="https://gitlab.com/krathalan/wtwitch"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly TWITCH_API_URL="https://api.twitch.tv"
+
+# Cache
+readonly CACHE_EXPIRY_TIME="60" # In seconds
+readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
+readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_offline.txt"
+readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/.stream_online.txt"
+
+# Config
+readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
+readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 
 # -----------------------------------------
 # ------------- User variables ------------
 # -----------------------------------------
 
-# Values are loaded from ~/.config/wtwitch/config.json
+# Values are loaded from $CONFIG_FILE (usually ~/.config/wtwitch/config.json)
 userPlayer=""
 userQuality=""
 userSubscriptions=()
@@ -69,10 +75,10 @@ userSubscriptions=()
 # -----------------------------------------
 
 #######################################
-# Changes the default player in ~/.config/wtwitch/config.json that 
-# gets passed to streamlink.
+# Changes the default player in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
-#   ORANGE, NC, CHECK_MARK
+#   Colors: ORANGE, NC
+#   CHECK_MARK
 #   CONFIG_FILE
 # Arguments:
 #   $1: player to set as default
@@ -81,11 +87,13 @@ userSubscriptions=()
 #######################################
 change_player()
 {
-  # Convert to lowercase
-  local -r playerName="${1,,}"
   local -r workingPlayers=("gnome-mpv" "mpv" "mplayer" "vlc")
   local passedCheckMarker="false"
 
+  # Convert user input to lowercase
+  local -r playerName="${1,,}"
+
+  # Check to make sure user has input player actually installed
   check_command "${playerName}"
 
   # Check against known working players
@@ -104,11 +112,11 @@ change_player()
 }
 
 #######################################
-# Changes the default quality in ~/.config/wtwitch/config.json that 
-# gets passed to streamlink.
+# Changes the default quality in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
 #   CHECK_MARK
 #   CONFIG_FILE
+#   PROJECT_URL
 # Arguments:
 #   $1: quality to set as default
 # Returns:
@@ -116,12 +124,13 @@ change_player()
 #######################################
 change_quality()
 {
-  # Convert to lowercase
-  local -r specifiedQuality="${1,,}"
   local -r acceptableQualities=("worst" "160p" "360p" "480p" "720p" "720p60" "1080p60" "best")
   local passedCheckMarkerArray=()
 
-  # User may try and enter fallback qualities; we should account for this
+  # Convert user input to lowercase
+  local -r specifiedQuality="${1,,}"
+
+  # User may try and enter fallback qualities; code should account for this
   IFS=',' read -r -a qualityArray <<< "$specifiedQuality"
 
   # For each quality the user has specified
@@ -139,14 +148,14 @@ change_quality()
     write_setting ".quality" "${specifiedQuality}"
     printf "\n %s Successfully changed default quality to %s.\n" "${CHECK_MARK}" "${specifiedQuality}"
   else
-    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. See https://gitlab.com/krathalan/wtwitch#wtwitch-q-quality-change-qualityquality for more information."
+    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. See ${PROJECT_URL}/#wtwitch-q-quality-change-qualityquality for more information."
   fi
 }
 
 #######################################
-# Checks to see if a specified command is available.
+# Checks to see if a specified command is available and exits the script if the command is not available.
 # Globals:
-#   none
+#   PROJECT_URL
 # Arguments:
 #   $1: command to test
 # Returns:
@@ -155,18 +164,19 @@ change_quality()
 check_command()
 {
   if [[ ! -x "$(command -v "$1")" ]]; then
-        exit_script_on_failure "Package $1 not installed. More information: https://gitlab.com/krathalan/wtwitch#dependencies"
+        exit_script_on_failure "Package $1 not installed. More information: ${PROJECT_URL}/#dependencies"
   fi
 }
 
 #######################################
-# Checks to see which subscribed Twitch streams are online
-# and prints the user's settings.
+# Checks to see which subscribed Twitch streams are online and prints the user's settings.
 # Globals:
-#   CONFIG_FILE
-#   userSubscriptions
-#   CACHE_ONLINE_TEXT_FILE
 #   CACHE_OFFLINE_TEXT_FILE
+#   CACHE_ONLINE_TEXT_FILE
+#   CONFIG_FILE
+#   userPlayer
+#   userQuality
+#   userSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -187,13 +197,15 @@ check_twitch_streams()
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
 
+  # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
+  # if the time between now and the last subscription update is greater than the cache expiry time, OR
+  # if either of the cache files do NOT exist yet
   if  [[ "${lastSubscriptionUpdate}" == "null" ]] || [[ $dateDiff -gt $CACHE_EXPIRY_TIME ]] \
   || [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
     # Remove old cache files
     clean_up
 
-    # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to;
-    # sometimes all streamers are online or offline
+    # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
     touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
 
     for stream in "${userSubscriptions[@]}"; do
@@ -203,8 +215,7 @@ check_twitch_streams()
     wait
 
     # Update lastSubscriptionUpdate time
-    local -r subscriptionUpdateTime=$(date -d "now")
-    write_setting ".lastSubscriptionUpdate" "${subscriptionUpdateTime}"
+    write_setting ".lastSubscriptionUpdate" "$(date -d "now")"
   fi
   
   printf "\n"
@@ -225,14 +236,13 @@ check_twitch_streams()
 }
 
 #######################################
-# Used by check_twitch_streams to facilitate multi-process
-# fetching and parsing of Twitch json files.
+# Used by check_twitch_streams to facilitate multi-process fetching and parsing of json files.
 # Globals:
-#   RED, NC, TURQOISE, ORANGE
+#   Colors: RED, NC, TURQOISE, ORANGE
+#   CACHE_OFFLINE_TEXT_FILE
+#   CACHE_ONLINE_TEXT_FILE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
-#   CACHE_ONLINE_TEXT_FILE
-#   CACHE_OFFLINE_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -248,26 +258,23 @@ check_twitch_streams_helper()
 
   # Check if stream is online 
   if [[ "${streamType}" != "null" ]]; then
-    local -r playingGame=$(jq -r ".stream.game" <<< "${streamerJson}")
-
     local streamName
     streamName=$(jq -r ".stream.channel.status" <<< "${streamerJson}")
 
     # Truncate stream name if necessary; some streamers have excessively long stream titles
-    local streamNameLength=${#streamName}
-
-    if [[ "${streamNameLength}" -gt 50 ]]; then
+    if [[ ${#streamName} -gt 50 ]]; then
       streamName=$(printf "%s" "${streamName}" | cut -c 1-50)
       streamName="${streamName}…"
     fi
 
+    # Give a warning if the stream isn't live (e.g. it's a rerun)
     if [[ "${streamType}" == "live" ]]; then
       streamType=""
     else
       streamType=", ${RED}${streamType}${NC}"
     fi
 
-    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${playingGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "$(jq -r ".stream.game" <<< "${streamerJson}")" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
     printf "   %s%s%s\n" "${TURQOISE}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
@@ -291,10 +298,9 @@ clean_up()
 }
 
 #######################################
-# Prints passed error message before premature exit.
-# Prints everything to >&2 (STDERR).
+# Prints passed error message before premature exit. Prints everything to >&2 (STDERR).
 # Globals:
-#   RED, NC
+#   Colors: RED, NC
 #   SCRIPT_NAME
 # Arguments:
 #   $1: error message to print
@@ -314,7 +320,7 @@ exit_script_on_failure() {
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
-#   TURQOISE, NC, ORANGE
+#   Colors: TURQOISE, NC, ORANGE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
@@ -324,7 +330,7 @@ exit_script_on_failure() {
 #######################################
 list_streamers_of_game()
 {
-  # Replace spaces in game name with %20
+  # Replace spaces in game name with %20 for URL
   local -r gameName=${1// /%20}
 
   # Get game_id
@@ -342,30 +348,22 @@ list_streamers_of_game()
   local streamTitle=""
   streamTitle=$(jq -r ".data[0].title" <<< "${twitchJson}")
 
-  local viewers=""
-  viewers=$(jq -r ".data[0].viewer_count" <<< "${twitchJson}")
-
-  local streamTitleLength
-
   printf "\n %s streamers:\n" "$1"
 
   local whileCounter=1
 
   while [[ "${streamerName}" != "null" ]]; do
     # Truncate title if necessary
-    streamTitleLength=${#streamTitle}
-
-    if [[ "${streamTitleLength}" -gt 50 ]]; then
+    if [[ ${#streamTitle} -gt 50 ]]; then
       streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-50)
       streamTitle="${streamTitle}…"
     fi
 
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "${viewers}" "${NC}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[0].viewer_count" <<< "${twitchJson}")" "${NC}"
 
     # Refresh data
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
     streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
-    viewers=$(jq -r ".data[${whileCounter}].viewer_count" <<< "${twitchJson}")
     whileCounter=$(( whileCounter + 1 ))
   done
 }
@@ -373,7 +371,7 @@ list_streamers_of_game()
 #######################################
 # Lists the top games on Twitch.
 # Globals:
-#   TURQOISE, NC
+#   Colors: TURQOISE, NC
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
@@ -402,7 +400,7 @@ list_top_games()
 }
 
 #######################################
-# Loads user configuration from ~/.config/wtwitch/config.json.
+# Loads user configuration from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
 #   CONFIG_FILE_DIRECTORY
@@ -453,7 +451,8 @@ load_config()
 #######################################
 # Prints information about how to use this script.
 # Globals:
-#   GREEN, NC
+#   Colors: GREEN, NC
+#   PROJECT_URL
 #   SCRIPT_NAME
 # Arguments:
 #   none
@@ -473,7 +472,7 @@ print_help()
   printf " Copyright (C) %s krathalan\n" "${copyrightDate}"
   printf " This is free software: you are free to change and redistribute it.\n"
   printf " There is NO WARRANTY, to the extent permitted by law.\n\n"
-  printf " Homepage: https://gitlab.com/krathalan/wtwitch\n\n"
+  printf " Homepage: %s\n\n" "${PROJECT_URL}"
   printf " Usage: bash %s [OPTION] [ARG]\n\n" "${SCRIPT_NAME}"
   printf " Options:\n"
 
@@ -491,7 +490,7 @@ print_help()
 #######################################
 # Formats strings nicely for print_help().
 # Globals:
-#   NC, TURQOISE, ORANGE
+#   Colors: NC, TURQOISE, ORANGE
 # Arguments:
 #   $1: option
 #   $2: description of option
@@ -524,14 +523,12 @@ stream()
   # Get current info of streamer
   local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/streams/$1")
 
-  local -r streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
-
-  if [[ "${streamType}" == "null" ]]; then
+  if [[ "$(jq -r ".stream.stream_type" <<< "${streamerJson}")" == "null" ]]; then
     notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Streamer $1 is not online."
     exit_script_on_failure
   fi
 
-  # Add title and enable hardware decoding if using mpv
+  # Add cosmetic window title and enable hardware decoding if using mpv
   if [[ "${userPlayer}" == "mpv" ]]; then
   {
     {
@@ -539,7 +536,7 @@ stream()
       streamlink --player-continuous-http -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
     } || {
       # Catch
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
       exit_script_on_failure
     }
   }
@@ -550,7 +547,7 @@ stream()
       streamlink --player-continuous-http -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
     } || {
       # Catch
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}."
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
       exit_script_on_failure
     }
   }
@@ -575,9 +572,7 @@ subscribe()
   local -r streamerToSubscribeTo="${1,,}"
 
   # Check to make sure user isn't already subscribed
-  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
-
-  if [[ ${subscriptionArrayLength} -gt 0 ]]; then
+  if [[ $(jq ".subscriptions | length" "${CONFIG_FILE}") -gt 0 ]]; then
     local currentSubscription
     currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
 
@@ -596,13 +591,12 @@ subscribe()
 
   # Check to make sure streamer exists before subscribing
   local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/channels/${streamerToSubscribeTo}")
-  local -r streamerStatus=$(jq -r ".status" <<< "${streamerJson}")
 
-  if [[ "${streamerStatus}" == "404" ]]; then
+  if [[ "$(jq -r ".status" <<< "${streamerJson}")" == "404" ]]; then
     exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
   fi
 
-  # Add subscription
+  # Add subscription (can't use write_setting here due to unique jq syntax)
   local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
   printf "%s" "${tempJson}" > "${CONFIG_FILE}"
 
@@ -642,9 +636,7 @@ unsubscribe()
   whileCounter=$(( whileCounter - 1 ))
 
   # Check to make sure user is subscribed before unsubscribing
-  local -r subscriptionArrayLength=$(jq ".subscriptions | length" "${CONFIG_FILE}")
-
-  if [[ ! $whileCounter -lt $subscriptionArrayLength ]]; then
+  if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
     exit_script_on_failure "You weren't subscribed to ${streamerToUnsubscribeFrom} in the first place."
   fi
 
