@@ -342,15 +342,15 @@ list_streamers_of_game()
   # Get streamers
   twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")
 
-  local streamerName=""
-  streamerName=$(jq -r ".data[0].user_name" <<< "${twitchJson}")
-
-  local streamTitle=""
-  streamTitle=$(jq -r ".data[0].title" <<< "${twitchJson}")
-
   printf "\n %s streamers:\n" "$1"
 
-  local whileCounter=1
+  local whileCounter=0
+
+  local streamerName=""
+  streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+
+  local streamTitle=""
+  streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
 
   while [[ "${streamerName}" != "null" ]]; do
     # Truncate title if necessary
@@ -359,12 +359,12 @@ list_streamers_of_game()
       streamTitle="${streamTitle}…"
     fi
 
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[0].viewer_count" <<< "${twitchJson}")" "${NC}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[${whileCounter}].viewer_count" <<< "${twitchJson}")" "${NC}"
 
     # Refresh data
+    whileCounter=$(( whileCounter + 1 ))
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
     streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
-    whileCounter=$(( whileCounter + 1 ))
   done
 }
 
