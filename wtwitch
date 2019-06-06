@@ -262,7 +262,7 @@ check_twitch_streams_helper()
     streamName=$(jq -r ".stream.channel.status" <<< "${streamerJson}")
 
     # Truncate stream name if necessary; some streamers have excessively long stream titles
-    if [[ ${#streamName} -gt 50 ]]; then
+    if [[ ${#streamName} -gt 75 ]]; then
       streamName=$(printf "%s" "${streamName}" | cut -c 1-50)
       streamName="${streamName}…"
     fi
@@ -354,7 +354,7 @@ list_streamers_of_game()
 
   while [[ "${streamerName}" != "null" ]]; do
     # Truncate title if necessary
-    if [[ ${#streamTitle} -gt 50 ]]; then
+    if [[ ${#streamTitle} -gt 75 ]]; then
       streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-50)
       streamTitle="${streamTitle}…"
     fi
