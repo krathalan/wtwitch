@@ -126,16 +126,21 @@ Wtwitch will make sure the streamer exists before allowing you to subscribe to t
 Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
 
 ## FAQ
+### Syncing subscriptions
+Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a tool from the GNU coreutils. Syncthing is a wonderful program for multiple operating systems licensed under the Mozilla Public License v2, which is [FSF approved](https://www.gnu.org/licenses/license-list.html#MPL-2.0). You can look at [Syncthing's homepage](https://syncthing.net/) for more information, as well as their [user documentation](https://docs.syncthing.net/intro/getting-started.html).
+
+After setting up Syncthing on the computers on which you wish to sync subscriptions, copy your subscriptions file from `~/.config/wtwitch/config.json` to a directory being synced with Syncthing. Then link the file to the previous location. For example, if you copied your subscriptions file to `~/Documents/Config`, you can link it to the correct location with the command `ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json`.
+
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
 Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it for a number of reasons.
 
 To start, when uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with wtwitch -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~230 MB for Streamlink Twitch GUI. 
 
-Additionally, Streamlink Twitch GUI's source consists of a multitude of files of varying lengths in a complex folder structure, altogether at least over 3000 lines of code (not counting any framework lines of code). Wtwitch is only written in Bash, and all the code is contained in one file at under 900 lines of code. It's much easier for someone to audit the source code of or contribute to Wtwitch compared to Streamlink Twitch GUI.
+Additionally, Streamlink Twitch GUI's source consists of a multitude of files of varying lengths in a complex folder structure, altogether at least over 3000 lines of code (not counting any framework lines of code). Wtwitch is only written in Bash, and all the code is contained in one file at under 900 lines of code. It's much easier for someone to audit the source code of or contribute to wtwitch compared to Streamlink Twitch GUI.
 
 > "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
 
-Streamlink Twitch GUI is built on NW.js, which is similar to Electron. I'd rather not use Chrome/Chromium if I don't have to. Given the existence of projects like [ungoogled-chromium](https://github.com/Eloston/ungoogled-chromium#motivation-and-philosophy), it's clear that Chromium automatically makes a multitude of non-user-initiated connections to Google, which I'd rather my computer *not* do. Additionally, [JavaScript sucks](https://whydoesitsuck.com/why-does-javascript-suck/). 
+Streamlink Twitch GUI is built on NW.js, which is similar to Electron. I'd rather not use Chrome/Chromium if I don't have to. Given the existence of projects like [ungoogled-chromium](https://github.com/Eloston/ungoogled-chromium#motivation-and-philosophy), it's clear that Chromium automatically makes a multitude of non-user-initiated connections to Google, which I'd rather my computer *not* do.
 
 Finally, security seems to be a sore point with NW.js:
 > "Node frames have following extra capabilities than normal frames: ... Bypass all security restrictions, such as sandboxing, same origin policy etc. For example, you can make cross origin XHR to any remote sites, or access to \<iframe\> element whose src points to remote sites in node frames." ([from the NW.js documentation](http://docs.nwjs.io/en/latest/For%20Users/Advanced/Security%20in%20NW.js/))
