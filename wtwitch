@@ -404,17 +404,17 @@ list_top_games()
   
   local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/games/top")
 
-  local gameName=""
-  gameName=$(jq -r ".data[0].name" <<< "${twitchJson}")
+  local whileCounter=0
 
-  local whileCounter=1
+  local gameName=""
+  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %s%s%s\n" "${whileCounter}" "${TURQOISE}" "${gameName}" "${NC}"
+    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${TURQOISE}" "${gameName}" "${NC}"
 
     # Refresh data
-    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
     whileCounter=$(( whileCounter + 1 ))
+    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
   done
 }
 
@@ -453,17 +453,17 @@ load_config()
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
 
   # Subscriptions
-  local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+  local whileCounter=0
 
-  local whileCounter=1
+  local currentSubscription
+  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
   while [[ "${currentSubscription}" != "null" ]]; do
     userSubscriptions+=("${currentSubscription}")
 
     # Refresh data
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
     whileCounter=$(( whileCounter + 1 ))
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
   done
 }
 
@@ -592,15 +592,15 @@ subscribe()
 
   # Check to make sure user isn't already subscribed
   if [[ $(jq ".subscriptions | length" "${CONFIG_FILE}") -gt 0 ]]; then
-    local currentSubscription
-    currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+    local whileCounter=0
 
-    local whileCounter=1
+    local currentSubscription
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
     while [[ "${currentSubscription}" != "null" ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
-      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
       whileCounter=$(( whileCounter + 1))
+      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
@@ -641,18 +641,18 @@ unsubscribe()
   local -r streamerToUnsubscribeFrom="${1,,}"
 
   # Find index of streamer in .subscriptions[]
-  local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+  local whileCounter=0
 
-  local whileCounter=1
+  local currentSubscription
+  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
   while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
     # Refresh data
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
     whileCounter=$(( whileCounter + 1 ))
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
   done
 
-  whileCounter=$(( whileCounter - 1 ))
+  whileCounter=$(( whileCounter + 1 ))
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
