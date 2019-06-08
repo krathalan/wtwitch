@@ -185,6 +185,7 @@ check_command()
 check_twitch_streams()
 {
   load_config
+  load_subs
 
   printf "\n Streamers online:"
 
@@ -421,13 +422,12 @@ list_top_games()
 }
 
 #######################################
-# Loads user configuration from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
+# Loads user player and quality settings from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
 #   CONFIG_FILE_DIRECTORY
 #   userPlayer
 #   userQuality
-#   userSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -453,8 +453,20 @@ load_config()
 
   # Quality
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
+}
 
-  # Subscriptions
+#######################################
+# Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
+# Globals:
+#   CONFIG_FILE
+#   userSubscriptions
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+load_subs()
+{
   local whileCounter=0
 
   local currentSubscription
@@ -542,6 +554,16 @@ stream()
 {
   load_config
   
+  # Use VLC as backup player if mpv is not installed
+  if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
+    if [[ -x "$(command -v "vlc")" ]]; then
+      printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
+      userPlayer="vlc"
+    else
+      exit_script_on_failure "Media player ${userPlayer} not found."
+    fi
+  fi
+
   # Check to make sure streamer is online 
   # Get current info of streamer
   local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/streams/$1")
@@ -591,7 +613,7 @@ stream()
 #######################################
 subscribe()
 {
-  load_config
+  load_subs
 
   # Convert to lowercase
   local -r streamerToSubscribeTo="${1,,}"
@@ -643,7 +665,7 @@ subscribe()
 #######################################
 unsubscribe()
 {
-  load_config
+  load_subs
 
   # Convert to lowercase
   local -r streamerToUnsubscribeFrom="${1,,}"
@@ -659,8 +681,6 @@ unsubscribe()
     whileCounter=$(( whileCounter + 1 ))
     currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
   done
-
-  whileCounter=$(( whileCounter + 1 ))
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
@@ -843,15 +863,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
-  if [[ -x "$(command -v "vlc")" ]]; then
-    printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
-    userPlayer="vlc"
-  else
-    exit_script_on_failure "Media player ${userPlayer} not found."
-  fi
-fi
 
 check_command "streamlink"
 (stream "$1" > /dev/null) &
