@@ -690,7 +690,6 @@ write_setting()
 
 check_command "curl"
 check_command "jq"
-load_config
 
 if [[ $# -eq 0 ]]; then
   print_help
@@ -707,6 +706,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -c|--check)
+      load_config
       check_twitch_streams
       exit 0
       break
@@ -735,6 +735,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -p)
+      load_config
       shift
       if [[ $# -gt 0 ]]; then
         change_player "$1"
@@ -745,6 +746,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     --change-player*)
+      load_config
       if [[ $# -gt 1 ]]; then
         shift
       fi
@@ -758,6 +760,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -q)
+      load_config
       shift
       if [[ $# -gt 0 ]]; then
         change_quality "$1"
@@ -768,6 +771,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     --change-quality*)
+      load_config
       if [[ $# -gt 1 ]]; then
         shift
       fi
@@ -781,6 +785,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -s)
+      load_config
       shift
       if [[ $# -gt 0 ]]; then
         subscribe "$1"
@@ -791,6 +796,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     --subscribe*)
+      load_config
       if [[ $# -gt 1 ]]; then
         shift
       fi
@@ -809,6 +815,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -u)
+      load_config
       shift
       if [[ $# -gt 0 ]]; then
         unsubscribe "$1"
@@ -819,6 +826,7 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     --unsubscribe*)
+      load_config
       if [[ $# -gt 1 ]]; then
         shift
       fi
@@ -836,6 +844,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+load_config
 
 if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
   if [[ -x "$(command -v "vlc")" ]]; then
