@@ -212,7 +212,7 @@ check_twitch_streams()
     touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
 
     for stream in "${userSubscriptions[@]}"; do
-      (check_twitch_streams_helper "${stream}") &
+      check_twitch_streams_helper "${stream}" &
     done
 
     wait
@@ -865,4 +865,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 check_command "streamlink"
-(stream "$1" > /dev/null) &
+stream "$1" &> /dev/null &
