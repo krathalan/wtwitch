@@ -307,7 +307,8 @@ clean_up()
 # Returns:
 #   none
 #######################################
-exit_script_on_failure() {
+exit_script_on_failure() 
+{
   if [[ $# -gt 0 ]]; then
     printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
     printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
@@ -320,7 +321,6 @@ exit_script_on_failure() {
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
-#   Colors: TURQOISE, NC, ORANGE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
@@ -349,23 +349,42 @@ list_streamers_of_game()
   local streamerName=""
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
 
-  local streamTitle=""
-  streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
-
   while [[ "${streamerName}" != "null" ]]; do
-    # Truncate title if necessary
-    if [[ ${#streamTitle} -gt 75 ]]; then
-      streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-75)
-      streamTitle="${streamTitle}…"
-    fi
-
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[${whileCounter}].viewer_count" <<< "${twitchJson}")" "${NC}"
-
-    # Refresh data
+    list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
     whileCounter=$(( whileCounter + 1 ))
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
-    streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
   done
+
+  wait
+}
+
+#######################################
+# Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
+# Globals:
+#   Colors: TURQOISE, NC, ORANGE
+# Arguments:
+#   $1: index of streamer to print info of
+#   $2: json file containing streamer data
+#   $3: name of streamer
+# Returns:
+#   none
+#######################################
+list_streamers_of_game_helper()
+{
+  local index="$1"
+  local twitchJson="$2"
+  local streamerName="$3"
+
+  local streamTitle=""
+  streamTitle=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
+
+  # Truncate title if necessary
+  if [[ ${#streamTitle} -gt 75 ]]; then
+    streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-75)
+    streamTitle="${streamTitle}…"
+  fi
+
+  printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")" "${NC}"
 }
 
 #######################################
