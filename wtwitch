@@ -200,9 +200,7 @@ check_twitch_streams()
     lastSubscriptionUpdate=$(date +%s -d "${lastSubscriptionUpdate}")
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
-
-  lastSubscriptionUpdate="null"
-
+  
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
   # if the time between now and the last subscription update is greater than the cache expiry time, OR
   # if either of the cache files do NOT exist yet
