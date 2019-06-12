@@ -49,6 +49,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly PROJECT_URL="https://gitlab.com/krathalan/wtwitch"
 readonly SCRIPT_NAME=$(basename "$0")
+readonly TEMP_WRITE_FILE="/tmp/.wtwitch.tmp"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 
 # Cache
@@ -200,6 +201,8 @@ check_twitch_streams()
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
 
+  lastSubscriptionUpdate="null"
+
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
   # if the time between now and the last subscription update is greater than the cache expiry time, OR
   # if either of the cache files do NOT exist yet
@@ -298,6 +301,7 @@ clean_up()
   # Clean up
   rm -f "${CACHE_ONLINE_TEXT_FILE}"
   rm -f "${CACHE_OFFLINE_TEXT_FILE}"
+  rm -f "${TEMP_WRITE_FILE}"
 }
 
 #######################################
@@ -467,18 +471,39 @@ load_config()
 #######################################
 load_subs()
 {
-  local whileCounter=0
+# local whileCounter=0
 
-  local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+# local currentSubscription
+# currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
-  while [[ "${currentSubscription}" != "null" ]]; do
-    userSubscriptions+=("${currentSubscription}")
+#  while [[ "${currentSubscription}" != "null" ]]; do
+#    userSubscriptions+=("${currentSubscription}")
 
     # Refresh data
+#    whileCounter=$(( whileCounter + 1 ))
+#    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+#  done
+
+  # Erase possible existing temp file
+  rm -f "${TEMP_WRITE_FILE}"
+  touch "${TEMP_WRITE_FILE}"
+
+  local whileCounter=0
+  local -r numberOfSubs=$(jq ".subscriptions | length" "${CONFIG_FILE}")
+
+  while [[ ${whileCounter} -lt ${numberOfSubs} ]]; do
+    load_subs_helper "${whileCounter}" &
     whileCounter=$(( whileCounter + 1 ))
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
-  done
+  done  
+
+  wait
+
+  mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
+}
+
+load_subs_helper()
+{
+  printf "%s\n" "$(jq -r ".subscriptions[$1].streamer" "${CONFIG_FILE}")" >> "${TEMP_WRITE_FILE}"
 }
 
 #######################################
