@@ -27,6 +27,7 @@
 # https://google.github.io/styleguide/shell.xml
 
 # This script uses shellcheck: https://www.shellcheck.net/
+# There are no "shellcheck disable=SCXXXX" lines in this script.
 
 # This script spawns subshell processes (see check_twitch_streams function)
 trap "clean_up && kill 0" SIGINT
@@ -49,6 +50,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly PROJECT_URL="https://gitlab.com/krathalan/wtwitch"
 readonly SCRIPT_NAME=$(basename "$0")
+readonly TEMP_WRITE_FILE="/tmp/.wtwitch.tmp"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 
 # Cache
@@ -174,6 +176,7 @@ check_command()
 #   CACHE_OFFLINE_TEXT_FILE
 #   CACHE_ONLINE_TEXT_FILE
 #   CONFIG_FILE
+#   TEMP_WRITE_FILE
 #   userPlayer
 #   userQuality
 #   userSubscriptions
@@ -184,8 +187,13 @@ check_command()
 #######################################
 check_twitch_streams()
 {
+  load_subs --async &
   load_config
-  load_subs
+  
+  wait
+
+  # Manually assign userSubscriptions due to asynchronous sub loading
+  mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
 
   printf "\n Streamers online:"
 
@@ -199,7 +207,7 @@ check_twitch_streams()
     lastSubscriptionUpdate=$(date +%s -d "${lastSubscriptionUpdate}")
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
-
+  
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
   # if the time between now and the last subscription update is greater than the cache expiry time, OR
   # if either of the cache files do NOT exist yet
@@ -298,6 +306,7 @@ clean_up()
   # Clean up
   rm -f "${CACHE_ONLINE_TEXT_FILE}"
   rm -f "${CACHE_OFFLINE_TEXT_FILE}"
+  rm -f "${TEMP_WRITE_FILE}"
 }
 
 #######################################
@@ -445,13 +454,11 @@ load_config()
 
   # Create cache folder if it doesn't exist
   if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-    mkdir "${CACHE_FILE_DIRECTORY}"
+    mkdir -p "${CACHE_FILE_DIRECTORY}"
   fi
 
-  # Player
+  # Load settings
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
-
-  # Quality
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
 }
 
@@ -459,26 +466,49 @@ load_config()
 # Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
+#   TEMP_WRITE_FILE
 #   userSubscriptions
 # Arguments:
-#   none
+#   $1: flag for --async to map userSubs manually after load_subs &
 # Returns:
 #   none
 #######################################
 load_subs()
 {
+  # Erase possible existing temp file
+  rm -f "${TEMP_WRITE_FILE}"
+  touch "${TEMP_WRITE_FILE}"
+
   local whileCounter=0
+  local -r numberOfSubs=$(jq ".subscriptions | length" "${CONFIG_FILE}")
 
-  local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
-
-  while [[ "${currentSubscription}" != "null" ]]; do
-    userSubscriptions+=("${currentSubscription}")
-
-    # Refresh data
+  while [[ ${whileCounter} -lt ${numberOfSubs} ]]; do
+    load_subs_helper "${whileCounter}" &
     whileCounter=$(( whileCounter + 1 ))
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
-  done
+  done  
+
+  wait
+
+  if [[ $# -gt 0 ]]; then
+    if [[ "$1" != "--async" ]]; then
+      mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
+    fi
+  fi
+}
+
+#######################################
+# Used by load_subs to facilitate multi-process parsing of json files.
+# Globals:
+#   CONFIG_FILE
+#   TEMP_WRITE_FILE
+# Arguments:
+#   $1: index of streamer to get name of
+# Returns:
+#   none
+#######################################
+load_subs_helper()
+{
+  printf "%s\n" "$(jq -r ".subscriptions[$1].streamer" "${CONFIG_FILE}")" >> "${TEMP_WRITE_FILE}"
 }
 
 #######################################
@@ -613,7 +643,7 @@ stream()
 #######################################
 subscribe()
 {
-  load_subs
+  load_subs --no-async
 
   # Convert to lowercase
   local -r streamerToSubscribeTo="${1,,}"
