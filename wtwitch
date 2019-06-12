@@ -185,8 +185,13 @@ check_command()
 #######################################
 check_twitch_streams()
 {
+  load_subs --async &
   load_config
-  load_subs
+  
+  wait
+
+  # Manually assign userSubscriptions due to asynchronous sub loading
+  mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
 
   printf "\n Streamers online:"
 
@@ -461,27 +466,15 @@ load_config()
 # Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
+#   TEMP_WRITE_FILE
 #   userSubscriptions
 # Arguments:
-#   none
+#   $1: flag for --async to map userSubs manually after load_subs &
 # Returns:
 #   none
 #######################################
 load_subs()
 {
-# local whileCounter=0
-
-# local currentSubscription
-# currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
-
-#  while [[ "${currentSubscription}" != "null" ]]; do
-#    userSubscriptions+=("${currentSubscription}")
-
-    # Refresh data
-#    whileCounter=$(( whileCounter + 1 ))
-#    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
-#  done
-
   # Erase possible existing temp file
   rm -f "${TEMP_WRITE_FILE}"
   touch "${TEMP_WRITE_FILE}"
@@ -496,9 +489,23 @@ load_subs()
 
   wait
 
-  mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
+  if [[ $# -gt 0 ]]; then
+    if [[ "$1" != "--async" ]]; then
+      mapfile -t userSubscriptions < "${TEMP_WRITE_FILE}"
+    fi
+  fi
 }
 
+#######################################
+# Used by load_subs to facilitate multi-process parsing of json files.
+# Globals:
+#   CONFIG_FILE
+#   TEMP_WRITE_FILE
+# Arguments:
+#   $1: index of streamer to get name of
+# Returns:
+#   none
+#######################################
 load_subs_helper()
 {
   printf "%s\n" "$(jq -r ".subscriptions[$1].streamer" "${CONFIG_FILE}")" >> "${TEMP_WRITE_FILE}"
@@ -636,7 +643,7 @@ stream()
 #######################################
 subscribe()
 {
-  load_subs
+  load_subs --no-async
 
   # Convert to lowercase
   local -r streamerToSubscribeTo="${1,,}"
