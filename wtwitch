@@ -329,6 +329,7 @@ exit_script_on_failure()
   fi
   
   clean_up
+  printf "%s" "${NC}"
   exit 1
 }
 
@@ -753,7 +754,7 @@ check_command "jq"
 
 if [[ $# -eq 0 ]]; then
   print_help
-  exit 0
+  printf "%s" "${NC}" && exit 0
 fi
 
 # Parse flags. From:
@@ -762,19 +763,19 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       print_help
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -c|--check)
       check_twitch_streams
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -g)
       shift
       if [[ $# -gt 0 ]]; then
         list_streamers_of_game "$1"
-        exit 0
+        printf "%s" "${NC}" && exit 0
       else
         exit_script_on_failure "No game specified."
       fi
@@ -790,14 +791,14 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No game specified."
       fi
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -p)
       shift
       if [[ $# -gt 0 ]]; then
         change_player "$1"
-        exit 0
+        printf "%s" "${NC}" && exit 0
       else
         exit_script_on_failure "No media player specified."
       fi
@@ -813,14 +814,14 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No media player specified."
       fi
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -q)
       shift
       if [[ $# -gt 0 ]]; then
         change_quality "$1"
-        exit 0
+        printf "%s" "${NC}" && exit 0
       else
         exit_script_on_failure "No quality specified."
       fi
@@ -836,14 +837,14 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No quality specified."
       fi
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -s)
       shift
       if [[ $# -gt 0 ]]; then
         subscribe "$1"
-        exit 0
+        printf "%s" "${NC}" && exit 0
       else
         exit_script_on_failure "No streamer specified."
       fi
@@ -859,19 +860,19 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No streamer specified."
       fi
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -t|--top-games)
       list_top_games
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     -u)
       shift
       if [[ $# -gt 0 ]]; then
         unsubscribe "$1"
-        exit 0
+        printf "%s" "${NC}" && exit 0
       else
         exit_script_on_failure "No streamer specified."
       fi
@@ -887,7 +888,7 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No streamer specified."
       fi
-      exit 0
+      printf "%s" "${NC}" && exit 0
       break
       ;;
     *)
