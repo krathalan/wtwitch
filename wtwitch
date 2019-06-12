@@ -41,6 +41,8 @@ set -Eeuo pipefail
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
+readonly LIGHTGREEN=$(tput setaf 10)
+readonly GREY=$(tput setaf 8)
 readonly RED=$(tput bold && tput setaf 1)
 readonly ORANGE=$(tput setaf 3)
 readonly TURQOISE=$(tput setaf 6)
@@ -285,9 +287,9 @@ check_twitch_streams_helper()
       streamType=", ${RED}${streamType}${NC}"
     fi
 
-    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${TURQOISE}" "$1" "${NC}" "${streamName}" "${ORANGE}" "$(jq -r ".stream.game" <<< "${streamerJson}")" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "$(jq -r ".stream.game" <<< "${streamerJson}")" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
-    printf "   %s%s%s\n" "${TURQOISE}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
 }
 
