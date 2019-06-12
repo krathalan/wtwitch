@@ -27,6 +27,7 @@
 # https://google.github.io/styleguide/shell.xml
 
 # This script uses shellcheck: https://www.shellcheck.net/
+# There are no "shellcheck disable=SCXXXX" lines in this script.
 
 # This script spawns subshell processes (see check_twitch_streams function)
 trap "clean_up && kill 0" SIGINT
@@ -175,6 +176,7 @@ check_command()
 #   CACHE_OFFLINE_TEXT_FILE
 #   CACHE_ONLINE_TEXT_FILE
 #   CONFIG_FILE
+#   TEMP_WRITE_FILE
 #   userPlayer
 #   userQuality
 #   userSubscriptions
@@ -452,13 +454,11 @@ load_config()
 
   # Create cache folder if it doesn't exist
   if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-    mkdir "${CACHE_FILE_DIRECTORY}"
+    mkdir -p "${CACHE_FILE_DIRECTORY}"
   fi
 
-  # Player
+  # Load settings
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
-
-  # Quality
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
 }
 
