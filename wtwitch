@@ -184,6 +184,9 @@ check_command()
 #######################################
 check_twitch_streams()
 {
+  load_config
+  load_subs
+
   printf "\n Streamers online:"
 
   # Check cache expiry time
@@ -209,7 +212,7 @@ check_twitch_streams()
     touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
 
     for stream in "${userSubscriptions[@]}"; do
-      (check_twitch_streams_helper "${stream}") &
+      check_twitch_streams_helper "${stream}" &
     done
 
     wait
@@ -307,7 +310,8 @@ clean_up()
 # Returns:
 #   none
 #######################################
-exit_script_on_failure() {
+exit_script_on_failure() 
+{
   if [[ $# -gt 0 ]]; then
     printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
     printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
@@ -320,7 +324,6 @@ exit_script_on_failure() {
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
-#   Colors: TURQOISE, NC, ORANGE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
@@ -349,23 +352,42 @@ list_streamers_of_game()
   local streamerName=""
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
 
-  local streamTitle=""
-  streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
-
   while [[ "${streamerName}" != "null" ]]; do
-    # Truncate title if necessary
-    if [[ ${#streamTitle} -gt 75 ]]; then
-      streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-75)
-      streamTitle="${streamTitle}…"
-    fi
-
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[${whileCounter}].viewer_count" <<< "${twitchJson}")" "${NC}"
-
-    # Refresh data
+    list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
     whileCounter=$(( whileCounter + 1 ))
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
-    streamTitle=$(jq -r ".data[${whileCounter}].title" <<< "${twitchJson}")
   done
+
+  wait
+}
+
+#######################################
+# Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
+# Globals:
+#   Colors: TURQOISE, NC, ORANGE
+# Arguments:
+#   $1: index of streamer to print info of
+#   $2: json file containing streamer data
+#   $3: name of streamer
+# Returns:
+#   none
+#######################################
+list_streamers_of_game_helper()
+{
+  local index="$1"
+  local twitchJson="$2"
+  local streamerName="$3"
+
+  local streamTitle=""
+  streamTitle=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
+
+  # Truncate title if necessary
+  if [[ ${#streamTitle} -gt 75 ]]; then
+    streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-75)
+    streamTitle="${streamTitle}…"
+  fi
+
+  printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")" "${NC}"
 }
 
 #######################################
@@ -385,28 +407,27 @@ list_top_games()
   
   local -r twitchJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/helix/games/top")
 
-  local gameName=""
-  gameName=$(jq -r ".data[0].name" <<< "${twitchJson}")
+  local whileCounter=0
 
-  local whileCounter=1
+  local gameName=""
+  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %s%s%s\n" "${whileCounter}" "${TURQOISE}" "${gameName}" "${NC}"
+    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${TURQOISE}" "${gameName}" "${NC}"
 
     # Refresh data
-    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
     whileCounter=$(( whileCounter + 1 ))
+    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
   done
 }
 
 #######################################
-# Loads user configuration from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
+# Loads user player and quality settings from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
 #   CONFIG_FILE_DIRECTORY
 #   userPlayer
 #   userQuality
-#   userSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -432,19 +453,31 @@ load_config()
 
   # Quality
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
+}
 
-  # Subscriptions
+#######################################
+# Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
+# Globals:
+#   CONFIG_FILE
+#   userSubscriptions
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+load_subs()
+{
+  local whileCounter=0
+
   local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
-
-  local whileCounter=1
+  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
   while [[ "${currentSubscription}" != "null" ]]; do
     userSubscriptions+=("${currentSubscription}")
 
     # Refresh data
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
     whileCounter=$(( whileCounter + 1 ))
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
   done
 }
 
@@ -519,6 +552,18 @@ print_help_helper()
 #######################################
 stream()
 {
+  load_config
+  
+  # Use VLC as backup player if mpv is not installed
+  if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
+    if [[ -x "$(command -v "vlc")" ]]; then
+      printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
+      userPlayer="vlc"
+    else
+      exit_script_on_failure "Media player ${userPlayer} not found."
+    fi
+  fi
+
   # Check to make sure streamer is online 
   # Get current info of streamer
   local -r streamerJson=$(curl --silent -H "Client-ID: ${TWITCH_API_KEY}" -X GET "${TWITCH_API_URL}/kraken/streams/$1")
@@ -568,20 +613,22 @@ stream()
 #######################################
 subscribe()
 {
+  load_subs
+
   # Convert to lowercase
   local -r streamerToSubscribeTo="${1,,}"
 
   # Check to make sure user isn't already subscribed
   if [[ $(jq ".subscriptions | length" "${CONFIG_FILE}") -gt 0 ]]; then
-    local currentSubscription
-    currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+    local whileCounter=0
 
-    local whileCounter=1
+    local currentSubscription
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
     while [[ "${currentSubscription}" != "null" ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
-      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
       whileCounter=$(( whileCounter + 1))
+      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
@@ -618,22 +665,22 @@ subscribe()
 #######################################
 unsubscribe()
 {
+  load_subs
+
   # Convert to lowercase
   local -r streamerToUnsubscribeFrom="${1,,}"
 
   # Find index of streamer in .subscriptions[]
-  local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[0].streamer" "${CONFIG_FILE}")
+  local whileCounter=0
 
-  local whileCounter=1
+  local currentSubscription
+  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
 
   while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
     # Refresh data
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
     whileCounter=$(( whileCounter + 1 ))
+    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
   done
-
-  whileCounter=$(( whileCounter - 1 ))
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
@@ -671,7 +718,6 @@ write_setting()
 
 check_command "curl"
 check_command "jq"
-load_config
 
 if [[ $# -eq 0 ]]; then
   print_help
@@ -818,14 +864,5 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
-  if [[ -x "$(command -v "vlc")" ]]; then
-    printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
-    userPlayer="vlc"
-  else
-    exit_script_on_failure "Media player ${userPlayer} not found."
-  fi
-fi
-
 check_command "streamlink"
-(stream "$1" > /dev/null) &
+stream "$1" &> /dev/null &

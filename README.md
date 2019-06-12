@@ -65,37 +65,39 @@ Option | Description | Example
 ### Additional usage information with screenshots
 #### wtwtich -h, --help
 
-![Screenshot](Images/Screenshot-Help.png)
+![Screenshot](Images/sc_help.jpg)
 
 #### wtwitch [STREAMER]
+![Screenshot](Images/sc_no_option.jpg)
+
 Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch adds this automatically. Wtwitch creates the streamlink process as a background process, so you don't have to keep your terminal open.
 
 Wtwitch will make sure the specified streamer is actually live before starting Streamlink.
 
-![Screenshot](Images/Screenshot-No-Option.jpg)
-
 #### wtwitch -c, --check
+![Screenshot](Images/sc_check.jpg)
+
 View the status of the streamers you're subscribed to and your settings. To subscribe to a streamer, use `wtwitch -s [STREAMER]`. To unsubscribe from a streamer, use `wtwitch -u [STREAMER]`.
 
 Wtwitch caches the results of the check operation in `~/.cache/wtwitch/` to reduce Twitch API calls. The cache expires every 60 seconds. If you subscribe to or unsubscribe from a streamer, the cache becomes invalidated. The cache is only marked as updated if the full check operation completed successfully, and the cache files get deleted if wtwitch exits with an error. Like the configuration file, the cache should rarely take more than a few kilobytes of space -- dependending on how many streamers you're subscribed to.
 
 Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
 
-![Screenshot](Images/Screenshot-Check.png)
-
 #### wtwitch -g [GAME], --get-streamers=[GAME]
+![Screenshot](Images/sc_get_streamers.jpg)
+
 View the top streamers for a specified game. If the game name has spaces in it, like "World of Warcraft", you'll have to quote the game name or put a backslash before every space. For example, `wtwitch -g world\ of\ warcraft` or `wtwitch -g "world of warcraft"`. The game name is case insensitive.
 
-![Screenshot](Images/Screenshot-Get-Streamers.png)
-
 #### wtwitch -p [PLAYER], --change-player=[PLAYER]
-Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html). Be aware that wtwitch passes the flag `--player-continuous-http` to Streamlink. Quicktime is the only player that doesn't support the HTTP transport mode, so wtwitch is incompatible with Quicktime (unless you modify the source code).
+Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html) (with the standard input pipe).
 
 Wtwitch will make sure the player you're trying to set as the default player is installed.
 
 Your player preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
 
 #### wtwitch -q [QUALITY], --change-quality=[QUALITY]
+![Screenshot](Images/sc_quality.jpg)
+
 Changes the quality that gets passed to Streamlink. You can specify [any quality that Streamlink supports](https://streamlink.github.io/cli.html#cmdoption-arg-stream), including fallback qualities, and wtwitch will make sure your input is valid.
 
 Full list of acceptable individual qualities: worst, 160p, 360p, 480p, 720p, 720p60, 1080p60, best.
@@ -111,14 +113,14 @@ Examples of acceptable quality settings (non-exclusive):
 
 Your quality preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
 
-![Screenshot](Images/Screenshot-Quality.png)
-
 #### wtwitch -t, --top-games
+![Screenshot](Images/sc_top_games.jpg)
+
 View the top watched games on Twitch at the moment. 
 
-![Screenshot](Images/Screenshot-Top-Games.png)
-
 #### wtwitch -s [STREAMER], --subscribe=[STREAMER]; wtwitch -u [STREAMER], unsubscribe=[STREAMER]
+![Screenshot](Images/sc_sub_unsub.jpg)
+
 You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitch -c`, the status of your subscribed streamers will be printed. 
 
 Wtwitch will make sure the streamer exists before allowing you to subscribe to them.
