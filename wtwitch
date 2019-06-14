@@ -29,7 +29,7 @@
 # This script uses shellcheck: https://www.shellcheck.net/
 # There are no "shellcheck disable=SCXXXX" lines in this script.
 
-# This script spawns subshell processes (see check_twitch_streams function)
+# Many functions in this script spawn subshell processes
 trap "clean_up && kill 0" SIGINT
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
@@ -50,6 +50,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
 # Other
 readonly CHECK_MARK="${GREEN}✔${NC}"
+readonly MAX_TITLE_LENGTH="$(( $(( $(tput cols) * 3 / 4 )) - 19 ))"
 readonly PROJECT_URL="https://gitlab.com/krathalan/wtwitch"
 readonly SCRIPT_NAME=$(basename "$0")
 readonly TEMP_WRITE_FILE="/tmp/.wtwitch.tmp"
@@ -254,6 +255,7 @@ check_twitch_streams()
 #   Colors: RED, NC, TURQOISE, ORANGE
 #   CACHE_OFFLINE_TEXT_FILE
 #   CACHE_ONLINE_TEXT_FILE
+#   MAX_TITLE_LENGTH
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
@@ -275,8 +277,8 @@ check_twitch_streams_helper()
     streamName=$(jq -r ".stream.channel.status" <<< "${streamerJson}")
 
     # Truncate stream name if necessary; some streamers have excessively long stream titles
-    if [[ ${#streamName} -gt 75 ]]; then
-      streamName=$(printf "%s" "${streamName}" | cut -c 1-75)
+    if [[ ${#streamName} -gt ${MAX_TITLE_LENGTH} ]]; then
+      streamName=$(printf "%s" "${streamName}" | cut -c 1-${MAX_TITLE_LENGTH})
       streamName="${streamName}…"
     fi
 
@@ -377,6 +379,7 @@ list_streamers_of_game()
 # Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
 # Globals:
 #   Colors: TURQOISE, NC, ORANGE
+#   MAX_TITLE_LENGTH
 # Arguments:
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
@@ -394,8 +397,8 @@ list_streamers_of_game_helper()
   streamTitle=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
 
   # Truncate title if necessary
-  if [[ ${#streamTitle} -gt 75 ]]; then
-    streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-75)
+  if [[ ${#streamTitle} -gt ${MAX_TITLE_LENGTH} ]]; then
+    streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-${MAX_TITLE_LENGTH})
     streamTitle="${streamTitle}…"
   fi
 
