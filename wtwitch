@@ -46,6 +46,7 @@ readonly GREY=$(tput setaf 8)
 readonly RED=$(tput bold && tput setaf 1)
 readonly ORANGE=$(tput setaf 3)
 readonly TURQOISE=$(tput setaf 6)
+readonly PURPLE=$(tput setaf 13)
 readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
 # Other
@@ -438,7 +439,7 @@ list_top_games()
   gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${TURQOISE}" "${gameName}" "${NC}"
+    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}"
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
@@ -557,13 +558,13 @@ print_help()
 
   print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
   print_help_helper "(no option) [STREAMER]" "watch the specified streamer" "bash wtwitch overwatchleague"
-  print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
+  print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
   print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
+  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
+  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
+  print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
   print_help_helper "-p [PLAYER], --change-player=[PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
   print_help_helper "-q [QUALITY], --change-quality=[QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
-  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
-  print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
-  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
 }
 
 #######################################
@@ -579,9 +580,9 @@ print_help()
 #######################################
 print_help_helper()
 {
-  local -r description="Description: "${NC}
+  local -r description="Description: "
   local -r usage="Usage: "
-  printf "   %s%s%s\n     %s%s%s%s\n     %s%s%s%s\n" "${TURQOISE}" "$1" "${NC}" "${ORANGE}" "${description}" "${NC}" "$2" "${ORANGE}" "${usage}" "${NC}" "$3"
+  printf "   %s%s%s\n     %s%s%s%s\n     %s%s%s%s\n" "${ORANGE}" "$1" "${NC}" "${TURQOISE}" "${description}" "${NC}" "$2" "${TURQOISE}" "${usage}" "${NC}" "$3"
 }
 
 #######################################

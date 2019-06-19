@@ -74,6 +74,25 @@ Watch the specified streamer. Do not inclue `https://www.twitch.tv/`, wtwitch ad
 
 Wtwitch will make sure the specified streamer is actually live before starting Streamlink.
 
+#### wtwitch -t, --top-games
+![Screenshot](Images/sc_top_games.jpg)
+
+View the top watched games on Twitch at the moment. 
+
+#### wtwitch -g [GAME], --get-streamers=[GAME]
+![Screenshot](Images/sc_get_streamers.jpg)
+
+View the top streamers for a specified game. If the game name has spaces in it, like "World of Warcraft", you'll have to quote the game name or put a backslash before every space. For example, `wtwitch -g world\ of\ warcraft` or `wtwitch -g "world of warcraft"`. The game name is case insensitive.
+
+#### wtwitch -s [STREAMER], --subscribe=[STREAMER]; wtwitch -u [STREAMER], unsubscribe=[STREAMER]
+![Screenshot](Images/sc_sub_unsub.jpg)
+
+You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitch -c`, the status of your subscribed streamers will be printed. 
+
+Wtwitch will make sure the streamer exists before allowing you to subscribe to them.
+
+Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
+
 #### wtwitch -c, --check
 ![Screenshot](Images/sc_check.jpg)
 
@@ -83,12 +102,8 @@ Wtwitch caches the results of the check operation in `~/.cache/wtwitch/` to redu
 
 Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
 
-#### wtwitch -g [GAME], --get-streamers=[GAME]
-![Screenshot](Images/sc_get_streamers.jpg)
-
-View the top streamers for a specified game. If the game name has spaces in it, like "World of Warcraft", you'll have to quote the game name or put a backslash before every space. For example, `wtwitch -g world\ of\ warcraft` or `wtwitch -g "world of warcraft"`. The game name is case insensitive.
-
 #### wtwitch -p [PLAYER], --change-player=[PLAYER]
+![Screenshot](Images/sc_player.jpg)
 Changes the player that gets passed to Streamlink. You can specify [any player that Streamlink supports](https://streamlink.github.io/players.html) (with the standard input pipe).
 
 Wtwitch will make sure the player you're trying to set as the default player is installed.
@@ -112,20 +127,6 @@ Examples of acceptable quality settings (non-exclusive):
   - Behavior: tries to get a 360p stream, then if that fails, the worst stream available
 
 Your quality preference is stored in the configuration file at `~/.config/wtwitch/config.json`.
-
-#### wtwitch -t, --top-games
-![Screenshot](Images/sc_top_games.jpg)
-
-View the top watched games on Twitch at the moment. 
-
-#### wtwitch -s [STREAMER], --subscribe=[STREAMER]; wtwitch -u [STREAMER], unsubscribe=[STREAMER]
-![Screenshot](Images/sc_sub_unsub.jpg)
-
-You can subscribe/unsubscribe to/from any streamer on Twitch. When using `wtwitch -c`, the status of your subscribed streamers will be printed. 
-
-Wtwitch will make sure the streamer exists before allowing you to subscribe to them.
-
-Your subscriptions are stored in the configuration file at `~/.config/wtwitch/config.json`.
 
 ## FAQ
 ### Syncing subscriptions
