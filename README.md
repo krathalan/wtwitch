@@ -29,21 +29,22 @@ The configuration file is located at `~/.config/wtwitch/config.json`. It should 
 You can make wtwitch executable with the command `chmod a+x wtwitch`. Additionally, you can [add the script to your $PATH](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path). Using both, you can use the command `wtwitch` in any directory in your terminal like a regular terminal program, instead of having to type `bash wtwitch [OPTION] [ARG]` in the directory the script is in.
 
 ## Dependencies
-You must have [Streamlink](https://streamlink.github.io/), [jq](https://stedolan.github.io/jq/), [cURL](https://curl.haxx.se/), and a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility) installed (preferably [mpv](https://mpv.io/)). cURL comes with most Linux installations, but some might be missing it.
+You must have [Streamlink](https://streamlink.github.io/), [jq](https://stedolan.github.io/jq/), [Wget](https://savannah.gnu.org/projects/wget/), and a [video player compatible with Streamlink](https://streamlink.github.io/players.html#player-compatibility) installed (preferably [mpv](https://mpv.io/)). Wget comes with most Linux installations, but some might be missing it.
 
 You can install all dependencies with the command...
-- Arch: `sudo pacman -S streamlink jq curl`
-- Fedora: `sudo dnf install -y python3-streamlink jq curl`
-- Ubuntu: `sudo apt update && sudo apt install python3-streamlink jq curl`
-- Void: `sudo xbps-install -S streamlink jq curl`
+- Arch: `sudo pacman -S streamlink jq wget`
+- Fedora: `sudo dnf install -y python3-streamlink jq wget`
+- Ubuntu: `sudo apt update && sudo apt install python3-streamlink jq wget`
+- Void: `sudo xbps-install -S streamlink jq wget`
 
 ### Licenses
+Wtwitch itself is licensed under the GPLv3, which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#GNUGPLv3).
+
 [Streamlink is licensed under the 2-clause BSD license](https://github.com/streamlink/streamlink/blob/master/LICENSE), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#FreeBSD). 
 
 [jq is licensed under the MIT license](https://github.com/stedolan/jq/blob/master/COPYING) [(which is technically the Expat license)](https://en.wikipedia.org/wiki/MIT_License#Variants), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#Expat).
 
-[cURL uses a slightly modified version of the MIT license](https://github.com/curl/curl/blob/master/COPYING). cURL's license is incompatible with the GPL because it prevents the names of copyright holders from being "used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization of the copyright holder." However, I believe the FSF would still classify this license as a free software license, as the Apache License (version 1) contains a similar advertising clause and is still categorized as a free software license. Since wtwitch is using cURL externally instead of borrowing some of cURL's code, wtwitch can still be licensed under the GPLv3.
+[Wget is licensed under the GPLv3](https://savannah.gnu.org/projects/wget/), which is [an FSF-approved free software license](https://www.gnu.org/licenses/license-list.en.html#GNUGPLv3).
 
 [mpv is licensed under the GPLv2 and LGPLv2.1 licenses](https://github.com/mpv-player/mpv/blob/master/Copyright). Both are [FSF-approved](https://www.gnu.org/licenses/license-list.html#GPLv2).
 
@@ -152,7 +153,7 @@ Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It 
 
 Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in: 
 
-- [cURL](https://github.com/curl/curl), written mostly in C
+- [Wget](https://savannah.gnu.org/projects/wget/), written mostly in C
 - [GNU coreutils](https://github.com/coreutils/coreutils), written nearly entirely in C and shell
 - [jq](https://github.com/stedolan/jq), written nearly entirely in C
 
