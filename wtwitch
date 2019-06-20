@@ -323,7 +323,7 @@ clean_up()
 }
 
 #######################################
-# Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server.
+# Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
 # Globals:
 #   TWITCH_API_KEY
 # Arguments:
@@ -333,7 +333,7 @@ clean_up()
 #######################################
 download_file()
 {
-  wget -qO- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
 }
 
 #######################################
