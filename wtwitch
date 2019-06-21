@@ -618,10 +618,10 @@ stream()
   # Use VLC as backup player if mpv is not installed
   if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     if [[ -x "$(command -v "vlc")" ]]; then
-      printf "\n %s not found. Using VLC instead...\n" "${userPlayer}"
       userPlayer="vlc"
     else
-      exit_script_on_failure "Media player ${userPlayer} not found."
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Media player ${userPlayer} not found."
+      exit_script_on_failure
     fi
   fi
 
