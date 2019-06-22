@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Description: Browse and watch Twitch without being tracked.
-#
-# Homepage: https://gitlab.com/krathalan
+# Homepage: https://gitlab.com/krathalan/wtwitch
+# Version 1.0.0
 #
 # Copyright (C) 2019 krathalan
 #
@@ -557,48 +557,7 @@ load_subs_helper()
 #######################################
 print_help()
 {
-  local copyrightDate
-  copyrightDate=$(date +%Y -d "now")
-
-  if [[ ! ${copyrightDate} -eq 2019 ]]; then
-    copyrightDate="2019-${copyrightDate}"
-  fi
-
-  printf "\n %s%s%s - browse and watch Twitch streams without being tracked.\n" "${GREEN}" "${SCRIPT_NAME}" "${NC}"
-  printf " Copyright (C) %s krathalan\n" "${copyrightDate}"
-  printf " This is free software: you are free to change and redistribute it.\n"
-  printf " There is NO WARRANTY, to the extent permitted by law.\n\n"
-  printf " Homepage: %s\n\n" "${PROJECT_URL}"
-  printf " Usage: bash %s [OPTION] [ARG]\n\n" "${SCRIPT_NAME}"
-  printf " Options:\n"
-
-  print_help_helper "-h, --help" "show this help" "bash wtwitch -h"
-  print_help_helper "(no option) [STREAMER]" "watch the specified streamer" "bash wtwitch overwatchleague"
-  print_help_helper "-t, --top-games" "lists the top games on twitch" "bash wtwitch -t"
-  print_help_helper "-g [GAME], --get-streamers=[GAME]" "view the top streamers for a specified game" "bash wtwitch -g \"world of warcraft\""
-  print_help_helper "-s [STREAMER], --subscribe=[STREAMER]" "subscribes to a specific streamer" "bash wtwitch -s overwatchleague"
-  print_help_helper "-u [STREAMER], --unsubscribe=[STREAMER]" "unsubscribes from a specified streamer" "bash wtwitch -u overwatchleague"
-  print_help_helper "-c, --check" "view which subscribed Twitch streams are online and your settings" "bash wtwitch -c"
-  print_help_helper "-p [PLAYER], --change-player=[PLAYER]" "changes the default player in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -p gnome-mpv"
-  print_help_helper "-q [QUALITY], --change-quality=[QUALITY]" "changes the default quality in ~/.config/wtwitch/config.json that gets passed to Streamlink" "bash wtwitch -q \"720p,480p\""
-}
-
-#######################################
-# Formats strings nicely for print_help().
-# Globals:
-#   Colors: NC, TURQOISE, ORANGE
-# Arguments:
-#   $1: option
-#   $2: description of option
-#   $3: example usage of option
-# Returns:
-#   none
-#######################################
-print_help_helper()
-{
-  local -r description="Description: "
-  local -r usage="Usage: "
-  printf "   %s%s%s\n     %s%s%s%s\n     %s%s%s%s\n" "${ORANGE}" "$1" "${NC}" "${TURQOISE}" "${description}" "${NC}" "$2" "${TURQOISE}" "${usage}" "${NC}" "$3"
+  man wtwitch
 }
 
 #######################################
