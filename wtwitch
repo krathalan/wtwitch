@@ -73,6 +73,7 @@ readonly LOAD_SUBS_FILE="/tmp/.wtwitch.tmp"
 # Miscellaneous
 readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly TWITCH_API_URL="https://api.twitch.tv"
+readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # -----------------------------------------
 # ------------- User variables ------------
