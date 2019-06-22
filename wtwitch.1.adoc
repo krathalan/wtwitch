@@ -1,0 +1,88 @@
+= wtwitch(1)
+Hunter Peavey <krathalan at disroot dot org>
+:Date:          June 2019
+:Revision:      1.0.0
+:man source:    wtwitch
+:man version:   {revision}
+:man manual:    User Commands
+
+== NAME
+wtwitch - terminal user interface for Twitch
+
+== SYNOPSIS
+wtwitch [*(no option)* _streamer_|*-t*|*--top-games*|*-g* _game_|**--get-streamers=**_game_|*-s* _streamer_|**--subscribe=**_streamer_|*-u* _streamer_|**--unsubscribe=**_streamer_|*-c*|*--check*|*-p* _player_|**--change-player=**_player_|*-q* _quality_|**--change-quality=**_quality_]
+
+== DESCRIPTION
+Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account, and without loading or executing Twitch's proprietary JavaScript.
+
+== DEFAULT BEHAVIOR
+=== Player
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, whereas VLC does not (yet). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed. 
+
+You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch -p [PLAYER]. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
+
+=== Quality
+Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch -q [QUALITY]. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
+
+=== Miscellaneous
+Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as Twitch takes 50% of the subscription fee.
+
+=== Caching
+To reduce strain on the Twitch API, responses to the check option (-c,--check) are kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to or unsubscribe from a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before using -c,--check.
+
+== OPTIONS
+*(no option)* _streamer_::
+Watch the specified _streamer_, e.g. wtwitch _overwatchleague_
+
+*-t*, *--top-games*::
+View the top games on Twitch, e.g. wtwitch -t
+
+*-g* _game_, **--get-streamers**=_game_::
+View the top streamers for a specified _game_, e.g. wtwitch _"world of warcraft"_. Game names with spaces must be quoted.
+
+*-s* _streamer_, **--subscribe=**_streamer_::
+Subscribe to a specific _streamer_, e.g. wtwitch -s _overwatchleague_
+
+*-u* _streamer_, **--unsubscribe=**_streamer_::
+Unsubscribe from a specified _streamer_, e.g. wtwitch -u _overwatchleague_
+
+*-c*, *--check*::
+View your settings and the status of the streamers you are subscribed to, e.g. wtwitch -c
+
+*-p* _player_, **--change-player**_player_::
+Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink, e.g. wtwitch -p _vlc_
+
+*-q* _quality_, **--change-quality=**_quality_::
+Change the default _quality_ that gets passed to Streamlink, e.g. wtwitch -q _"720p,480p"_
+
+== FILES
+The configuration file is at `~/.config/wtwitch/config.json`. 
+
+Cache files are kept in `~/.cache/wtwitch`.
+
+== SYNCING SUBSCRIPTIONS
+Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a utility already installed on your GNU/Linux computer. Syncthing is a powerful synchronization program for multiple operating systems licensed under the Mozilla Public License v2, which is FSF approved. You can look at Syncthing's homepage for more information, as well as their user documentation: 
+
+https://docs.syncthing.net/intro/getting-started.html
+
+After setting up Syncthing on the computers on which you wish to sync subscriptions, copy your subscriptions file from ~~/.config/wtwitch/config.json to a directory that you are syncing with Syncthing. Then link the file to the previous location. For example, if you copied your subscriptions file to ~~/Documents/Config, you can link it to the correct location with the command:
+
+ln -sf ~~/Documents/Config/config.json ~~/.config/wtwitch/config.json
+
+== BUGS
+Please report any bugs at:
+
+https://gitlab.com/krathalan/wtwitch/issues
+
+== LICENSES
+Wtwitch itself is licensed under the GPLv3.
+
+jq is licensed under the MIT license.
+
+mpv (should you choose it as your player) is licensed under the GPLv2 and LGPLv2.1 licenses.
+
+Streamlink is licensed under the 2-clause BSD license.
+
+Wget is licensed under the GPLv3.
+
+All licenses, for wtwitch itself and its dependencies, are FSF approved. 
