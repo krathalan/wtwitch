@@ -11,7 +11,11 @@ Table of contents:
 3. [FAQ](#faq)
 
 ## Install
-Either download the script manually or install the AUR package (coming soon).
+### Arch Linux
+Install the AUR package: https://aur.archlinux.org/packages/wtwitch/
+
+### Any distro
+Download the script manually
 
 ## More information
 See the [man page](wtwitch.1.adoc).
