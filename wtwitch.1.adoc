@@ -49,7 +49,7 @@ Unsubscribe from a specified _streamer_, e.g. wtwitch -u _overwatchleague_
 *-c*, *--check*::
 View your settings and the status of the streamers you are subscribed to, e.g. wtwitch -c
 
-*-p* _player_, **--change-player**_player_::
+*-p* _player_, **--change-player=**_player_::
 Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink, e.g. wtwitch -p _vlc_
 
 *-q* _quality_, **--change-quality=**_quality_::
