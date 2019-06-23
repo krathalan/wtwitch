@@ -213,8 +213,8 @@ check_twitch_streams()
   lastSubscriptionUpdate=$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")
 
   if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-    local -r currentDate=$(date +%s -d "now")
-    lastSubscriptionUpdate=$(date +%s -d "${lastSubscriptionUpdate}")
+    local -r currentDate=$(LANG=C date +%s -d "now")
+    lastSubscriptionUpdate=$(LANG=C date +%s -d "${lastSubscriptionUpdate}")
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
   
@@ -236,7 +236,7 @@ check_twitch_streams()
     wait
 
     # Update lastSubscriptionUpdate time
-    write_setting ".lastSubscriptionUpdate" "$(date -d "now")"
+    write_setting ".lastSubscriptionUpdate" "$(LANG=C date -d "now")"
   fi
   
   printf "\n"
@@ -597,16 +597,32 @@ stream()
   fi
 
   # Add cosmetic window title and enable hardware decoding if using mpv
+  
   if [[ "${userPlayer}" == "mpv" ]]; then
   {
+    if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
     {
-      # Try
-      streamlink -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-    } || {
-      # Catch
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
-      exit_script_on_failure
+      {
+        # Try
+        streamlink -p "${userPlayer} --hwdec=auto --gpu-context=wayland" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+      } || {
+        # Catch
+        notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
+        exit_script_on_failure
+      }
     }
+    else
+    {
+      {
+        # Try
+        streamlink -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+      } || {
+        # Catch
+        notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
+        exit_script_on_failure
+      }
+    }
+    fi
   }
   else
   {
