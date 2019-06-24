@@ -596,33 +596,23 @@ stream()
     exit_script_on_failure
   fi
 
-  # Add cosmetic window title and enable hardware decoding if using mpv
-  
+  # If using mpv: add window title, enable hardware dec, and use wayland if possible
   if [[ "${userPlayer}" == "mpv" ]]; then
   {
+    userPlayer="${userPlayer} --hwdec=auto"
+
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
-    {
-      {
-        # Try
-        streamlink -p "${userPlayer} --hwdec=auto --gpu-context=wayland" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-      } || {
-        # Catch
-        notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
-        exit_script_on_failure
-      }
-    }
-    else
-    {
-      {
-        # Try
-        streamlink -p "${userPlayer} --hwdec=auto" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-      } || {
-        # Catch
-        notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
-        exit_script_on_failure
-      }
-    }
+      userPlayer="${userPlayer} --hwdec=auto --gpu-context=wayland"
     fi
+
+    {
+      # Try
+      streamlink -p "${userPlayer}" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
+    } || {
+      # Catch
+      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
+      exit_script_on_failure
+    }
   }
   else
   {
