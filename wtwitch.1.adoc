@@ -1,7 +1,7 @@
 = wtwitch(1)
 Hunter Peavey <krathalan at disroot dot org>
-:Date:          June 2019
-:Revision:      1.0.1
+:Date:          June 27 2019
+:Revision:      1.0.3
 :man source:    wtwitch
 :man version:   {revision}
 :man manual:    User Commands

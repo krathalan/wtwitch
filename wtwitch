@@ -2,7 +2,7 @@
 #
 # Description: Browse and watch Twitch without being tracked.
 # Homepage: https://gitlab.com/krathalan/wtwitch
-# Version 1.0.2
+# Version 1.0.3
 #
 # Copyright (C) 2019 krathalan
 #
@@ -177,6 +177,34 @@ check_command()
 {
   if [[ ! -x "$(command -v "$1")" ]]; then
     exit_script_on_failure "Package $1 not installed. More information: ${PROJECT_URL}/#dependencies"
+  fi
+}
+
+#######################################
+# Creates the cache and config directories and the config file if they are missing.
+# Globals:
+#   CACHE_FILE_DIRECTORY
+#   CONFIG_FILE
+#   CONFIG_FILE_DIRECTORY
+# Arguments:
+#   $1: command to test
+# Returns:
+#   none
+#######################################
+check_files()
+{
+  # Create config file if it doesnt exist
+  if [[ ! -f "${CONFIG_FILE}" ]]; then
+    if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
+      mkdir "${CONFIG_FILE_DIRECTORY}"
+    fi
+
+    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+  fi
+
+  # Create cache folder if it doesn't exist
+  if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
+    mkdir -p "${CACHE_FILE_DIRECTORY}"
   fi
 }
 
@@ -478,18 +506,8 @@ list_top_games()
 #######################################
 load_config()
 {
-  # Create config file if it doesnt exist
-  if [[ ! -f "${CONFIG_FILE}" ]]; then
-    if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-      mkdir "${CONFIG_FILE_DIRECTORY}"
-    fi
-    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
-  fi
-
-  # Create cache folder if it doesn't exist
-  if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-    mkdir -p "${CACHE_FILE_DIRECTORY}"
-  fi
+  # Make sure cache and config directories exist
+  check_files
 
   # Load settings
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
@@ -509,6 +527,9 @@ load_config()
 #######################################
 load_subs()
 {
+  # Make sure cache directory and config file exists
+  check_files
+
   # Erase possible existing temp file
   rm -f "${LOAD_SUBS_FILE}"
   touch "${LOAD_SUBS_FILE}"
