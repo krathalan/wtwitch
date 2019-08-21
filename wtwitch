@@ -297,10 +297,11 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
   # Get current info of streamer
-  local -r streamerJson=$(download_file "${TWITCH_API_URL}/kraken/streams/$1")
+  local streamerJson
+  streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
   local streamType
-  streamType=$(jq -r ".stream.stream_type" <<< "${streamerJson}")
+  streamType=$(jq -r ".data[0].type" <<< "${streamerJson}")
 
   # Check if stream is online 
   if [[ "${streamType}" != "null" ]]; then
@@ -312,10 +313,13 @@ check_twitch_streams_helper()
     fi
 
     local streamName
-    streamName=$(jq -r ".stream.channel.status" <<< "${streamerJson}")
+    streamName=$(jq -r ".data[0].title" <<< "${streamerJson}")
 
+    # Download game title (extract id, download info, then extract name)
     local streamGame
-    streamGame="$(jq -r ".stream.game" <<< "${streamerJson}")"
+    streamGame="$(jq -r ".data[0].game_id" <<< "${streamerJson}")"
+    streamerJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
+    streamGame="$(jq -r ".data[0].name" <<< "${streamerJson}")"
 
     local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamType} - ${#1} ))
 
@@ -610,9 +614,9 @@ stream()
 
   # Check to make sure streamer is online 
   # Get current info of streamer
-  local -r streamerJson=$(download_file "${TWITCH_API_URL}/kraken/streams/$1")
+  local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
-  if [[ "$(jq -r ".stream.stream_type" <<< "${streamerJson}")" == "null" ]]; then
+  if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
     notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Streamer $1 is not online."
     exit_script_on_failure
   fi
@@ -687,9 +691,9 @@ subscribe()
   fi
 
   # Check to make sure streamer exists before subscribing
-  local -r streamerJson=$(download_file "${TWITCH_API_URL}/kraken/channels/${streamerToSubscribeTo}")
+  local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=${streamerToSubscribeTo}")
 
-  if [[ "$(jq -r ".status" <<< "${streamerJson}")" == "404" ]]; then
+  if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
     exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
   fi
 
