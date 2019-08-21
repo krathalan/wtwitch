@@ -29,7 +29,7 @@
 # This script uses shellcheck: https://www.shellcheck.net/
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -Eeu # (o pipefail) is Bash only!
+set -eu # (Eo pipefail) is Bash only!
 
 # -----------------------------------------
 # ----------- Program variables -----------
@@ -78,6 +78,10 @@ printf "Making wtwitch release files..."
 
 if [ "$(whoami)" = "root" ]; then
   exit_script_on_failure "This script should NOT be run as root (or sudo)!"
+fi
+
+if [ ! -x "$(command -v a2x)" ]; then
+  exit_script_on_failure "You need to have asciidoc installed to build the man page."
 fi
 
 readonly VERSION="$(head wtwitch | grep -i "version" | awk '{printf $3}')"
