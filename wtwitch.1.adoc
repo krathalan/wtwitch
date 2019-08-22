@@ -1,7 +1,7 @@
 = wtwitch(1)
 Hunter Peavey <krathalan at disroot dot org>
-:Date:          June 27 2019
-:Revision:      1.0.3
+:Date:          August 21 2019
+:Revision:      1.0.4
 :man source:    wtwitch
 :man version:   {revision}
 :man manual:    User Commands
@@ -17,7 +17,7 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 == DEFAULT BEHAVIOR
 === Player
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, whereas VLC does not (yet). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed. 
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and [I've wrote an AppArmor profile for mpv](https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed.
 
 You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch -p [PLAYER]. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
@@ -56,9 +56,9 @@ Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to
 Change the default _quality_ that gets passed to Streamlink, e.g. wtwitch *-q* _"720p,480p"_
 
 == FILES
-The configuration file is at `~/.config/wtwitch/config.json`. 
+The configuration file is at `~/.config/wtwitch/config.json`. Cache files are kept in `~/.cache/wtwitch`.
 
-Cache files are kept in `~/.cache/wtwitch`.
+You should never need to edit these files; you should use the options listed above. However if you wish to edit them manually they're human-readable and easily edited.
 
 == SYNCING SUBSCRIPTIONS
 Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a utility already installed on your GNU/Linux computer. Syncthing is a powerful synchronization program for multiple operating systems licensed under the Mozilla Public License v2, which is FSF approved. You can look at Syncthing's homepage for more information, as well as their user documentation: 
