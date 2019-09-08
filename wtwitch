@@ -690,13 +690,6 @@ subscribe()
     fi
   fi
 
-  # Check to make sure streamer exists before subscribing
-  local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=${streamerToSubscribeTo}")
-
-  if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
-    exit_script_on_failure "Streamer ${streamerToSubscribeTo} does not exist."
-  fi
-
   # Add subscription (can't use write_setting here due to unique jq syntax)
   local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
   printf "%s" "${tempJson}" > "${CONFIG_FILE}"
