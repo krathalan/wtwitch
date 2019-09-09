@@ -1,7 +1,7 @@
 = wtwitch(1)
 Hunter Peavey <krathalan at disroot dot org>
-:Date:          August 21 2019
-:Revision:      1.0.4
+:Date:          September 09 2019
+:Revision:      1.0.6
 :man source:    wtwitch
 :man version:   {revision}
 :man manual:    User Commands
@@ -10,14 +10,14 @@ Hunter Peavey <krathalan at disroot dot org>
 wtwitch - terminal user interface for Twitch
 
 == SYNOPSIS
-wtwitch [*(no option)* _streamer_|*-t*|*--top-games*|*-g* _game_|**--get-streamers=**_game_|*-s* _streamer_|**--subscribe=**_streamer_|*-u* _streamer_|**--unsubscribe=**_streamer_|*-c*|*--check*|*-p* _player_|**--change-player=**_player_|*-q* _quality_|**--change-quality=**_quality_]
+wtwitch [*(no option)* _streamer_|*-t*|*--top-games*|*-g* _game_|**--get-streamers=**_game_|*-s* _streamer_|**--subscribe=**_streamer_|*-u* _streamer_|**--unsubscribe=**_streamer_|*-c*|*--check*|*-p* _player_|**--change-player=**_player_|*-q* _quality_|**--change-quality=**_quality_]|*-d*
 
 == DESCRIPTION
 Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account, and without loading or executing Twitch's proprietary JavaScript.
 
 == DEFAULT BEHAVIOR
 === Player
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and [I've wrote an AppArmor profile for mpv](https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed.
 
 You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch -p [PLAYER]. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
@@ -54,6 +54,9 @@ Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to
 
 *-q* _quality_, **--change-quality=**_quality_::
 Change the default _quality_ that gets passed to Streamlink, e.g. wtwitch *-q* _"720p,480p"_
+
+*-d*::
+Run the program in debug mode, avoiding subshells and printing each command processed. If you do this you should probably redirect all output to a log file, e.g. wtwitch -c *-d* &> debug.log
 
 == FILES
 The configuration file is at `~/.config/wtwitch/config.json`. Cache files are kept in `~/.cache/wtwitch`.

@@ -2,7 +2,7 @@
 #
 # Description: Browse and watch Twitch without being tracked.
 # Homepage: https://gitlab.com/krathalan/wtwitch
-# Version 1.0.5
+# Version 1.0.6
 #
 # Copyright (C) 2019 krathalan
 #
@@ -74,6 +74,14 @@ readonly LOAD_SUBS_FILE="/tmp/.wtwitch.tmp"
 readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
+
+# Debugging
+if [[ "$*" == *"-d"* ]]; then
+  readonly DEBUGGING="on"
+  set -x
+else
+  readonly DEBUGGING="off"
+fi
 
 # -----------------------------------------
 # ------------- User variables ------------
@@ -257,9 +265,17 @@ check_twitch_streams()
     # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
     touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
 
-    for stream in "${userSubscriptions[@]}"; do
-      check_twitch_streams_helper "${stream}" &
-    done
+    # Do not invoke subshells for status checking if debugging is on; subshells
+    # will not print debugging info with set -x
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      for stream in "${userSubscriptions[@]}"; do
+        check_twitch_streams_helper "${stream}"
+      done
+    else
+      for stream in "${userSubscriptions[@]}"; do
+        check_twitch_streams_helper "${stream}" &
+      done
+    fi
 
     wait
 
