@@ -12,7 +12,7 @@ Table of contents:
 
 ## Install
 ### Arch Linux
-Install the official AUR package, maintained by the author of wtwitch: https://aur.archlinux.org/packages/wtwitch/
+Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
 ### Any distro
 Download the script manually
