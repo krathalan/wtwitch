@@ -80,15 +80,15 @@ if [ "$(whoami)" = "root" ]; then
   exit_script_on_failure "This script should NOT be run as root (or sudo)!"
 fi
 
-if [ ! -x "$(command -v a2x)" ]; then
-  exit_script_on_failure "You need to have asciidoc installed to build the man page."
+if [ ! -x "$(command -v scdoc)" ]; then
+  exit_script_on_failure "You need to have scdoc installed to build the man page."
 fi
 
-readonly VERSION="$(head wtwitch | grep -i "version" | awk '{printf $3}')"
+readonly VERSION="$(grep "VERSION=" wtwitch | cut -d "\"" -f2 | cut -d "\"" -f1)"
 readonly TARBALL="wtwitch-${VERSION}.tar.gz"
 
 # Create man page
-a2x --format manpage wtwitch.1.adoc
+scdoc < wtwitch.1.scd > wtwitch.1
 
 # Create tarball
 tar -czf "${TARBALL}" wtwitch wtwitch.1
