@@ -1,3 +1,11 @@
+1.0.8-1
+    Add CHANGELOG to .tar.gz releases
+
+1.0.7-1
+    Add version (`-v`,`--version`) flag to display current version of wtwitch
+    Updated man page
+    Changed format of man page from asciidoc to scdoc
+
 1.0.6-1
     Added debug option (-d) and updated man page
 
