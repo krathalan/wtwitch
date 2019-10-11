@@ -39,8 +39,11 @@ set -eu # (Eo pipefail) is Bash only!
 readonly RED=$(tput bold && tput setaf 1)
 readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 
-# Other
+# Miscellaneous
+readonly DOWNLOADS_PATH="${HOME}/Downloads"
 readonly SCRIPT_NAME=$(basename "$0")
+readonly VERSION="$(grep "VERSION=" wtwitch | cut -d "\"" -f2 | cut -d "\"" -f1)"
+readonly TARBALL="wtwitch-${VERSION}.tar.gz"
 
 # -----------------------------------------
 # ------------- User variables ------------
@@ -73,7 +76,6 @@ exit_script_on_failure()
 # ---------------- Script -----------------
 # -----------------------------------------
 
-# Print intro
 printf "Making wtwitch release files..."
 
 if [ "$(whoami)" = "root" ]; then
@@ -84,25 +86,21 @@ if [ ! -x "$(command -v scdoc)" ]; then
   exit_script_on_failure "You need to have scdoc installed to build the man page."
 fi
 
-readonly VERSION="$(grep "VERSION=" wtwitch | cut -d "\"" -f2 | cut -d "\"" -f1)"
-readonly TARBALL="wtwitch-${VERSION}.tar.gz"
-
 # Create man page
 scdoc < wtwitch.1.scd > wtwitch.1
 
 # Create tarball
 tar -czf "${TARBALL}" wtwitch wtwitch.1
 
-# Create verification files
+# Create signature and checksum files
 gpg --output "${TARBALL}.sig" --detach-sig "${TARBALL}"
 sha256sum "${TARBALL}" > sha256sums
 sha256sum "${TARBALL}.sig" >> sha256sums
 
-# Remove unnecessary files
+# Remove leftover files
 rm -f wtwitch.1
 
-# Move/copy files to Downloads folder for uploading 
-readonly DOWNLOADS_PATH="${HOME}/Downloads"
+# Move/copy release files to Downloads folder for uploading
 mv "${TARBALL}" "${DOWNLOADS_PATH}"
 mv "${TARBALL}.sig" "${DOWNLOADS_PATH}"
 mv "sha256sums" "${DOWNLOADS_PATH}"
