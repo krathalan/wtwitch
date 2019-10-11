@@ -101,10 +101,11 @@ sha256sum "${TARBALL}.sig" >> sha256sums
 # Remove unnecessary files
 rm -f wtwitch.1
 
-# Move files to Downloads folder for uploading 
+# Move/copy files to Downloads folder for uploading 
 readonly DOWNLOADS_PATH="${HOME}/Downloads"
 mv "${TARBALL}" "${DOWNLOADS_PATH}"
 mv "${TARBALL}.sig" "${DOWNLOADS_PATH}"
 mv "sha256sums" "${DOWNLOADS_PATH}"
+cp "CHANGELOG" "${DOWNLOADS_PATH}"
 
 printf "done.\n"
