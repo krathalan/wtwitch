@@ -16,13 +16,13 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 ## Player
 
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
 
-You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch -p [PLAYER]. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
+You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *-p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
 ## Quality
 
-Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch -q [QUALITY]. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
+Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch *-q* _quality_. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
 
 ## Miscellaneous
 
@@ -30,7 +30,9 @@ Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer
 
 ## Caching
 
-To reduce strain on the Twitch API, responses to the check option (-c,--check) are kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to or unsubscribe from a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before using -c,--check.
+To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to or unsubscribe from a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
+
+See *FILES* below for the path of the cache directory.
 
 # OPTIONS
 
@@ -69,7 +71,7 @@ To reduce strain on the Twitch API, responses to the check option (-c,--check) a
 
 The configuration file is at ~/.config/wtwitch/config.json. Cache files are kept in ~/.cache/wtwitch.
 
-You should never need to edit these files; you should use the options listed above. However if you wish to edit them manually they're human-readable and easily edited.
+You should never need to edit these files; you should use the options listed above. However you may easily edit them manually.
 
 # SYNCING SUBSCRIPTIONS
 
@@ -83,13 +85,13 @@ ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json
 
 # BUGS
 
-Please report any bugs at:
-
-https://gitlab.com/krathalan/wtwitch/issues
+Please report any bugs at: https://gitlab.com/krathalan/wtwitch/issues
 
 # LICENSES
 
 Wtwitch itself is licensed under the GPLv3.
+
+## Dependencies
 
 jq is licensed under the MIT license.
 
@@ -99,4 +101,4 @@ Streamlink is licensed under the 2-clause BSD license.
 
 Wget is licensed under the GPLv3.
 
-All licenses, for wtwitch itself and its dependencies, are FSF approved. 
+All licenses, for wtwitch itself and its dependencies, are FSF approved: https://www.gnu.org/licenses/license-list.html
