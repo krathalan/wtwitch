@@ -36,6 +36,8 @@ See *FILES* below for the path of the cache directory.
 
 # OPTIONS
 
+## Viewing and browsing streams
+
 *(no option)* _streamer_++
     Watch the specified _streamer_, e.g. wtwitch _overwatchleague_
 
@@ -44,6 +46,8 @@ See *FILES* below for the path of the cache directory.
 
 *-g* _game_, **--get-streamers**=_game_++
     View the top streamers for a specified _game_, e.g. wtwitch *-g* _"world of warcraft"_. Game names with spaces must be quoted.
+
+## Subscriptions
 
 *-s* _streamer_, **--subscribe=**_streamer_++
     Subscribe to a specific _streamer_, e.g. wtwitch *-s* _overwatchleague_
@@ -54,6 +58,8 @@ See *FILES* below for the path of the cache directory.
 *-c*, *--check*++
     View your settings and the status of the streamers you are subscribed to, e.g. wtwitch *-c*
 
+## Configuration options
+
 *-p* _player_, **--change-player=**_player_++
     Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink, e.g. wtwitch *-p* _vlc_
 
@@ -62,6 +68,8 @@ See *FILES* below for the path of the cache directory.
 
 *-l*, *--toggle-colors*++
     Toggle the usage of colors in wtwitch output.
+
+## Miscellaneous
 
 *-d*++
     Run the program in debug mode, avoiding subshells and printing each command processed.++
@@ -85,6 +93,12 @@ https://docs.syncthing.net/intro/getting-started.html
 After setting up Syncthing on the computers on which you wish to sync subscriptions, copy your subscriptions file from ~/.config/wtwitch/config.json to a directory that you are syncing with Syncthing. Then link the file to the previous location. For example, if you copied your subscriptions file to ~/Documents/Config, you can link it to the correct location with the command:
 
 ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json
+
+# CHANGELOG
+
+View the wtwitch changelog with the command:
+
+pacman -Qc wtwitch
 
 # BUGS
 
