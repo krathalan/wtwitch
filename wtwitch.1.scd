@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.0.7"]
+wtwitch(1) ["Version 1.0.8"]
 
 # NAME
 
@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*(no option)* _streamer_|*-t*|*--top-games*|*-g* _game_|*--get-streamers=*_game_|*-s* _streamer_|*--subscribe=*_streamer_|*-u* _streamer_|*--unsubscribe=*_streamer_|*-c*|*--check*|*-p* _player_|*--change-player=*_player_|*-q* _quality_|*--change-quality=*_quality_|*-d*|*-v*|*--version*]
+wtwitch [*(no option)* _streamer_|*-t*|*-g* _game_|*-s* _streamer_|*-u* _streamer_|*-c*|*-p* _player_|*-q* _quality_|*-l*|*-d*|*-v*]
 
 # DESCRIPTION 
 
@@ -58,7 +58,10 @@ See *FILES* below for the path of the cache directory.
     Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink, e.g. wtwitch *-p* _vlc_
 
 *-q* _quality_, **--change-quality=**_quality_++
-    Change the default _quality_ that gets passed to Streamlink, e.g. wtwitch *-q* _"720p,480p"_
+    Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, and worst are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. wtwitch *-q* _"720p,480p"_
+
+*-l*, *--toggle-colors*++
+    Toggle the usage of colors in wtwitch output.
 
 *-d*++
     Run the program in debug mode, avoiding subshells and printing each command processed.++
@@ -85,7 +88,7 @@ ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json
 
 # BUGS
 
-Please report any bugs at: https://gitlab.com/krathalan/wtwitch/issues
+Please file requests and report any bugs at: https://gitlab.com/krathalan/wtwitch/issues
 
 # LICENSES
 
@@ -95,10 +98,10 @@ Wtwitch itself is licensed under the GPLv3.
 
 jq is licensed under the MIT license.
 
-mpv (should you choose it as your player) is licensed under the GPLv2 and LGPLv2.1 licenses.
-
 Streamlink is licensed under the 2-clause BSD license.
 
 Wget is licensed under the GPLv3.
+
+VLC and mpv, should you choose either as your player, are both licensed under both the GPLv2 and LGPLv2.1 licenses.
 
 All licenses, for wtwitch itself and its dependencies, are FSF approved: https://www.gnu.org/licenses/license-list.html

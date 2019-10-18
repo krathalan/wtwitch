@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://gitlab.com/krathalan/wtwitch"
-readonly VERSION="1.0.7"
+readonly VERSION="1.0.8"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
@@ -88,6 +88,7 @@ fi
 # -----------------------------------------
 
 # Values are loaded from $CONFIG_FILE (usually ~/.config/wtwitch/config.json)
+useColors=""
 userPlayer=""
 userQuality=""
 userSubscriptions=()
@@ -168,7 +169,7 @@ change_quality()
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
   else
-    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. See ${PROJECT_URL}/#wtwitch-q-quality-change-qualityquality for more information."
+    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, and worst are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"."
   fi
 }
 
@@ -207,7 +208,8 @@ check_files()
       mkdir "${CONFIG_FILE_DIRECTORY}"
     fi
 
-    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+    # Default config
+    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
   fi
 
   # Create cache folder if it doesn't exist
@@ -345,7 +347,11 @@ check_twitch_streams_helper()
       streamName="${streamName}…"
     fi
 
-    printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    if [[ "${useColors}" == "true" ]]; then
+      printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    else
+      printf "   %s: %s (playing %s%s)\n" "$1" "${streamName}" "${streamGame}" "${streamType}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    fi
   else
     printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
@@ -417,6 +423,9 @@ exit_script_on_failure()
 #######################################
 list_streamers_of_game()
 {
+  # Load config for useColors
+  load_config
+
   # Replace spaces in game name with %20 for URL
   local -r gameName=${1// /%20}
 
@@ -478,7 +487,11 @@ list_streamers_of_game_helper()
     streamTitle="${streamTitle}…"
   fi
 
-  printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "${viewers}" "${NC}"
+  if [[ "${useColors}" == "true" ]]; then
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "${viewers}" "${NC}"
+  else
+    printf "   %s: %s (%s viewers)\n" "${streamerName}" "${streamTitle}" "${viewers}"
+  fi
 }
 
 #######################################
@@ -494,6 +507,9 @@ list_streamers_of_game_helper()
 #######################################
 list_top_games()
 {
+  # Load config for useColors
+  load_config
+
   printf "\n Top games:\n"
   
   local -r twitchJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
@@ -504,7 +520,11 @@ list_top_games()
   gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}"
+    if [[ "${useColors}" == "true" ]]; then
+      printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}"
+    else
+      printf "   %s. %s\n" $(( whileCounter + 1 )) "${gameName}"
+    fi
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
@@ -530,6 +550,7 @@ load_config()
   check_files
 
   # Load settings
+  useColors=$(jq -r ".colors" "${CONFIG_FILE}")
   userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
   userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
 }
@@ -643,7 +664,7 @@ stream()
     userPlayer="${userPlayer} --hwdec=auto"
 
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
-      userPlayer="${userPlayer} --hwdec=auto --gpu-context=wayland"
+      userPlayer="${userPlayer} --gpu-context=wayland"
     fi
 
     {
@@ -714,6 +735,33 @@ subscribe()
   write_setting ".lastSubscriptionUpdate" "null"
 
   printf "\n %s Successfully subscribed to %s.\n" "${CHECK_MARK}" "${streamerToSubscribeTo}"
+}
+
+#######################################
+# Changes the useColor value in $CONFIG_FILE that determines if wtwitch output is colored.
+# Globals:
+#   useColors
+#   CHECK_MARK
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+toggle_colors()
+{
+  load_config
+
+  # Reverse "colors" value
+  if [[ "${useColors}" == "true" ]]; then
+    write_setting ".colors" "false"
+    printf "\n %s Turned colors OFF.\n" "${CHECK_MARK}"
+  else
+    write_setting ".colors" "true"
+    printf "\n %s Turned colors ON.\n" "${CHECK_MARK}"
+  fi
+
+  # Invalidate cache as it may or may not have colors
+  write_setting ".lastSubscriptionUpdate" "null"
 }
 
 #######################################
@@ -821,6 +869,11 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "No game specified."
       fi
+      printf "%s" "${NC}" && exit 0
+      break
+      ;;
+    -l|--toggle-colors)
+      toggle_colors
       printf "%s" "${NC}" && exit 0
       break
       ;;
