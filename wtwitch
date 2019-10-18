@@ -829,9 +829,6 @@ write_setting()
 # ---------------- Script -----------------
 # -----------------------------------------
 
-check_command "wget"
-check_command "jq"
-
 if [[ $# -eq 0 ]]; then
   print_help
   printf "%s" "${NC}" && exit 0
@@ -990,5 +987,4 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-check_command "streamlink"
 stream "$1" &> /dev/null &
