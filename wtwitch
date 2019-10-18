@@ -353,7 +353,11 @@ check_twitch_streams_helper()
       printf "   %s: %s (playing %s%s)\n" "$1" "${streamName}" "${streamGame}" "${streamType}" >> "${CACHE_ONLINE_TEXT_FILE}"
     fi
   else
-    printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    if [[ "${useColors}" == "true" ]]; then
+      printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    else
+      printf "   %s\n" "$1" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    fi
   fi
 }
 
