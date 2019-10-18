@@ -205,7 +205,7 @@ check_files()
   # Create config file if it doesnt exist
   if [[ ! -f "${CONFIG_FILE}" ]]; then
     if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-      mkdir "${CONFIG_FILE_DIRECTORY}"
+      mkdir -p "${CONFIG_FILE_DIRECTORY}"
     fi
 
     # Default config
