@@ -614,9 +614,7 @@ load_subs_helper()
 #######################################
 # Prints information about how to use this script.
 # Globals:
-#   Colors: GREEN, NC
-#   PROJECT_URL
-#   SCRIPT_NAME
+#   none
 # Arguments:
 #   none
 # Returns:
@@ -624,7 +622,7 @@ load_subs_helper()
 #######################################
 print_help()
 {
-  man wtwitch
+  man wtwitch || exit_script_on_failure "View the man page at ${PROJECT_URL}/blob/master/wtwitch.1.scd"
 }
 
 #######################################
