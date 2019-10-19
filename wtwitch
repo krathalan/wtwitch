@@ -131,7 +131,9 @@ change_player()
   local -r playerName="${1,,}"
 
   # Check to make sure user has input player actually installed
-  check_command "${playerName}"
+  if [[ ! -x "$(command -v "${playerName}")" ]]; then
+    exit_script_on_failure "Media player ${playerName} not found."
+  fi
 
   # Check against known working players
   for i in "${workingPlayers[@]}"; do
@@ -184,22 +186,6 @@ change_quality()
     write_setting ".quality" "${specifiedQuality}"
   else
     exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"."
-  fi
-}
-
-#######################################
-# Checks to see if a specified command is available and exits the script if the command is not available.
-# Globals:
-#   PROJECT_URL
-# Arguments:
-#   $1: command to test
-# Returns:
-#   none
-#######################################
-check_command()
-{
-  if [[ ! -x "$(command -v "$1")" ]]; then
-    exit_script_on_failure "Package $1 not installed. More information: ${PROJECT_URL}/#dependencies"
   fi
 }
 
