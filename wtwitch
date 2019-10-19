@@ -89,7 +89,7 @@ if [[ "$*" == *"-d"* ]]; then
     readonly packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nwtwitch Version: %s\njq Version: %s\nstreamlink Version: %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${packageinfo}" "${VERSION}" "$(jq --version)" "$(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${dashes}" "${dashes}"
+  printf "Starting wtwitch debug log\nPackage: %s\nwtwitch Version: %s\nDeps: %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${dashes}" "${dashes}"
 
   # Print all commands
   set -x
