@@ -21,7 +21,7 @@
 # -------------- Guidelines ---------------
 # -----------------------------------------
 
-# This script follows the Google Shell Style Guide: 
+# This script follows the Google Shell Style Guide:
 # https://google.github.io/styleguide/shell.xml
 
 # This script uses shellcheck: https://www.shellcheck.net/
@@ -236,7 +236,7 @@ check_twitch_streams()
 {
   load_subs --async &
   load_config
-  
+
   wait
 
   # Manually assign userSubscriptions due to asynchronous sub loading
@@ -254,7 +254,7 @@ check_twitch_streams()
     lastSubscriptionUpdate=$(LANG=C date +%s -d "${lastSubscriptionUpdate}")
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
-  
+
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
   # if the time between now and the last subscription update is greater than the cache expiry time, OR
   # if either of the cache files do NOT exist yet
@@ -283,7 +283,7 @@ check_twitch_streams()
     # Update lastSubscriptionUpdate time
     write_setting ".lastSubscriptionUpdate" "$(LANG=C date -d "now")"
   fi
-  
+
   printf "\n"
 
   sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
@@ -316,7 +316,7 @@ check_twitch_streams_helper()
   local streamerJson
   streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
-  # Check if stream is online 
+  # Check if stream is online
   local streamType
   streamType=$(jq -r ".data[0].type" <<< "${streamerJson}")
 
@@ -395,12 +395,12 @@ download_file()
 # Returns:
 #   none
 #######################################
-exit_script_on_failure() 
+exit_script_on_failure()
 {
   if [[ $# -gt 0 ]]; then
     printf "\n %sError%s: %s\n\n Exiting %s.\n%s" "${RED}" "${NC}" "$1" "${SCRIPT_NAME}" "${NC}" >&2
   fi
-  
+
   clean_up
   exit 1
 }
@@ -426,7 +426,7 @@ list_streamers_of_game()
   # Get game_id
   local twitchJson
   twitchJson=$(download_file "${TWITCH_API_URL}/helix/games?name=${gameName}")
-  
+
   local -r gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
 
   # Get streamers
@@ -506,7 +506,7 @@ list_top_games()
   load_config
 
   printf "\n Top games:\n"
-  
+
   local -r twitchJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
 
   local whileCounter=0
@@ -576,7 +576,7 @@ load_subs()
   while [[ ${whileCounter} -lt ${numberOfSubs} ]]; do
     load_subs_helper "${whileCounter}" &
     whileCounter=$(( whileCounter + 1 ))
-  done  
+  done
 
   wait
 
@@ -631,7 +631,7 @@ print_help()
 stream()
 {
   load_config
-  
+
   # Use VLC as backup player if mpv is not installed
   if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     if [[ -x "$(command -v "vlc")" ]]; then
@@ -641,7 +641,7 @@ stream()
     fi
   fi
 
-  # Check to make sure streamer is online 
+  # Check to make sure streamer is online
   # Get current info of streamer
   local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
