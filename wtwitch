@@ -160,7 +160,7 @@ change_player()
 #######################################
 change_quality()
 {
-  local -r acceptableQualities=("worst" "160p" "360p" "480p" "720p" "720p60" "1080p60" "best")
+  local -r acceptableQualities=("audio_only" "worst" "160p" "360p" "480p" "720p" "720p60" "1080p60" "best")
   local passedCheckMarkerArray=()
 
   # Convert user input to lowercase
@@ -183,7 +183,7 @@ change_quality()
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
   else
-    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, and worst are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"."
+    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"."
   fi
 }
 
@@ -749,8 +749,6 @@ subscribe()
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
-
-  printf "\n %s Successfully subscribed to %s.\n" "${CHECK_MARK}" "${streamerToSubscribeTo}"
 }
 
 #######################################
@@ -811,7 +809,7 @@ unsubscribe()
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
-    exit_script_on_failure "You weren't subscribed to ${streamerToUnsubscribeFrom} in the first place."
+    exit_script_on_failure "You aren't subscribed to ${streamerToUnsubscribeFrom}."
   fi
 
   # Remove subscription
@@ -820,7 +818,6 @@ unsubscribe()
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
-  printf "\n %s Successfully unsubscribed from %s.\n" "${CHECK_MARK}" "${streamerToUnsubscribeFrom}"
 }
 
 #######################################
