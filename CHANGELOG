@@ -2,6 +2,8 @@
     Added "audio_only" as an acceptable quality
     Improved functionality of (-h,--help) feature for systems without man page
     Improved information output of debug (-d) feature
+    Change AUR package to build (man page) from source and remove make_release_files.sh
+    Drop "v" prefix from tags
 
 1.0.9-1 (October 17, 2019)
     Updated man page
