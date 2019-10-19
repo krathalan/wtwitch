@@ -265,7 +265,7 @@ check_twitch_streams()
     clean_up
 
     # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
-    touch "${CACHE_ONLINE_TEXT_FILE}" && touch "${CACHE_OFFLINE_TEXT_FILE}"
+    touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
 
     # Do not invoke subshells for status checking if debugging is on; subshells
     # will not print debugging info with set -x
@@ -293,9 +293,8 @@ check_twitch_streams()
 
   sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
 
-  printf "\n Settings:"
-  printf "\n   Player set to %s" "${userPlayer}"
-  printf "\n   Quality set to %s\n" "${userQuality}"
+  # Print settings
+  printf "\n Settings:\n   Player set to %s\n   Quality set to %s\n" "${userPlayer}" "${userQuality}"
 }
 
 #######################################
@@ -318,18 +317,12 @@ check_twitch_streams_helper()
   local streamerJson
   streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
+  # Check if stream is online 
   local streamType
   streamType=$(jq -r ".data[0].type" <<< "${streamerJson}")
 
-  # Check if stream is online 
   if [[ "${streamType}" != "null" ]]; then
-    # Give a warning if the stream isn't live (e.g. it's a rerun)
-    if [[ "${streamType}" == "live" ]]; then
-      streamType=""
-    else
-      streamType=", ${RED}${streamType}${NC}"
-    fi
-
+    # Get streamer-set stream name
     local streamName
     streamName=$(jq -r ".data[0].title" <<< "${streamerJson}")
 
@@ -339,18 +332,18 @@ check_twitch_streams_helper()
     streamerJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
     streamGame="$(jq -r ".data[0].name" <<< "${streamerJson}")"
 
-    local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamType} - ${#1} ))
-
     # Truncate stream name if necessary; some streamers have excessively long stream titles
+    local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#1} ))
+
     if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
       streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
       streamName="${streamName}…"
     fi
 
     if [[ "${useColors}" == "true" ]]; then
-      printf "   %s%s%s: %s %s(playing %s%s%s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${streamType}" "${ORANGE}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+      printf "   %s%s%s: %s %s(playing %s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
     else
-      printf "   %s: %s (playing %s%s)\n" "$1" "${streamName}" "${streamGame}" "${streamType}" >> "${CACHE_ONLINE_TEXT_FILE}"
+      printf "   %s: %s (playing %s)\n" "$1" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
     fi
   else
     if [[ "${useColors}" == "true" ]]; then
@@ -474,27 +467,28 @@ list_streamers_of_game_helper()
 {
   local index="$1"
   local twitchJson="$2"
-  local streamerName="$3"
+  # name of streamer = $3
 
-  local streamTitle=""
-  streamTitle=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
+  # Get streamer-set stream name
+  local streamName=""
+  streamName=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
 
+  # Get number of current stream viewers
   local viewers=""
   viewers=$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")
 
- #local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamType} - ${#1} ))
-  local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamerName} - ${#viewers} ))
+  # Truncate stream name if necessary
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#viewers} ))
 
-  # Truncate title if necessary
-  if [[ ${#streamTitle} -gt ${maxTitleLength} ]]; then
-    streamTitle=$(printf "%s" "${streamTitle}" | cut -c 1-${maxTitleLength})
-    streamTitle="${streamTitle}…"
+  if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
+    streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
+    streamName="${streamName}…"
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamTitle}" "${ORANGE}" "${viewers}" "${NC}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}"
   else
-    printf "   %s: %s (%s viewers)\n" "${streamerName}" "${streamTitle}" "${viewers}"
+    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}"
   fi
 }
 
@@ -646,8 +640,7 @@ stream()
     if [[ -x "$(command -v "vlc")" ]]; then
       userPlayer="vlc"
     else
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Media player ${userPlayer} not found."
-      exit_script_on_failure
+      stream_failure_notify "$1" "Media player ${userPlayer} not found."
     fi
   fi
 
@@ -656,40 +649,37 @@ stream()
   local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
 
   if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
-    notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "Streamer $1 is not online."
-    exit_script_on_failure
+    stream_failure_notify "$1" "Streamer $1 is not online."
   fi
 
   # If using mpv: add window title, enable hardware dec, and use wayland if possible
   if [[ "${userPlayer}" == "mpv" ]]; then
-  {
     userPlayer="${userPlayer} --hwdec=auto"
 
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
       userPlayer="${userPlayer} --gpu-context=wayland"
     fi
 
-    {
-      # Try
-      streamlink -p "${userPlayer}" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-    } || {
-      # Catch
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
-      exit_script_on_failure
-    }
-  }
+    streamlink -p "${userPlayer}" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's stream does not support quality ${userQuality}."
   else
-  {
-    {
-      # Try
-      streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" 2> /dev/null
-    } || {
-      # Catch
-      notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "It's possible that $1's stream does not support quality ${userQuality}, or that the streamer $1 does not exist."
-      exit_script_on_failure
-    }
-  }
+    streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's stream does not support quality ${userQuality}."
   fi
+}
+
+#######################################
+# Opens a stream with Streamlink.
+# Globals:
+#   none
+# Arguments:
+#   $1: name of streamer
+#   $2: error message to print
+# Returns:
+#   none
+#######################################
+stream_failure_notify()
+{
+  notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "$2"
+  exit_script_on_failure
 }
 
 #######################################
@@ -984,4 +974,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-stream "$1" &> /dev/null &
+if [[ "${DEBUGGING}" == "on" ]]; then
+  stream "$1"
+else
+  stream "$1" &> /dev/null &
+fi
