@@ -60,7 +60,7 @@ And security seems to be a sore point with NW.js:
 
 ---
 
-Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 1 MB of RAM.) This design, along with native hardware video decoding, makes wtwitch much more resource efficient than Streamlink Twitch GUI.
+Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.) This design, along with native hardware video decoding, makes wtwitch much more resource efficient than Streamlink Twitch GUI.
 
 Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in: 
 
