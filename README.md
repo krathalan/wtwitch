@@ -53,12 +53,12 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 > "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
 
-Streamlink Twitch GUI is built on NW.js, which is similar to Electron. I'd rather not use Chrome/Chromium if I don't have to. Given the existence of projects like [ungoogled-chromium](https://github.com/Eloston/ungoogled-chromium#motivation-and-philosophy), it's clear that Chromium automatically makes a multitude of non-user-initiated connections to Google, which I'd rather my computer *not* do.
-
 Since Streamlink Twitch GUI uses Chromium to render everything, Streamlink Twitch GUI can't support hardware video decoding since [Chromium doesn't support it on Linux](https://fossbytes.com/chrome-hardware-acceleration-on-linux-dont-expect-google/). Using a native player with wtwitch like mpv allows users to watch twitch streams with hardware video decoding which frees up resources for other programs and dramatically reduces battery usage on mobile devices.
 
-Finally, security seems to be a sore point with NW.js:
+And security seems to be a sore point with NW.js:
 > "Node frames have following extra capabilities than normal frames: ... Bypass all security restrictions, such as sandboxing, same origin policy etc. For example, you can make cross origin XHR to any remote sites, or access to \<iframe\> element whose src points to remote sites in node frames." ([from the NW.js documentation](http://docs.nwjs.io/en/latest/For%20Users/Advanced/Security%20in%20NW.js/))
+
+---
 
 Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 1 MB of RAM.) This design, along with native hardware video decoding, makes wtwitch much more resource efficient than Streamlink Twitch GUI.
 
