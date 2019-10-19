@@ -398,12 +398,10 @@ download_file()
 exit_script_on_failure() 
 {
   if [[ $# -gt 0 ]]; then
-    printf "\n %sError%s: %s\n" "${RED}" "${NC}" "$1" >&2
-    printf "\n Exiting %s Bash script.\n" "${SCRIPT_NAME}" >&2
+    printf "\n %sError%s: %s\n\n Exiting %s.\n%s" "${RED}" "${NC}" "$1" "${SCRIPT_NAME}" "${NC}" >&2
   fi
   
   clean_up
-  printf "%s" "${NC}"
   exit 1
 }
 
