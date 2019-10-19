@@ -1,3 +1,6 @@
+1.1.1-1 (TBD)
+    Added debugging feature for "no option" option, i.e. opening a stream
+
 1.1.0-1 (October 19, 2019)
     Fixed an issue where wtwitch would not function if the ~/.config/ dir didn't exist
     Added "audio_only" as an acceptable quality
