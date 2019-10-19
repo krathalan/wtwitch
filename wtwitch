@@ -723,7 +723,7 @@ subscribe()
 #######################################
 # Changes the useColor value in $CONFIG_FILE that determines if wtwitch output is colored.
 # Globals:
-#   Colors: GREEN
+#   Colors: GREEN, NC
 #   useColors
 # Arguments:
 #   none
