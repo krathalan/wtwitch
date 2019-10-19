@@ -70,7 +70,6 @@ readonly TERMINAL_WIDTH=$(tput cols)
 readonly LOAD_SUBS_FILE="/tmp/wtwitch.tmp"
 
 # Miscellaneous
-readonly CHECK_MARK="${GREEN}✔${NC}"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
@@ -114,7 +113,6 @@ userSubscriptions=()
 # Changes the default player in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
 #   Colors: ORANGE, NC
-#   CHECK_MARK
 #   CONFIG_FILE
 # Arguments:
 #   $1: player to set as default
@@ -151,7 +149,6 @@ change_player()
 #######################################
 # Changes the default quality in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
-#   CHECK_MARK
 #   CONFIG_FILE
 #   PROJECT_URL
 # Arguments:
@@ -682,7 +679,6 @@ stream_failure_notify()
 #######################################
 # Subscribes to a specific streamer.
 # Globals:
-#   CHECK_MARK
 #   CONFIG_FILE
 #   TWITCH_API_KEY
 #   TWITCH_API_URL
@@ -727,8 +723,8 @@ subscribe()
 #######################################
 # Changes the useColor value in $CONFIG_FILE that determines if wtwitch output is colored.
 # Globals:
+#   Colors: GREEN
 #   useColors
-#   CHECK_MARK
 # Arguments:
 #   none
 # Returns:
@@ -741,10 +737,10 @@ toggle_colors()
   # Reverse "colors" value
   if [[ "${useColors}" == "true" ]]; then
     write_setting ".colors" "false"
-    printf "\n %s Turned colors OFF.\n" "${CHECK_MARK}"
+    printf "\n Turned colors OFF.\n"
   else
     write_setting ".colors" "true"
-    printf "\n %s Turned colors ON.\n" "${CHECK_MARK}"
+    printf "\n %sTurned colors ON.%s\n" "${GREEN}" "${NC}"
   fi
 
   # Invalidate cache as it may or may not have colors
@@ -755,7 +751,6 @@ toggle_colors()
 # Unsubscribes from a specific streamer.
 # Globals:
 #   CONFIG_FILE
-#   CHECK_MARK
 # Arguments:
 #   $1: streamer to unsubscribe from
 # Returns:
