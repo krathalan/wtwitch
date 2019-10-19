@@ -27,10 +27,10 @@ Streamlink Twitch GUI is great for people uncomfortable with the command line. H
 When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with wtwitch -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~230 MB for Streamlink Twitch GUI.
 
 > `$ find streamlink-twitch-gui/src/ -name "*.*" | xargs wc -l | tail -n1`  
->> `58147 total`  
+`58147 total`  
 
 > `$ wc -l wtwitch/* | tail -n1`  
->> `3234 total`
+ `3234 total`
 
 Additionally, Streamlink Twitch GUI's source consists of a multitude of files (HTML, Javascript, CSS, etc.) of varying lengths, altogether at least over 3000 lines of code, not counting any framework lines of code. Wtwitch is only written in Bash, and all the code is contained in one file at under 1500 lines of code. It's much easier for someone to audit the source code of (or contribute to) wtwitch, compared to Streamlink Twitch GUI. If you use Bash at all, you can understand a good portion of wtwitch's source code.
 
