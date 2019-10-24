@@ -611,7 +611,7 @@ load_subs_helper()
 #######################################
 print_help()
 {
-  man wtwitch || exit_script_on_failure "View the man page at ${PROJECT_URL}/blob/master/wtwitch.1.scd"
+  man wtwitch || exit_script_on_failure "View the man page at ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
 }
 
 #######################################
