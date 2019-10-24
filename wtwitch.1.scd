@@ -16,7 +16,7 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 ## Player
 
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://gitlab.com/krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://git.sr.ht/~krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
 
 You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *-p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
@@ -102,7 +102,7 @@ pacman -Qc wtwitch
 
 # BUGS
 
-Please file requests and report any bugs at: https://gitlab.com/krathalan/wtwitch/issues
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
 # LICENSES
 

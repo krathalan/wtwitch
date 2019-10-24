@@ -20,6 +20,9 @@ Download the script manually
 ## More information
 See `man wtwitch` if you have the AUR package installed. Otherwise, read the manual here: [wtwitch.1.scd](wtwitch.1.scd)
 
+## Bugs
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
 Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it for a number of (fairly trivial) reasons.
@@ -43,7 +46,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 ---
 
-> `$ git clone https://gitlab.com/krathalan/wtwitch.git && cloc wtwitch/`  
+> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/`  
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
