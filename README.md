@@ -18,7 +18,7 @@ Install the official AUR package, maintained by the author of wtwitch (me): http
 Download the script manually
 
 ## More information
-See the [man page](wtwitch.1.scd).
+See `man wtwitch` if you have the AUR package installed. Otherwise, read the manual here: [wtwitch.1.scd](wtwitch.1.scd)
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
