@@ -28,8 +28,7 @@ When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 M
 
 Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
 
-> `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git`  
-`$ cloc streamlink-twitch-gui/src/`  
+> `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/`  
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
@@ -42,9 +41,9 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 | CSS | 1 | 2 | 2 | 14 |
 | SUM | 778 | 8865 | 2926 | **46306** |
 
+---
 
-> `$ git clone https://gitlab.com/krathalan/wtwitch.git`  
- `$ cloc wtwitch/`  
+> `$ git clone https://gitlab.com/krathalan/wtwitch.git && cloc wtwitch/`  
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
@@ -52,6 +51,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 | Markdown | 1 | 20 | 0 | 34 |
 | SUM | 2 | 148 | 342 | **565** |
 
+---
 
 > "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
 
