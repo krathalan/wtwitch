@@ -2,7 +2,8 @@
 #
 # Description: Browse and watch Twitch without being tracked.
 #
-# Copyright (C) 2019 krathalan
+# Copyright (C) 2019:
+readonly CONTRIBUTORS="krathalan"
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,7 +88,7 @@ if [[ "$*" == *"-d"* ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nwtwitch Version: %s\nDeps: %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
+  printf "Starting wtwitch debug log\nPackage: %s\nVersions: wtwitch-%s %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
 
   # Print all commands
   set -x
@@ -952,7 +953,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -v|--version)
       printf "wtwitch v%s\n" "${VERSION}"
-      printf "Copyright (C) krathalan 2019-%s\n" "$(date +%Y)"
+      printf "Copyright (C) %s 2019-%s\n" "${CONTRIBUTORS}" "$(date +%Y)"
       printf "This is free software: you are free to change and redistribute it.\n"
       printf "There is NO WARRANTY, to the extent permitted by law.\n"
       printf "%s" "${NC}" && exit 0
