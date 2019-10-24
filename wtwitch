@@ -79,15 +79,15 @@ if [[ "$*" == *"-d"* ]]; then
   readonly DEBUGGING="on"
 
   # Print log information
-  readonly dashes="-----------------------------------------------------------"
+  readonly _dashes="-----------------------------------------------------------"
 
   if pacman -Q wtwitch &> /dev/null; then
-    readonly packageinfo="installed via pacman"
+    readonly _packageinfo="installed via pacman"
   else
-    readonly packageinfo="script or unknown"
+    readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nwtwitch Version: %s\nDeps: %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${dashes}" "${dashes}"
+  printf "Starting wtwitch debug log\nPackage: %s\nwtwitch Version: %s\nDeps: %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
 
   # Print all commands
   set -x
@@ -113,7 +113,6 @@ userSubscriptions=()
 # Changes the default player in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
 #   Colors: ORANGE, NC
-#   CONFIG_FILE
 # Arguments:
 #   $1: player to set as default
 # Returns:
@@ -149,8 +148,7 @@ change_player()
 #######################################
 # Changes the default quality in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
-#   CONFIG_FILE
-#   PROJECT_URL
+#   none
 # Arguments:
 #   $1: quality to set as default
 # Returns:
@@ -217,9 +215,11 @@ check_files()
 #######################################
 # Checks to see which subscribed Twitch streams are online and prints the user's settings.
 # Globals:
+#   CACHE_EXPIRY_TIME
 #   CACHE_OFFLINE_TEXT_FILE
 #   CACHE_ONLINE_TEXT_FILE
 #   CONFIG_FILE
+#   DEBUGGING
 #   LOAD_SUBS_FILE
 #   userPlayer
 #   userQuality
@@ -296,11 +296,11 @@ check_twitch_streams()
 #######################################
 # Used by check_twitch_streams to facilitate multi-process fetching and parsing of json files.
 # Globals:
-#   Colors: RED, NC, TURQOISE, ORANGE
+#   Colors: LIGHTGREEN, NC, ORANGE, GREY
 #   CACHE_OFFLINE_TEXT_FILE
 #   CACHE_ONLINE_TEXT_FILE
 #   TERMINAL_WIDTH
-#   TWITCH_API_KEY
+#   TITLE_CHARACTERS
 #   TWITCH_API_URL
 # Arguments:
 #   none
@@ -355,6 +355,7 @@ check_twitch_streams_helper()
 # Globals:
 #   CACHE_ONLINE_TEXT_FILE
 #   CACHE_OFFLINE_TEXT_FILE
+#   LOAD_SUBS_FILE
 # Arguments:
 #   none
 # Returns:
@@ -405,7 +406,6 @@ exit_script_on_failure()
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
-#   TWITCH_API_KEY
 #   TWITCH_API_URL
 # Arguments:
 #   $1: game to list top streamers of
@@ -450,6 +450,7 @@ list_streamers_of_game()
 # Globals:
 #   Colors: TURQOISE, NC, ORANGE
 #   TERMINAL_WIDTH
+#   TITLE_CHARACTERS
 # Arguments:
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
@@ -489,9 +490,9 @@ list_streamers_of_game_helper()
 #######################################
 # Lists the top games on Twitch.
 # Globals:
-#   Colors: TURQOISE, NC
-#   TWITCH_API_KEY
+#   Colors: PURPLE, NC
 #   TWITCH_API_URL
+#   useColors
 # Arguments:
 #   none
 # Returns:
@@ -528,7 +529,7 @@ list_top_games()
 # Loads user player and quality settings from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
-#   CONFIG_FILE_DIRECTORY
+#   useColors
 #   userPlayer
 #   userQuality
 # Arguments:
@@ -602,7 +603,7 @@ load_subs_helper()
 #######################################
 # Prints information about how to use this script.
 # Globals:
-#   none
+#   PROJECT_URL
 # Arguments:
 #   none
 # Returns:
@@ -616,7 +617,6 @@ print_help()
 #######################################
 # Opens a stream with Streamlink.
 # Globals:
-#   TWITCH_API_KEY
 #   TWITCH_API_URL
 #   userPlayer
 #   userQuality
@@ -661,7 +661,7 @@ stream()
 }
 
 #######################################
-# Opens a stream with Streamlink.
+# Notifies the user if streaming failed.
 # Globals:
 #   none
 # Arguments:
@@ -680,8 +680,6 @@ stream_failure_notify()
 # Subscribes to a specific streamer.
 # Globals:
 #   CONFIG_FILE
-#   TWITCH_API_KEY
-#   TWITCH_API_URL
 # Arguments:
 #   $1: streamer to subscribe to
 # Returns:
@@ -721,7 +719,7 @@ subscribe()
 }
 
 #######################################
-# Changes the useColor value in $CONFIG_FILE that determines if wtwitch output is colored.
+# Changes the useColor value in $CONFIG_FILE that determines if wtwitch output is colorful.
 # Globals:
 #   Colors: GREEN, NC
 #   useColors
@@ -966,6 +964,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# If debugging, do not open streamlink as a background process
 if [[ "${DEBUGGING}" == "on" ]]; then
   stream "$1"
 else
