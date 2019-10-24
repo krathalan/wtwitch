@@ -1,14 +1,14 @@
 # wtwitch
 
-![Screenshot](screenshot.jpg)
-
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
+
+![Screenshot](https://git.sr.ht/~krathalan/wtwitch/tree/master/screenshot.jpg)
 
 Table of contents:
 
-1. [Install](#install)
-2. [More information](#more-information)
-3. [FAQ](#faq)
+1. [Install](https://git.sr.ht/~krathalan/wtwitch#install)
+2. [More information](https://git.sr.ht/~krathalan/wtwitch#more-information)
+3. [FAQ](https://git.sr.ht/~krathalan/wtwitch#faq)
 
 ## Install
 ### Arch Linux
@@ -18,7 +18,7 @@ Install the official AUR package, maintained by the author of wtwitch (me): http
 Download the script manually
 
 ## More information
-See the [man page](wtwitch.1.adoc).
+See the [man page](wtwitch.1.scd).
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
@@ -42,6 +42,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 | CSS | 1 | 2 | 2 | 14 |
 | SUM | 778 | 8865 | 2926 | **46306** |
 
+
 > `$ git clone https://gitlab.com/krathalan/wtwitch.git`  
  `$ cloc wtwitch/`  
 
@@ -50,6 +51,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 | Bourne Again Shell | 1 | 128 | 342 | 531 |
 | Markdown | 1 | 20 | 0 | 34 |
 | SUM | 2 | 148 | 342 | **565** |
+
 
 > "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
 
