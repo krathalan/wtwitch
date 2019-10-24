@@ -2,7 +2,7 @@
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
-![Screenshot](https://git.sr.ht/~krathalan/wtwitch/tree/master/screenshot.jpg)
+![Screenshot](https://i.imgur.com/oaxH3ss.jpg)
 
 Table of contents:
 
