@@ -75,7 +75,7 @@ readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # Debugging
-if [[ "$*" == *"-d"* ]]; then
+if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
   # Avoid subshells
   readonly DEBUGGING="on"
 

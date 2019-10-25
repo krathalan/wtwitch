@@ -71,7 +71,7 @@ See *FILES* below for the path of the cache directory.
 
 ## Miscellaneous
 
-*-d*++
+*-d*, *--debug*++
     Run the program in debug mode, avoiding subshells and printing each command processed.++
     If you do this you should probably redirect all output to a log file, e.g. wtwitch -c *-d* _&> debug.log_
 
