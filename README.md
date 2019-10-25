@@ -25,7 +25,7 @@ To take a debug log with wtwitch, append `-d &> debug.log` to your command (e.g.
 
 Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
-Alternatively, you may send them via email to `~krathalan/wtwitch@todo.sr.ht`.
+Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
