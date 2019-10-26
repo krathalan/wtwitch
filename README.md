@@ -21,7 +21,7 @@ Download the script manually
 See `man wtwitch` if you have the AUR package installed. Otherwise, read the manual here: [wtwitch.1.scd](wtwitch.1.scd)
 
 ## Bugs
-To take a debug log with wtwitch, append `-d &> debug.log` to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
+To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
 
 Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
