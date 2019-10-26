@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.1.0"]
+wtwitch(1) ["Version 1.1.1"]
 
 # NAME
 
@@ -103,6 +103,8 @@ pacman -Qc wtwitch
 # BUGS
 
 Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+
+Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
 
 # LICENSES
 
