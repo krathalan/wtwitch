@@ -1,6 +1,7 @@
 1.1.1-1 (TBD)
     Change upstream to https://sourcehut.org/
     Debugging feature now works with "no option" option, i.e. opening a stream
+    Add matching long --debug flag for existing short -d flag
     Code cleanup
 
 1.1.0-1 (October 19, 2019)
