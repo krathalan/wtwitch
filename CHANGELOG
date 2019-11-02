@@ -1,4 +1,4 @@
-1.1.1-1 (TBD)
+1.1.1-1 (November 2, 2019)
     Change upstream to https://sourcehut.org/
     Debugging feature now works with "no option" option, i.e. opening a stream
     Add matching long --debug flag for existing short -d flag
