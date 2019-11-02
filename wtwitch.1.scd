@@ -114,7 +114,7 @@ pacman -Qc wtwitch
 
 Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
-Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
+Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
 
 # LICENSES
 
