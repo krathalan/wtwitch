@@ -247,9 +247,13 @@ check_twitch_streams()
   local lastSubscriptionUpdate
   lastSubscriptionUpdate=$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")
 
+  # Check for older (e.g. "Sun Nov  3 14:54:55 PST 2019") style lastSubscriptionUpdate
+  if ! [[ "${lastSubscriptionUpdate}" =~ ^[0-9]+$ ]] ; then
+    lastSubscriptionUpdate=0
+  fi
+
   if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
     local -r currentDate=$(LANG=C date +%s -d "now")
-    lastSubscriptionUpdate=$(LANG=C date +%s -d "${lastSubscriptionUpdate}")
     dateDiff=$(( currentDate - lastSubscriptionUpdate ))
   fi
 
@@ -279,7 +283,7 @@ check_twitch_streams()
     wait
 
     # Update lastSubscriptionUpdate time
-    write_setting ".lastSubscriptionUpdate" "$(LANG=C date -d "now")"
+    write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s -d "now")"
   fi
 
   printf "\n"
