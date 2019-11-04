@@ -161,10 +161,13 @@ change_quality()
   local passedCheckMarkerArray=()
 
   # Convert user input to lowercase
-  local -r specifiedQuality="${1,,}"
+  local specifiedQuality="${1,,}"
+
+  # Replace commas with newlines for mapfile (for now)
+  specifiedQuality="${specifiedQuality/,/$'\n'}"
 
   # User may try and enter fallback qualities; code should account for this
-  IFS=',' read -r -a qualityArray <<< "$specifiedQuality"
+  mapfile -t qualityArray <<< "$specifiedQuality"
 
   # For each quality the user has specified
   for i in "${qualityArray[@]}"; do
@@ -175,6 +178,9 @@ change_quality()
       fi
     done
   done
+
+  # Replace newlines with commas (as originally input)
+  specifiedQuality="${specifiedQuality/$'\n'/,}"
 
   # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
