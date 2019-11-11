@@ -698,16 +698,16 @@ subscribe()
   local -r streamerToSubscribeTo="${1,,}"
 
   # Check to make sure user isn't already subscribed
-  if [[ $(jq ".subscriptions | length" "${CONFIG_FILE}") -gt 0 ]]; then
+  if [[ ${#userSubscriptions[@]} -gt 0 ]]; then
     local whileCounter=0
 
     local currentSubscription
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+    currentSubscription="${userSubscriptions[${whileCounter}]}"
 
-    while [[ "${currentSubscription}" != "null" ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
+    while [[ ${whileCounter} -lt ${#userSubscriptions[@]} ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
+      currentSubscription="${userSubscriptions[${whileCounter}]}"
       whileCounter=$(( whileCounter + 1))
-      currentSubscription=$(jq -r ".subscriptions[$whileCounter].streamer" "${CONFIG_FILE}")
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
