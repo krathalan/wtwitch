@@ -424,6 +424,8 @@ list_streamers_of_game()
   # Load config for useColors
   load_config
 
+  printf "\n %s streamers:\n" "$1"
+
   # Replace spaces in game name with %20 for URL
   local -r gameName=${1// /%20}
 
@@ -435,8 +437,6 @@ list_streamers_of_game()
 
   # Get streamers
   twitchJson=$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")
-
-  printf "\n %s streamers:\n" "$1"
   
   # Remove old cache files
   clean_up
