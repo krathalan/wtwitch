@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.1.3"
+readonly VERSION="1.1.4"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
@@ -58,6 +58,9 @@ readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
+
+# Used by list_streamers_of_game() and list_top_games()
+readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
@@ -369,9 +372,7 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}"
-  rm -f "${CACHE_OFFLINE_TEXT_FILE}"
-  rm -f "${LOAD_SUBS_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${LOAD_SUBS_FILE}"
 }
 
 #######################################
@@ -411,6 +412,7 @@ exit_script_on_failure()
 #######################################
 # Lists the top streamers for a specified game.
 # Globals:
+#   CACHE_MISC_TEXT_FILE
 #   TWITCH_API_URL
 # Arguments:
 #   $1: game to list top streamers of
@@ -435,6 +437,9 @@ list_streamers_of_game()
   twitchJson=$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")
 
   printf "\n %s streamers:\n" "$1"
+  
+  # Remove old cache files
+  clean_up
 
   local whileCounter=0
 
@@ -448,12 +453,15 @@ list_streamers_of_game()
   done
 
   wait
+
+  cat "${CACHE_MISC_TEXT_FILE}"
 }
 
 #######################################
 # Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
 # Globals:
 #   Colors: TURQOISE, NC, ORANGE
+#   CACHE_MISC_TEXT_FILE
 #   TERMINAL_WIDTH
 #   TITLE_CHARACTERS
 # Arguments:
@@ -486,9 +494,9 @@ list_streamers_of_game_helper()
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
   else
-    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}"
+    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "${CACHE_MISC_TEXT_FILE}"
   fi
 }
 
@@ -496,6 +504,7 @@ list_streamers_of_game_helper()
 # Lists the top games on Twitch.
 # Globals:
 #   Colors: PURPLE, NC
+#   CACHE_MISC_TEXT_FILE
 #   TWITCH_API_URL
 #   useColors
 # Arguments:
@@ -510,6 +519,9 @@ list_top_games()
 
   printf "\n Top games:\n"
 
+  # Remove old cache files
+  clean_up
+
   local -r twitchJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
 
   local whileCounter=0
@@ -519,15 +531,17 @@ list_top_games()
 
   while [[ "${gameName}" != "null" ]]; do
     if [[ "${useColors}" == "true" ]]; then
-      printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}"
+      printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
     else
-      printf "   %s. %s\n" $(( whileCounter + 1 )) "${gameName}"
+      printf "   %s. %s\n" $(( whileCounter + 1 )) "${gameName}" >> "${CACHE_MISC_TEXT_FILE}"
     fi
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
     gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
   done
+
+  cat "${CACHE_MISC_TEXT_FILE}"
 }
 
 #######################################
