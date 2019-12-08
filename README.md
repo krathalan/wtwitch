@@ -15,10 +15,20 @@ Table of contents:
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
 ### Any distro
-Download the script manually
+Download the script manually: [wtwitch](wtwitch)
 
 ## More information
-See `man wtwitch` if you have the AUR package installed. Otherwise, read the manual here: [wtwitch.1.scd](wtwitch.1.scd)
+See `man wtwitch` if you have the AUR package installed. 
+
+Otherwise, download the manual here: [wtwitch.1.scd](wtwitch.1.scd)
+
+You can then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
+
+> `$ scdoc < wtwitch.1.scd > wtwitch.1`
+
+Then view the man page:
+
+> `$ man -l wtwitch.1`
 
 ## Bugs
 To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
