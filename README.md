@@ -64,9 +64,9 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 128 | 342 | 531 |
-| Markdown | 1 | 20 | 0 | 34 |
-| SUM | 2 | 148 | 342 | **565** |
+| Bourne Again Shell | 1 | 133 | 343 | 515 |
+| Markdown | 1 | 32 | 0 | 58 |
+| SUM | 2 | 165 | 343 | **573** |
 
 ---
 
