@@ -454,7 +454,11 @@ list_streamers_of_game()
 
   wait
 
-  cat "${CACHE_MISC_TEXT_FILE}"
+  if [[ -f "${CACHE_MISC_TEXT_FILE}" ]]; then
+    cat "${CACHE_MISC_TEXT_FILE}"
+  else
+    printf " No one is streaming %s.\n" "$1"
+  fi
 }
 
 #######################################
