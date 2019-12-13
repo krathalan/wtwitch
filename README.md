@@ -14,6 +14,9 @@ Table of contents:
 ### Arch Linux
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
+AUR releases are signed so you'll need to import my GPG key:  
+`02AA A23A BDF1 D538 BD88  9D25 1AAD E5E7 28FF C667`
+
 ### Any distro
 Download the script manually: [wtwitch](wtwitch)
 
