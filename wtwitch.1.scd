@@ -46,17 +46,18 @@ See *FILES* below for the path of the cache directory.
     View the top games on Twitch.++
     e.g. wtwitch *-t*
 
-*-g* _game_, **--get-streamers**=_game_++
-    View the top streamers for a specified _game_. Game names with spaces must be quoted.++
-    e.g. wtwitch *-g* _"world of warcraft"_
+*-g* _game_, *--get-streamers=*_game_++
+    View the top streamers for a specified _game_. Game names with spaces must be quoted, or the spaces must be escaped with \\.++
+    e.g. wtwitch *-g* _"world of warcraft"_++
+    e.g. wtwitch *-g* _world\\ of\\ warcraft_
 
 ## Subscriptions
 
-*-s* _streamer_, **--subscribe=**_streamer_++
+*-s* _streamer_, *--subscribe=*_streamer_++
     Subscribe to a specific _streamer_.++
     e.g. wtwitch *-s* _overwatchleague_
 
-*-u* _streamer_, **--unsubscribe=**_streamer_++
+*-u* _streamer_, *--unsubscribe=*_streamer_++
     Unsubscribe from a specified _streamer_.++
     e.g. wtwitch *-u* _overwatchleague_
 
@@ -66,11 +67,11 @@ See *FILES* below for the path of the cache directory.
 
 ## Configuration options
 
-*-p* _player_, **--change-player=**_player_++
+*-p* _player_, *--change-player=*_player_++
     Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink.++
     e.g. wtwitch *-p* _vlc_
 
-*-q* _quality_, **--change-quality=**_quality_++
+*-q* _quality_, *--change-quality=*_quality_++
     Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma.++
     e.g. wtwitch *-q* _720p60,720p,best_
 
@@ -81,7 +82,7 @@ See *FILES* below for the path of the cache directory.
 ## Miscellaneous
 
 *-d*, *--debug*++
-    Run the program in debug mode, avoiding subshells and printing each command processed. If you do this you should probably redirect all output to a _log file_:++
+    Run the program in debug mode, avoiding subshells and printing each command processed. The debug flag must come after the command you are trying to take a log of. You should also probably redirect all output to a _log file_:++
     e.g. wtwitch -c *-d* _&> debug.log_
 
 *-v*, *--version*++

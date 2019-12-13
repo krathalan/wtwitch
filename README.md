@@ -14,11 +14,24 @@ Table of contents:
 ### Arch Linux
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
+AUR releases are signed so you'll need to import my GPG key:  
+`02AA A23A BDF1 D538 BD88  9D25 1AAD E5E7 28FF C667`
+
 ### Any distro
-Download the script manually
+Download the script manually: [wtwitch](wtwitch)
 
 ## More information
-See `man wtwitch` if you have the AUR package installed. Otherwise, read the manual here: [wtwitch.1.scd](wtwitch.1.scd)
+See `man wtwitch` if you have the AUR package installed. 
+
+Otherwise, download the manual here: [wtwitch.1.scd](wtwitch.1.scd)
+
+You can then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
+
+> `$ scdoc < wtwitch.1.scd > wtwitch.1`
+
+Then view the man page:
+
+> `$ man -l wtwitch.1`
 
 ## Bugs
 To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
@@ -54,9 +67,9 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 128 | 342 | 531 |
-| Markdown | 1 | 20 | 0 | 34 |
-| SUM | 2 | 148 | 342 | **565** |
+| Bourne Again Shell | 1 | 133 | 343 | 515 |
+| Markdown | 1 | 32 | 0 | 58 |
+| SUM | 2 | 165 | 343 | **573** |
 
 ---
 
