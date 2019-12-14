@@ -42,7 +42,9 @@ Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
-Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it for a number of (fairly trivial) reasons.
+Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
+
+Since wtwitch is a terminal program, it can be run in any terminal emulator that supports Wayland for a nice Wayland-native experience. Streamlink Twitch GUI requires Xwayland as it uses Chromium to render and Chromium does not yet support Wayland.
 
 When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with wtwitch -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~230 MB for Streamlink Twitch GUI.
 
@@ -73,15 +75,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 ---
 
-> "Streamlink Twitch GUI is a NW.js application, which means that it is a web application written in JavaScript (EmberJS), HTML (Handlebars) and CSS (LessCSS) and is being run by a Node.js powered version of Chromium." ([from Streamlink Twitch GUI's Github page](https://github.com/streamlink/streamlink-twitch-gui#description))
-
-Since Streamlink Twitch GUI uses Chromium to render everything, Streamlink Twitch GUI can't support hardware video decoding since [Chromium doesn't support it on Linux](https://fossbytes.com/chrome-hardware-acceleration-on-linux-dont-expect-google/). Using a native player with wtwitch like mpv allows users to watch twitch streams with hardware video decoding which frees up resources for other programs and dramatically reduces battery usage on mobile devices.
-
-And security seems to be a sore point with NW.js:
-> "Node frames have following extra capabilities than normal frames: ... Bypass all security restrictions, such as sandboxing, same origin policy etc. For example, you can make cross origin XHR to any remote sites, or access to \<iframe\> element whose src points to remote sites in node frames." ([from the NW.js documentation](http://docs.nwjs.io/en/latest/For%20Users/Advanced/Security%20in%20NW.js/))
-
----
-
+## Technical information
 Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.) This design, along with native hardware video decoding, makes wtwitch much more resource efficient than Streamlink Twitch GUI.
 
 Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in: 
