@@ -650,8 +650,6 @@ print_help()
 #######################################
 stream()
 {
-  load_config
-
   # Use VLC as backup player if mpv is not installed
   if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     if [[ -x "$(command -v "vlc")" ]]; then
@@ -987,8 +985,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# If debugging, do not open streamlink as a background process
-if [[ "${DEBUGGING}" == "on" ]]; then
+load_config
+
+# If quality="audio_only" OR debugging, do not open streamlink as a background process
+if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
   stream "$1"
 else
   stream "$1" &> /dev/null &
