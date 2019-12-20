@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.1.5"]
+wtwitch(1) ["Version 1.1.6"]
 
 # NAME
 
