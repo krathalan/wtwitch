@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.1.4"
+readonly VERSION="1.1.5"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
