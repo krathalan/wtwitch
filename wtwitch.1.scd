@@ -68,7 +68,7 @@ See *FILES* below for the path of the cache directory.
 ## Configuration options
 
 *-p* _player_, *--change-player=*_player_++
-    Change the default _player_ in ~/.config/wtwitch/config.json that gets passed to Streamlink.++
+    Change the default _player_ that gets passed to Streamlink.++
     e.g. wtwitch *-p* _vlc_
 
 *-q* _quality_, *--change-quality=*_quality_++
