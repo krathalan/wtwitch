@@ -386,7 +386,12 @@ clean_up()
 #######################################
 download_file()
 {
-  wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  # Do not pass --quiet flag to wget if debugging
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    wget --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  else
+    wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  fi
 }
 
 #######################################
