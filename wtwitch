@@ -79,7 +79,7 @@ readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # Debugging
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
-  # Avoid subshells
+  # Avoid subshells, print full wget output, and more behavioral changes
   readonly DEBUGGING="on"
 
   # Print log information
