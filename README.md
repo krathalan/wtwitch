@@ -22,11 +22,11 @@ Please note that Ubuntu ships an older version of Streamlink that does not have 
 
 You have a few options:
 
-1. Contact the maintainer of streamlink for Ubuntu
+1. Contact the maintainer of Streamlink for Ubuntu
 
-2. Use a different distribution which provides a more up-to-date streamlink
+2. Use a different distribution which provides a more up-to-date Streamlink
 
-3. Use the Streamlink installation instructions for Ubuntu [from streamlink's website](https://streamlink.github.io/install.html):
+3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html):
 
 ```
 $ sudo add-apt-repository ppa:nilarimogard/webupd8
