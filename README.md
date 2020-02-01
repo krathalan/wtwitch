@@ -26,7 +26,8 @@ You have a few options:
 
 2. Use a different distribution which provides a more up-to-date streamlink
 
-3. Use the Streamlink installation instructions for Ubuntu [from streamlink's website](https://streamlink.github.io/install.html):  
+3. Use the Streamlink installation instructions for Ubuntu [from streamlink's website](https://streamlink.github.io/install.html):
+
 ```
 sudo add-apt-repository ppa:nilarimogard/webupd8
 
