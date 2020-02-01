@@ -71,7 +71,7 @@ readonly TITLE_CHARACTERS=18
 readonly TERMINAL_WIDTH=$(tput cols)
 
 # Used by check_twitch_streams() for asynchronous loading of user subscriptions
-readonly LOAD_SUBS_FILE="/tmp/wtwitch.tmp"
+readonly LOAD_SUBS_FILE="${CACHE_FILE_DIRECTORY}/subs.tmp"
 
 # Miscellaneous
 readonly TWITCH_API_URL="https://api.twitch.tv"
@@ -79,7 +79,7 @@ readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # Debugging
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
-  # Avoid subshells
+  # Avoid subshells, print full wget output, and more behavioral changes
   readonly DEBUGGING="on"
 
   # Print log information
@@ -386,7 +386,12 @@ clean_up()
 #######################################
 download_file()
 {
-  wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  # Do not pass --quiet flag to wget if debugging
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    wget --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  else
+    wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  fi
 }
 
 #######################################
