@@ -28,9 +28,11 @@ You have a few options:
 
 3. Use the Streamlink installation instructions for Ubuntu [from streamlink's website](https://streamlink.github.io/install.html):
 ```
-sudo add-apt-repository ppa:nilarimogard/webupd8  
-sudo apt update  
-sudo apt install streamlink  
+sudo add-apt-repository ppa:nilarimogard/webupd8
+
+sudo apt update
+
+sudo apt install streamlink
 ```
 
 Afterwards, download the script manually like any distro other than Arch.
