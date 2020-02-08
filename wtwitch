@@ -2,7 +2,7 @@
 #
 # Description: Browse and watch Twitch without being tracked.
 #
-# Copyright (C) 2019:
+# Copyright (C) 2019-2020:
 readonly CONTRIBUTORS="krathalan"
 #
 # This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.1.6"
+readonly VERSION="1.2.0"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
@@ -67,13 +67,18 @@ readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 
 # Used to calculate output string lengths (see check_twitch_streams_helper() and list_streamers_of_game_helper())
+# Why is TITLE_CHARACTERS=18? Because that's how many characters will always
+# be present in a printed line; ergo they must be subtracted from the total
+# terminal width to get the effective maximum line length.
 readonly TITLE_CHARACTERS=18
 readonly TERMINAL_WIDTH=$(tput cols)
 
 # Used by check_twitch_streams() for asynchronous loading of user subscriptions
 readonly LOAD_SUBS_FILE="${CACHE_FILE_DIRECTORY}/subs.tmp"
 
-# Miscellaneous
+# Twitch API information
+# This API key is intended to be used for wtwitch only -- do not use this API
+# key for any other reason!
 readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
@@ -270,19 +275,43 @@ check_twitch_streams()
 
     # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
     touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
+    
+    # Build inital request URL
+    local initialRequestURL="${TWITCH_API_URL}/helix/streams?"
 
-    # Do not invoke subshells for status checking if debugging is on; subshells
-    # will not print debugging info with set -x
+    for stream in "${userSubscriptions[@]}"; do
+      initialRequestURL+="user_login=${stream}&"
+    done
+
+    # Get data of all online streamers (sans game names)
+    local -r allStreamerJson=$(download_file "${initialRequestURL}")
+
+    # Figure out offline streamers in background
+    get_offline_streams "${allStreamerJson}"
+
+    # Pass each streamer json data to check_twitch_streams_helper to parse, 
+    # get game name for, and print
+    local whileCounter=0
+
+    local streamerToProcess=""
+    streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
+
+    # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
-      for stream in "${userSubscriptions[@]}"; do
-        check_twitch_streams_helper "${stream}"
+      while [[ "${streamerToProcess}" != "null" ]]; do
+        check_twitch_streams_helper "${streamerToProcess}"
+        whileCounter=$(( whileCounter + 1 ))
+        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
       done
     else
-      for stream in "${userSubscriptions[@]}"; do
-        check_twitch_streams_helper "${stream}" &
+      while [[ "${streamerToProcess}" != "null" ]]; do
+        check_twitch_streams_helper "${streamerToProcess}" &
+        whileCounter=$(( whileCounter + 1 ))
+        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
       done
     fi
 
+    # Wait for all background processes, offline and online, to finish
     wait
 
     # Update lastSubscriptionUpdate time
@@ -302,6 +331,52 @@ check_twitch_streams()
 }
 
 #######################################
+# Used by check_twitch_streams to figure out the streamers that are offline.
+# Globals:
+#   DEBUGGING
+#   userSubscriptions
+# Arguments:
+#   $1: "${allStreamerJson}" to compare with user subscriptions
+# Returns:
+#   none
+#######################################
+get_offline_streams()
+{
+  # Don't use subshells if debugging is on
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    for streamerName in "${userSubscriptions[@]}"; do
+      get_offline_streams_helper "${streamerName}" "$1"
+    done
+  else
+    for streamerName in "${userSubscriptions[@]}"; do
+      get_offline_streams_helper "${streamerName}" "$1" &
+    done
+  fi
+}
+
+#######################################
+# Used by get_offline_streams to figure out the streamers that are offline.
+# Globals:
+#   Colors: NC, GREY
+#   CACHE_OFFLINE_TEXT_FILE
+# Arguments:
+#   $1: streamer to check
+#   $2: "${allStreamerJson}" to compare with streamer
+# Returns:
+#   none
+#######################################
+get_offline_streams_helper()
+{
+  if ! grep -qi "$1" <<< "$2"; then
+    if [[ "${useColors}" == "true" ]]; then
+      printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    else
+      printf "   %s\n" "$1" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    fi
+  fi
+}
+
+#######################################
 # Used by check_twitch_streams to facilitate multi-process fetching and parsing of json files.
 # Globals:
 #   Colors: LIGHTGREEN, NC, ORANGE, GREY
@@ -318,43 +393,32 @@ check_twitch_streams()
 check_twitch_streams_helper()
 {
   # Get current info of streamer
-  local streamerJson
-  streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
+  local -r streamerJson="$1"
+  local userName
+  userName=$(jq -r ".user_name" <<< "${streamerJson}")
 
-  # Check if stream is online
-  local streamType
-  streamType=$(jq -r ".data[0].type" <<< "${streamerJson}")
+  # Get streamer-set stream name
+  local streamName
+  streamName=$(jq -r ".title" <<< "${streamerJson}")
 
-  if [[ "${streamType}" != "null" ]]; then
-    # Get streamer-set stream name
-    local streamName
-    streamName=$(jq -r ".data[0].title" <<< "${streamerJson}")
+  # Download game title (extract id, download info, then extract name)
+  local streamGame
+  streamGame="$(jq -r ".game_id" <<< "${streamerJson}")"
+  local -r tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
+  streamGame="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
-    # Download game title (extract id, download info, then extract name)
-    local streamGame
-    streamGame="$(jq -r ".data[0].game_id" <<< "${streamerJson}")"
-    streamerJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
-    streamGame="$(jq -r ".data[0].name" <<< "${streamerJson}")"
+  # Truncate stream name if necessary; some streamers have excessively long stream titles
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} ))
 
-    # Truncate stream name if necessary; some streamers have excessively long stream titles
-    local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#1} ))
+  if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
+    streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
+    streamName="${streamName}…"
+  fi
 
-    if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
-      streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-      streamName="${streamName}…"
-    fi
-
-    if [[ "${useColors}" == "true" ]]; then
-      printf "   %s%s%s: %s %s(playing %s)%s\n" "${LIGHTGREEN}" "$1" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
-    else
-      printf "   %s: %s (playing %s)\n" "$1" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
-    fi
+  if [[ "${useColors}" == "true" ]]; then
+    printf "   %s%s%s: %s %s(playing %s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
-    if [[ "${useColors}" == "true" ]]; then
-      printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
-    else
-      printf "   %s\n" "$1" >> "${CACHE_OFFLINE_TEXT_FILE}"
-    fi
+    printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
   fi
 }
 
@@ -583,7 +647,7 @@ load_config()
 #   LOAD_SUBS_FILE
 #   userSubscriptions
 # Arguments:
-#   $1: flag for --async to map userSubs manually after load_subs &
+#   $1: flag for --async to map userSubscriptions manually after load_subs &
 # Returns:
 #   none
 #######################################
