@@ -75,14 +75,14 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| JavaScript | 554 | 7995 | 2760 | 34118 |
-| YAML | 47 | 4 | 60 | 3896 |
-| LESS | 54 | 806 | 104 | 3557 |
-| Handlebars | 81 | 48 | 0 | 2588 |
-| JSON | 38 | 8 | 0 | 2063 |
+| JavaScript | 529 | 7759 | 2730 | 33151 |
+| YAML | 47 | 4 | 44 | 3702 |
+| LESS | 52 | 769 | 100 | 3409 |
+| Handlebars | 73 | 47 | 0 | 2415 |
+| JSON | 33 | 8 | 0 | 1702 |
 | HTML | 3 | 2 | 0 | 70 |
 | CSS | 1 | 2 | 2 | 14 |
-| SUM | 778 | 8865 | 2926 | **46306** |
+| SUM | 738 | 8591 | 2876 | **44463** |
 
 ---
 
@@ -90,9 +90,9 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 133 | 343 | 515 |
-| Markdown | 1 | 32 | 0 | 58 |
-| SUM | 2 | 165 | 343 | **573** |
+| Bourne Again Shell | 1 | 151 | 400 | 573 |
+| Markdown | 1 | 39 | 0 | 69 |
+| SUM | 2 | 190 | 400 | **642** |
 
 ---
 
