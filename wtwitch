@@ -298,20 +298,18 @@ check_twitch_streams()
     local streamerToProcess=""
     streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
 
-    # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      while [[ "${streamerToProcess}" != "null" ]]; do
+    while [[ "${streamerToProcess}" != "null" ]]; do
+      # Don't use subshells when debugging is on
+      if [[ "${DEBUGGING}" == "on" ]]; then
         check_twitch_streams_helper "${streamerToProcess}"
-        whileCounter=$(( whileCounter + 1 ))
-        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
-      done
-    else
-      while [[ "${streamerToProcess}" != "null" ]]; do
+      else
         check_twitch_streams_helper "${streamerToProcess}" &
-        whileCounter=$(( whileCounter + 1 ))
-        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
-      done
-    fi
+      fi
+
+      # Refresh data
+      whileCounter=$(( whileCounter + 1 ))
+      streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
+    done
 
     # Wait for all background processes, offline and online, to finish
     wait
@@ -344,16 +342,14 @@ check_twitch_streams()
 #######################################
 get_offline_streams()
 {
-  # Don't use subshells if debugging is on
-  if [[ "${DEBUGGING}" == "on" ]]; then
-    for streamerName in "${userSubscriptions[@]}"; do
+  for streamerName in "${userSubscriptions[@]}"; do
+    # Don't use subshells if debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
       get_offline_streams_helper "${streamerName}" "$1"
-    done
-  else
-    for streamerName in "${userSubscriptions[@]}"; do
+    else
       get_offline_streams_helper "${streamerName}" "$1" &
-    done
-  fi
+    fi
+  done
 }
 
 #######################################
@@ -444,6 +440,7 @@ clean_up()
 #######################################
 # Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
 # Globals:
+#   DEBUGGING
 #   TWITCH_API_KEY
 # Arguments:
 #   $1: file to download
@@ -484,6 +481,7 @@ exit_script_on_failure()
 # Lists the top streamers for a specified game.
 # Globals:
 #   CACHE_MISC_TEXT_FILE
+#   DEBUGGING
 #   TWITCH_API_URL
 # Arguments:
 #   $1: game to list top streamers of
@@ -517,20 +515,18 @@ list_streamers_of_game()
   local streamerName=""
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
 
-  # Don't use subshells when debugging is on
-  if [[ "${DEBUGGING}" == "on" ]]; then
-    while [[ "${streamerName}" != "null" ]]; do
-      list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}"
-      whileCounter=$(( whileCounter + 1 ))
-      streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
-    done
-  else
-    while [[ "${streamerName}" != "null" ]]; do
-      list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
-      whileCounter=$(( whileCounter + 1 ))
-      streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
-    done
-  fi
+  while [[ "${streamerName}" != "null" ]]; do
+    # Don't use subshells when debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}"
+    else
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}" &
+    fi
+
+    # Refresh data
+    whileCounter=$(( whileCounter + 1 ))
+    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+  done
 
   wait
 
@@ -542,7 +538,7 @@ list_streamers_of_game()
 }
 
 #######################################
-# Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
+# Facilitates multi-process parsing of json files.
 # Globals:
 #   Colors: TURQOISE, NC, ORANGE
 #   CACHE_MISC_TEXT_FILE
@@ -552,10 +548,11 @@ list_streamers_of_game()
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
 #   $3: name of streamer
+#   $4: file to print to
 # Returns:
 #   none
 #######################################
-list_streamers_of_game_helper()
+print_stream_info()
 {
   local index="$1"
   local twitchJson="$2"
@@ -578,9 +575,9 @@ list_streamers_of_game_helper()
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}" >> "$4"
   else
-    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "$4"
   fi
 }
 
@@ -589,6 +586,8 @@ list_streamers_of_game_helper()
 # Globals:
 #   Colors: PURPLE, NC
 #   CACHE_MISC_TEXT_FILE
+#   CACHE_TOP_STREAMS_TEXT_FILE
+#   DEBUGGING
 #   TWITCH_API_URL
 #   useColors
 # Arguments:
@@ -633,7 +632,7 @@ list_top_games()
     gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
   done
 
-  # Wait for list_top_streamers() to finish
+  # Wait for list_top_streams() to finish
   wait
 
   cat "${CACHE_MISC_TEXT_FILE}"
@@ -642,9 +641,19 @@ list_top_games()
   cat "${CACHE_TOP_STREAMS_TEXT_FILE}"
 }
 
+#######################################
+# Lists the top streams on Twitch.
+# Globals:
+#   CACHE_TOP_STREAMS_TEXT_FILE
+#   DEBUGGING
+#   TWITCH_API_URL
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 list_top_streams()
 {
-  # CACHE_TOP_STREAMS_TEXT_FILE
   local -r topStreamsJson=$(download_file "${TWITCH_API_URL}/helix/streams?first=20")
 
   local whileCounter=0
@@ -653,39 +662,19 @@ list_top_streams()
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
 
   while [[ "${streamerName}" != "null" ]]; do
-    # Get streamer-set stream name
-    local streamName=""
-    streamName=$(jq -r ".data[${whileCounter}].title" <<< "${topStreamsJson}")
-
-    # Get number of current stream viewers
-    local viewers=""
-    viewers=$(jq -r ".data[${whileCounter}].viewer_count" <<< "${topStreamsJson}")
-
-    # Download game title (extract id, download info, then extract name)
-    local streamGame
-    streamGame="$(jq -r ".data[${whileCounter}].game_id" <<< "${topStreamsJson}")"
-    local tmpJson
-    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
-    streamGame="$(jq -r ".data[0].name" <<< "${tmpJson}")"
-
-    # Truncate stream name if necessary
-    local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerName} - ${#viewers} - 10 ))
-
-    if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
-      streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-      streamName+="…"
-    fi
-
-    if [[ "${useColors}" == "true" ]]; then
-      printf "   %s%s%s: %s %s(playing %s, %s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${viewers}" "${NC}" >> "${CACHE_TOP_STREAMS_TEXT_FILE}"
+    # Don't use subshells when debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
     else
-      printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_TOP_STREAMS_TEXT_FILE}"
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" &
     fi
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
   done
+
+  wait
 }
 
 #######################################
