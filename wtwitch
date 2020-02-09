@@ -59,9 +59,9 @@ readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
 
-# Used by list_streamers_of_game() and list_top_games()
+# Used by list_streamers_of_game() and list_top()
 readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
-# Used exclusively by list_top_games()
+# Used exclusively by list_top()
 readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streamers.txt"
 
 # Config
@@ -582,7 +582,7 @@ print_stream_info()
 }
 
 #######################################
-# Lists the top games on Twitch.
+# Lists the top games and streamers on Twitch.
 # Globals:
 #   Colors: PURPLE, NC
 #   CACHE_MISC_TEXT_FILE
@@ -595,7 +595,7 @@ print_stream_info()
 # Returns:
 #   none
 #######################################
-list_top_games()
+list_top()
 {
   # Load config for useColors
   load_config
@@ -1072,8 +1072,8 @@ while [[ $# -gt 0 ]]; do
       printf "%s" "${NC}" && exit 0
       break
       ;;
-    -t|--top-games)
-      list_top_games
+    -t|--top)
+      list_top
       printf "%s" "${NC}" && exit 0
       break
       ;;
