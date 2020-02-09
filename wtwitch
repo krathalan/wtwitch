@@ -738,10 +738,10 @@ stream()
 
   # If using mpv: add window title, enable hardware dec, and use wayland if possible
   if [[ "${userPlayer}" == "mpv" ]]; then
-    userPlayer="${userPlayer} --hwdec=auto"
+    userPlayer+=" --hwdec=auto"
 
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
-      userPlayer="${userPlayer} --gpu-context=wayland"
+      userPlayer+=" --gpu-context=wayland"
     fi
 
     streamlink -p "${userPlayer}" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's stream does not support quality ${userQuality}."
