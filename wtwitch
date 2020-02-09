@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.2.0"
+readonly VERSION="1.3.0"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
@@ -61,6 +61,8 @@ readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
 
 # Used by list_streamers_of_game() and list_top_games()
 readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
+# Used exclusively by list_top_games()
+readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streamers.txt"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
@@ -412,7 +414,7 @@ check_twitch_streams_helper()
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-    streamName="${streamName}…"
+    streamName+="…"
   fi
 
   if [[ "${useColors}" == "true" ]]; then
@@ -436,7 +438,7 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${LOAD_SUBS_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "${LOAD_SUBS_FILE}"
 }
 
 #######################################
@@ -515,11 +517,20 @@ list_streamers_of_game()
   local streamerName=""
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
 
-  while [[ "${streamerName}" != "null" ]]; do
-    list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
-    whileCounter=$(( whileCounter + 1 ))
-    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
-  done
+  # Don't use subshells when debugging is on
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    while [[ "${streamerName}" != "null" ]]; do
+      list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}"
+      whileCounter=$(( whileCounter + 1 ))
+      streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+    done
+  else
+    while [[ "${streamerName}" != "null" ]]; do
+      list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
+      whileCounter=$(( whileCounter + 1 ))
+      streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+    done
+  fi
 
   wait
 
@@ -563,7 +574,7 @@ list_streamers_of_game_helper()
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-    streamName="${streamName}…"
+    streamName+="…"
   fi
 
   if [[ "${useColors}" == "true" ]]; then
@@ -595,12 +606,20 @@ list_top_games()
   # Remove old cache files
   clean_up
 
-  local -r twitchJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
+  # Start figuring out top streamers - don't use subshells when debugging is on
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    list_top_streams
+  else
+    list_top_streams &
+  fi
+
+  # Figure out top games in foreground
+  local -r topGamesJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
 
   local whileCounter=0
 
   local gameName=""
-  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
+  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
 
   while [[ "${gameName}" != "null" ]]; do
     if [[ "${useColors}" == "true" ]]; then
@@ -611,10 +630,62 @@ list_top_games()
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
-    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
+    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
   done
 
+  # Wait for list_top_streamers() to finish
+  wait
+
   cat "${CACHE_MISC_TEXT_FILE}"
+
+  printf "\n Top streams:\n"
+  cat "${CACHE_TOP_STREAMS_TEXT_FILE}"
+}
+
+list_top_streams()
+{
+  # CACHE_TOP_STREAMS_TEXT_FILE
+  local -r topStreamsJson=$(download_file "${TWITCH_API_URL}/helix/streams?first=20")
+
+  local whileCounter=0
+
+  local streamerName=""
+  streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+
+  while [[ "${streamerName}" != "null" ]]; do
+    # Get streamer-set stream name
+    local streamName=""
+    streamName=$(jq -r ".data[${whileCounter}].title" <<< "${topStreamsJson}")
+
+    # Get number of current stream viewers
+    local viewers=""
+    viewers=$(jq -r ".data[${whileCounter}].viewer_count" <<< "${topStreamsJson}")
+
+    # Download game title (extract id, download info, then extract name)
+    local streamGame
+    streamGame="$(jq -r ".data[${whileCounter}].game_id" <<< "${topStreamsJson}")"
+    local tmpJson
+    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
+    streamGame="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+
+    # Truncate stream name if necessary
+    local maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerName} - ${#viewers} - 10 ))
+
+    if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
+      streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
+      streamName+="…"
+    fi
+
+    if [[ "${useColors}" == "true" ]]; then
+      printf "   %s%s%s: %s %s(playing %s, %s viewers)%s\n" "${TURQOISE}" "${streamerName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${viewers}" "${NC}" >> "${CACHE_TOP_STREAMS_TEXT_FILE}"
+    else
+      printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_TOP_STREAMS_TEXT_FILE}"
+    fi
+
+    # Refresh data
+    whileCounter=$(( whileCounter + 1 ))
+    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+  done
 }
 
 #######################################
