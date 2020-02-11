@@ -64,6 +64,9 @@ readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
 # Used exclusively by list_top()
 readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streamers.txt"
 
+# Used to reduce strain on Twitch API
+readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
+
 # Config
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
@@ -221,6 +224,11 @@ check_files()
   if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
     mkdir -p "${CACHE_FILE_DIRECTORY}"
   fi
+
+  # Create gameids cache file
+  if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
+    printf "{}" > "${CACHE_GAME_ID_FILE}"
+  fi
 }
 
 #######################################
@@ -375,6 +383,39 @@ get_offline_streams_helper()
 }
 
 #######################################
+# Returns the game name for a specified game ID. Attempts to get game name from
+# cache, but if game ID not present, retrieves it from the Twitch API.
+# Globals:
+#   CACHE_GAME_ID_FILE
+# Arguments:
+#   $1: game ID to get game name of
+# Returns:
+#   game name of specified ID
+#######################################
+get_game_name()
+{
+  # Add "id" prefix as jq does not accept numerical identifiers
+  local -r gameID="id$1"
+
+  # Attempt to extract game name from cached game ids
+  local gameName
+  gameName="$(jq -r ".game_id" <<< "${CACHE_GAME_ID_FILE}")"
+
+  # If game id not cached, fetch from Twitch API
+  if [[ "${gameName}" == "null" ]]; then
+    local tmpJson
+    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${gameID}")
+    gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+
+    # Cache result for future reference
+    tmpJson=$(jq "${gameID} = \"${gameName}\"" "${CACHE_GAME_ID_FILE}")
+    printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
+  fi
+
+  printf "%s" "${gameName}"
+}
+
+#######################################
 # Used by check_twitch_streams to facilitate multi-process fetching and parsing of json files.
 # Globals:
 #   Colors: LIGHTGREEN, NC, ORANGE, GREY
@@ -401,9 +442,7 @@ check_twitch_streams_helper()
 
   # Download game title (extract id, download info, then extract name)
   local streamGame
-  streamGame="$(jq -r ".game_id" <<< "${streamerJson}")"
-  local -r tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
-  streamGame="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+  streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
 
   # Truncate stream name if necessary; some streamers have excessively long stream titles
   local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} ))
@@ -861,8 +900,8 @@ subscribe()
   fi
 
   # Add subscription (can't use write_setting here due to unique jq syntax)
-  local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
@@ -929,8 +968,8 @@ unsubscribe()
   fi
 
   # Remove subscription
-  local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
@@ -948,8 +987,8 @@ unsubscribe()
 #######################################
 write_setting()
 {
-  local -r tempJson=$(jq "$1 = \"$2\"" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq "$1 = \"$2\"" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 }
 
 # -----------------------------------------
