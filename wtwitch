@@ -399,12 +399,12 @@ get_game_name()
 
   # Attempt to extract game name from cached game ids
   local gameName
-  gameName="$(jq -r ".game_id" <<< "${CACHE_GAME_ID_FILE}")"
+  gameName="$(jq -r ".${gameID}" "${CACHE_GAME_ID_FILE}")"
 
   # If game id not cached, fetch from Twitch API
-  if [[ "${gameName}" == "null" ]]; then
+  if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
     local tmpJson
-    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${gameID}")
+    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=$1")
     gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
     # Cache result for future reference
