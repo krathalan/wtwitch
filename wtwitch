@@ -227,7 +227,7 @@ check_files()
 
   # Create gameids cache file
   if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
-    printf "{}" > "${CACHE_GAME_ID_FILE}"
+    printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
   fi
 }
 
@@ -399,7 +399,7 @@ get_game_name()
 
   # Attempt to extract game name from cached game ids
   local gameName
-  gameName="$(jq -r ".${gameID}" "${CACHE_GAME_ID_FILE}")"
+  gameName="$(jq -r ".data | add | .${gameID}" "${CACHE_GAME_ID_FILE}")"
 
   # If game id not cached, fetch from Twitch API
   if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
@@ -408,7 +408,7 @@ get_game_name()
     gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
     # Cache result for future reference
-    tmpJson=$(jq "${gameID} = \"${gameName}\"" "${CACHE_GAME_ID_FILE}")
+    tmpJson=$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")
     printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
   fi
 
