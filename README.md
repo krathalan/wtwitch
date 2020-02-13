@@ -90,9 +90,9 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 151 | 400 | 573 |
+| Bourne Again Shell | 1 | 159 | 418 | 593 |
 | Markdown | 1 | 39 | 0 | 69 |
-| SUM | 2 | 190 | 400 | **642** |
+| SUM | 2 | 198 | 418 | **662** |
 
 ---
 
