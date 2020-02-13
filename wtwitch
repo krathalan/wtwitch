@@ -164,7 +164,7 @@ change_player()
 # Globals:
 #   none
 # Arguments:
-#   $1: quality to set as default
+#   $1: quality to set as default, e.g. "1080p60,720p60,best"
 # Returns:
 #   none
 #######################################
@@ -198,7 +198,7 @@ change_quality()
 }
 
 #######################################
-# Creates the cache and config directories and the config file if they are missing.
+# Creates the cache and config directories and files if they are missing.
 # Globals:
 #   CACHE_FILE_DIRECTORY
 #   CONFIG_FILE
@@ -445,7 +445,7 @@ check_twitch_streams_helper()
   streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
 
   # Truncate stream name if necessary; some streamers have excessively long stream titles
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} + 7))
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
@@ -453,7 +453,7 @@ check_twitch_streams_helper()
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(playing %s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
     printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
   fi
@@ -588,6 +588,7 @@ list_streamers_of_game()
 #   $2: json file containing streamer data
 #   $3: name of streamer
 #   $4: file to print to
+#   $5: if this argument exists, print game of stream
 # Returns:
 #   none
 #######################################
@@ -605,8 +606,14 @@ print_stream_info()
   local viewers=""
   viewers=$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")
 
+  # Add game name to final string if $5 is present
+  local additionalText=""
+  if [[ $# -gt 4 ]]; then
+    additionalText="$(get_game_name "$(jq -r ".data[${index}].game_id" <<< "${twitchJson}")"), "
+  fi
+
   # Truncate stream name if necessary
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#viewers} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#viewers} ))
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
@@ -614,7 +621,7 @@ print_stream_info()
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}" >> "$4"
+    printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${viewers}" "${NC}" >> "$4"
   else
     printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "$4"
   fi
@@ -703,9 +710,9 @@ list_top_streams()
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game"
     else
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" &
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game" &
     fi
 
     # Refresh data
