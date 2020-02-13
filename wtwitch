@@ -440,7 +440,7 @@ check_twitch_streams_helper()
   local streamName
   streamName=$(jq -r ".title" <<< "${streamerJson}")
 
-  # Download game title (extract id, download info, then extract name)
+  # Get stream game name from game ID
   local streamGame
   streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
 
