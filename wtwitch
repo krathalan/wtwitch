@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.2.0"
+readonly VERSION="1.3.0"
 
 # Colors
 readonly GREEN=$(tput bold && tput setaf 2)
@@ -59,8 +59,13 @@ readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
 
-# Used by list_streamers_of_game() and list_top_games()
+# Used by list_streamers_of_game() and list_top()
 readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
+# Used exclusively by list_top()
+readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streamers.txt"
+
+# Used to reduce strain on Twitch API
+readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
@@ -159,7 +164,7 @@ change_player()
 # Globals:
 #   none
 # Arguments:
-#   $1: quality to set as default
+#   $1: quality to set as default, e.g. "1080p60,720p60,best"
 # Returns:
 #   none
 #######################################
@@ -193,7 +198,7 @@ change_quality()
 }
 
 #######################################
-# Creates the cache and config directories and the config file if they are missing.
+# Creates the cache and config directories and files if they are missing.
 # Globals:
 #   CACHE_FILE_DIRECTORY
 #   CONFIG_FILE
@@ -218,6 +223,11 @@ check_files()
   # Create cache folder if it doesn't exist
   if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
     mkdir -p "${CACHE_FILE_DIRECTORY}"
+  fi
+
+  # Create gameids cache file
+  if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
+    printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
   fi
 }
 
@@ -296,20 +306,18 @@ check_twitch_streams()
     local streamerToProcess=""
     streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
 
-    # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      while [[ "${streamerToProcess}" != "null" ]]; do
+    while [[ "${streamerToProcess}" != "null" ]]; do
+      # Don't use subshells when debugging is on
+      if [[ "${DEBUGGING}" == "on" ]]; then
         check_twitch_streams_helper "${streamerToProcess}"
-        whileCounter=$(( whileCounter + 1 ))
-        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
-      done
-    else
-      while [[ "${streamerToProcess}" != "null" ]]; do
+      else
         check_twitch_streams_helper "${streamerToProcess}" &
-        whileCounter=$(( whileCounter + 1 ))
-        streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
-      done
-    fi
+      fi
+
+      # Refresh data
+      whileCounter=$(( whileCounter + 1 ))
+      streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
+    done
 
     # Wait for all background processes, offline and online, to finish
     wait
@@ -342,16 +350,14 @@ check_twitch_streams()
 #######################################
 get_offline_streams()
 {
-  # Don't use subshells if debugging is on
-  if [[ "${DEBUGGING}" == "on" ]]; then
-    for streamerName in "${userSubscriptions[@]}"; do
+  for streamerName in "${userSubscriptions[@]}"; do
+    # Don't use subshells if debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
       get_offline_streams_helper "${streamerName}" "$1"
-    done
-  else
-    for streamerName in "${userSubscriptions[@]}"; do
+    else
       get_offline_streams_helper "${streamerName}" "$1" &
-    done
-  fi
+    fi
+  done
 }
 
 #######################################
@@ -374,6 +380,39 @@ get_offline_streams_helper()
       printf "   %s\n" "$1" >> "${CACHE_OFFLINE_TEXT_FILE}"
     fi
   fi
+}
+
+#######################################
+# Returns the game name for a specified game ID. Attempts to get game name from
+# cache, but if game ID not present, retrieves it from the Twitch API.
+# Globals:
+#   CACHE_GAME_ID_FILE
+# Arguments:
+#   $1: game ID to get game name of
+# Returns:
+#   game name of specified ID
+#######################################
+get_game_name()
+{
+  # Add "id" prefix as jq does not accept numerical identifiers
+  local -r gameID="id$1"
+
+  # Attempt to extract game name from cached game ids
+  local gameName
+  gameName="$(jq -r ".data | add | .${gameID}" "${CACHE_GAME_ID_FILE}")"
+
+  # If game id not cached, fetch from Twitch API
+  if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
+    local tmpJson
+    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=$1")
+    gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+
+    # Cache result for future reference
+    tmpJson=$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")
+    printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
+  fi
+
+  printf "%s" "${gameName}"
 }
 
 #######################################
@@ -403,20 +442,18 @@ check_twitch_streams_helper()
 
   # Download game title (extract id, download info, then extract name)
   local streamGame
-  streamGame="$(jq -r ".game_id" <<< "${streamerJson}")"
-  local -r tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=${streamGame}")
-  streamGame="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+  streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
 
   # Truncate stream name if necessary; some streamers have excessively long stream titles
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} + 7))
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-    streamName="${streamName}…"
+    streamName+="…"
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(playing %s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
   else
     printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
   fi
@@ -436,12 +473,13 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${LOAD_SUBS_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "${LOAD_SUBS_FILE}"
 }
 
 #######################################
 # Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
 # Globals:
+#   DEBUGGING
 #   TWITCH_API_KEY
 # Arguments:
 #   $1: file to download
@@ -482,6 +520,7 @@ exit_script_on_failure()
 # Lists the top streamers for a specified game.
 # Globals:
 #   CACHE_MISC_TEXT_FILE
+#   DEBUGGING
 #   TWITCH_API_URL
 # Arguments:
 #   $1: game to list top streamers of
@@ -516,7 +555,14 @@ list_streamers_of_game()
   streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
 
   while [[ "${streamerName}" != "null" ]]; do
-    list_streamers_of_game_helper "${whileCounter}" "${twitchJson}" "${streamerName}" &
+    # Don't use subshells when debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}"
+    else
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}" &
+    fi
+
+    # Refresh data
     whileCounter=$(( whileCounter + 1 ))
     streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
   done
@@ -531,7 +577,7 @@ list_streamers_of_game()
 }
 
 #######################################
-# Used by list_streamers_of_game to facilitate multi-process fetching and parsing of json files.
+# Facilitates multi-process parsing of json files.
 # Globals:
 #   Colors: TURQOISE, NC, ORANGE
 #   CACHE_MISC_TEXT_FILE
@@ -541,10 +587,12 @@ list_streamers_of_game()
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
 #   $3: name of streamer
+#   $4: file to print to
+#   $5: if this argument exists, print game of stream
 # Returns:
 #   none
 #######################################
-list_streamers_of_game_helper()
+print_stream_info()
 {
   local index="$1"
   local twitchJson="$2"
@@ -558,26 +606,34 @@ list_streamers_of_game_helper()
   local viewers=""
   viewers=$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")
 
+  # Add game name to final string if $5 is present
+  local additionalText=""
+  if [[ $# -gt 4 ]]; then
+    additionalText="$(get_game_name "$(jq -r ".data[${index}].game_id" <<< "${twitchJson}")"), "
+  fi
+
   # Truncate stream name if necessary
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#viewers} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#viewers} ))
 
   if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
     streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
-    streamName="${streamName}…"
+    streamName+="…"
   fi
 
   if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${viewers}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${viewers}" "${NC}" >> "$4"
   else
-    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "$4"
   fi
 }
 
 #######################################
-# Lists the top games on Twitch.
+# Lists the top games and streamers on Twitch.
 # Globals:
 #   Colors: PURPLE, NC
 #   CACHE_MISC_TEXT_FILE
+#   CACHE_TOP_STREAMS_TEXT_FILE
+#   DEBUGGING
 #   TWITCH_API_URL
 #   useColors
 # Arguments:
@@ -585,7 +641,7 @@ list_streamers_of_game_helper()
 # Returns:
 #   none
 #######################################
-list_top_games()
+list_top()
 {
   # Load config for useColors
   load_config
@@ -595,12 +651,20 @@ list_top_games()
   # Remove old cache files
   clean_up
 
-  local -r twitchJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
+  # Start figuring out top streamers - don't use subshells when debugging is on
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    list_top_streams
+  else
+    list_top_streams &
+  fi
+
+  # Figure out top games in foreground
+  local -r topGamesJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
 
   local whileCounter=0
 
   local gameName=""
-  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
+  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
 
   while [[ "${gameName}" != "null" ]]; do
     if [[ "${useColors}" == "true" ]]; then
@@ -611,10 +675,52 @@ list_top_games()
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
-    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${twitchJson}")
+    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
   done
 
+  # Wait for list_top_streams() to finish
+  wait
+
   cat "${CACHE_MISC_TEXT_FILE}"
+
+  printf "\n Top streams:\n"
+  cat "${CACHE_TOP_STREAMS_TEXT_FILE}"
+}
+
+#######################################
+# Lists the top streams on Twitch.
+# Globals:
+#   CACHE_TOP_STREAMS_TEXT_FILE
+#   DEBUGGING
+#   TWITCH_API_URL
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+list_top_streams()
+{
+  local -r topStreamsJson=$(download_file "${TWITCH_API_URL}/helix/streams?first=20")
+
+  local whileCounter=0
+
+  local streamerName=""
+  streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+
+  while [[ "${streamerName}" != "null" ]]; do
+    # Don't use subshells when debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game"
+    else
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game" &
+    fi
+
+    # Refresh data
+    whileCounter=$(( whileCounter + 1 ))
+    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+  done
+
+  wait
 }
 
 #######################################
@@ -801,8 +907,8 @@ subscribe()
   fi
 
   # Add subscription (can't use write_setting here due to unique jq syntax)
-  local -r tempJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
@@ -869,8 +975,8 @@ unsubscribe()
   fi
 
   # Remove subscription
-  local -r tempJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
@@ -888,8 +994,8 @@ unsubscribe()
 #######################################
 write_setting()
 {
-  local -r tempJson=$(jq "$1 = \"$2\"" "${CONFIG_FILE}")
-  printf "%s" "${tempJson}" > "${CONFIG_FILE}"
+  local -r tmpJson=$(jq "$1 = \"$2\"" "${CONFIG_FILE}")
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 }
 
 # -----------------------------------------
@@ -1012,8 +1118,8 @@ while [[ $# -gt 0 ]]; do
       printf "%s" "${NC}" && exit 0
       break
       ;;
-    -t|--top-games)
-      list_top_games
+    -t|--top)
+      list_top
       printf "%s" "${NC}" && exit 0
       break
       ;;

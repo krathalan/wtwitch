@@ -20,8 +20,8 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     Watch the specified _streamer_.++
     e.g. wtwitch _overwatchleague_
 
-*-t*, *--top-games*++
-    View the top games on Twitch.++
+*-t*, *--top*++
+    View the top games and streams on Twitch.++
     e.g. wtwitch *-t*
 
 *-g* _game_, *--get-streamers=*_game_++
@@ -86,6 +86,8 @@ Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer
 ## Caching
 
 To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to or unsubscribe from a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
+
+For the same reason, every game ID/game name pair fetched from the Twitch API is also stored in the cache directory. However, this cache file does not expire.
 
 # FILES
 
