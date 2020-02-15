@@ -96,6 +96,12 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 ---
 
+## Privacy
+Wtwitch never collects any usage data or data about the user. Wtwitch only connects to remote servers for the following reasons:
+
+1. Directly to Twitch's API endpoint to get data about various streamers that you request
+2. Through `streamlink` to Twitch's video servers to get video data for a streamer you request to watch
+
 ## Technical information
 Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.)
 
