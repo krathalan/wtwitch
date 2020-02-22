@@ -598,7 +598,6 @@ print_stream_info()
 
   # Get streamer-set stream name
   local streamName=""
-  streamName=$(jq -r ".data[${index}].title" <<< "${twitchJson}")
 
   # Get number of current stream viewers
   local viewers=""
@@ -612,9 +611,10 @@ print_stream_info()
 
   # Truncate stream name if necessary
   local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#viewers} ))
+  local streamName
+  streamName=$(jq -r ".data[${index}].title[0:${maxTitleLength}]" <<< "${twitchJson}")
 
-  if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
-    streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
+  if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
