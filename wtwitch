@@ -436,19 +436,17 @@ check_twitch_streams_helper()
   local userName
   userName=$(jq -r ".user_name" <<< "${streamerJson}")
 
-  # Get streamer-set stream name
-  local streamName
-  streamName=$(jq -r ".title" <<< "${streamerJson}")
-
   # Get stream game name from game ID
   local streamGame
   streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
 
+  # Get streamer-set stream name
   # Truncate stream name if necessary; some streamers have excessively long stream titles
   local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} + 7))
+  local streamName
+  streamName=$(jq -r ".title[0:${maxTitleLength}]" <<< "${streamerJson}")
 
-  if [[ ${#streamName} -gt ${maxTitleLength} ]]; then
-    streamName=$(printf "%s" "${streamName}" | cut -c 1-${maxTitleLength})
+  if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
