@@ -1,0 +1,12 @@
+1. git checkout dev
+2. Bump version number in script and scdoc man page
+3. Add notes to CHANGELOG and copy to wtwitch AUR repo
+4. git checkout master
+5. git merge dev
+6. git tag versionnumber
+7. cd ~/downloads
+8. wget https://git.sr.ht/~krathalan/wtwitch/archive/tagname.tar.gz
+9. mv wtwitch-tagname.tar.gz tagname.tar.gz
+10. sign_sourcehut tagname.tar.gz
+11. sha256sum tagname.tar.gz*
+12. Update PKGBUILD for new version number and new sha256 sums
