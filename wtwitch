@@ -53,6 +53,9 @@ readonly PURPLE=$(tput setaf 13)
 readonly RED=$(tput bold && tput setaf 1)
 readonly TURQOISE=$(tput setaf 6)
 
+# Locale file
+readonly LANG_FILE="/usr/lib/wtwitch/locale.json"
+
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
@@ -71,7 +74,8 @@ readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 
-# Used to calculate output string lengths (see check_twitch_streams_helper() and list_streamers_of_game_helper())
+# Used to calculate output string lengths (see check_twitch_streams_helper()
+# and list_streamers_of_game_helper())
 # Why is TITLE_CHARACTERS=18? Because that's how many characters will always
 # be present in a printed line; ergo they must be subtracted from the total
 # terminal width to get the effective maximum line length.
@@ -258,7 +262,7 @@ check_twitch_streams()
   # Manually assign userSubscriptions due to asynchronous sub loading
   mapfile -t userSubscriptions < "${LOAD_SUBS_FILE}"
 
-  printf "\n Streamers online:"
+  printf "\n %s:" "$(get_localized_string "check_online")"
 
   # Check cache expiry time
   local dateDiff="0"
@@ -330,12 +334,12 @@ check_twitch_streams()
 
   sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
 
-  printf "\n Streamers offline:\n"
+  printf "\n %s:\n" "$(get_localized_string "check_offline")"
 
   sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
 
   # Print settings
-  printf "\n Settings:\n   Player set to %s\n   Quality set to %s\n" "${userPlayer}" "${userQuality}"
+  printf "\n %s:\n   %s %s\n   %s %s\n" "$(get_localized_string "check_settings")" "$(get_localized_string "check_player")" "${userPlayer}" "$(get_localized_string "check_quality")" "${userQuality}"
 }
 
 #######################################
@@ -512,6 +516,21 @@ exit_script_on_failure()
 
   clean_up
   exit 1
+}
+
+#######################################
+# Prints the requested string in the current system locale.
+# Globals:
+#   LANG
+#   LANG_FILE
+# Arguments:
+#   $1: string to print
+# Returns:
+#   none
+#######################################
+get_localized_string()
+{
+  printf "%s" "$(jq -r ".$1 | add | .${LANG%_*}" "${LANG_FILE}")"
 }
 
 #######################################
