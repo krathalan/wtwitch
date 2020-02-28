@@ -530,7 +530,7 @@ exit_script_on_failure()
 #######################################
 get_localized_string()
 {
-  printf "%s" "$(jq -r ".$1 | add | .${LANG%_*}" "${LANG_FILE}")"
+  printf "%s" "$(jq -r ".$1.${LANG%_*}" "${LANG_FILE}")"
 }
 
 #######################################
