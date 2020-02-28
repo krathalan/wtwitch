@@ -1,4 +1,24 @@
 {
+  "change_player_not_found": {
+    "en": "media player not found",
+    "de": "Videospieler nicht gefunden",
+    "es": "reproductor de vídeo no encontrado"
+  },
+  "change_player_warning": {
+    "en": "Warning",
+    "de": "Warnung",
+    "es": "Advertencia"
+  },
+  "change_player_player": {
+    "en": "player",
+    "de": "Videospieler",
+    "es": "reproductor"
+  },
+  "change_player_warning_text": {
+    "en": "may not work properly with Streamlink",
+    "de": "funktioniert möglicherweise nicht richtig mit Streamlink",
+    "es": "puede no funcionar correctamente con Streamlink"
+  },
   "check_online": {
     "en": "Live channels",
     "de": "Live Kanäle",

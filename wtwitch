@@ -131,6 +131,7 @@ userSubscriptions=()
 # Changes the default player in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
 #   Colors: ORANGE, NC
+#   useColors
 # Arguments:
 #   $1: player to set as default
 # Returns:
@@ -138,6 +139,9 @@ userSubscriptions=()
 #######################################
 change_player()
 {
+  # Load config for useColors
+  load_config
+
   local -r workingPlayers=("gnome-mpv" "mpv" "mplayer" "vlc")
   local passedCheckMarker="false"
 
@@ -146,7 +150,7 @@ change_player()
 
   # Check to make sure user has input player actually installed
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
-    exit_script_on_failure "Media player ${playerName} not found."
+    exit_script_on_failure "$(get_localized_string "change_player_not_found"): ${playerName}"
   fi
 
   # Check against known working players
@@ -157,7 +161,11 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    printf "\n %sWarning%s: player %s may not work properly with Streamlink.\n" "${ORANGE}" "${NC}" "${playerName}"
+    if [[ "${useColors}" == "true" ]]; then
+      printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "$(get_localized_string "change_player_warning")" "${NC}" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
+    else
+      printf "\n %s: %s %s %s.\n" "$(get_localized_string "change_player_warning")" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
+    fi
   fi
 
   write_setting ".player" "${playerName}"
