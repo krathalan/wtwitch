@@ -72,9 +72,6 @@ readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly TITLE_CHARACTERS=18
 readonly TERMINAL_WIDTH=$(tput cols)
 
-# Used by check_twitch_streams() for asynchronous loading of user subscriptions
-readonly LOAD_SUBS_FILE="${CACHE_FILE_DIRECTORY}/subs.tmp"
-
 # Twitch API information
 # This API key is intended to be used for wtwitch only -- do not use this API
 # key for any other reason!
@@ -245,7 +242,6 @@ change_quality()
 #   CACHE_ONLINE_TEXT_FILE
 #   CONFIG_FILE
 #   DEBUGGING
-#   LOAD_SUBS_FILE
 #   userPlayer
 #   userQuality
 #   userSubscriptions
@@ -256,15 +252,11 @@ change_quality()
 #######################################
 check_twitch_streams()
 {
-  load_subs --async &
+  # Get subscriptions
+  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
   mapfile -t strings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" "${LANG_FILE}")"
-  
-  wait
-
-  # Manually assign userSubscriptions due to asynchronous sub loading
-  mapfile -t userSubscriptions < "${LOAD_SUBS_FILE}"
 
   printf "\n %s:" "${strings[0]}"
 
@@ -460,7 +452,6 @@ check_twitch_streams_helper()
 # Globals:
 #   CACHE_ONLINE_TEXT_FILE
 #   CACHE_OFFLINE_TEXT_FILE
-#   LOAD_SUBS_FILE
 # Arguments:
 #   none
 # Returns:
@@ -469,7 +460,7 @@ check_twitch_streams_helper()
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "${LOAD_SUBS_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
 }
 
 #######################################
@@ -716,55 +707,6 @@ list_top_streams()
 }
 
 #######################################
-# Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
-# Globals:
-#   CONFIG_FILE
-#   LOAD_SUBS_FILE
-#   userSubscriptions
-# Arguments:
-#   $1: flag for --async to map userSubscriptions manually after load_subs &
-# Returns:
-#   none
-#######################################
-load_subs()
-{
-  # Erase possible existing temp file
-  rm -f "${LOAD_SUBS_FILE}"
-  touch "${LOAD_SUBS_FILE}"
-
-  local whileCounter=0
-  local -r numberOfSubs=$(jq ".subscriptions | length" "${CONFIG_FILE}")
-
-  while [[ ${whileCounter} -lt ${numberOfSubs} ]]; do
-    load_subs_helper "${whileCounter}" &
-    whileCounter=$(( whileCounter + 1 ))
-  done
-
-  wait
-
-  if [[ $# -gt 0 ]]; then
-    if [[ "$1" != "--async" ]]; then
-      mapfile -t userSubscriptions < "${LOAD_SUBS_FILE}"
-    fi
-  fi
-}
-
-#######################################
-# Used by load_subs to facilitate multi-process parsing of json files.
-# Globals:
-#   CONFIG_FILE
-#   LOAD_SUBS_FILE
-# Arguments:
-#   $1: index of streamer to get name of
-# Returns:
-#   none
-#######################################
-load_subs_helper()
-{
-  printf "%s\n" "$(jq -r ".subscriptions[$1].streamer" "${CONFIG_FILE}")" >> "${LOAD_SUBS_FILE}"
-}
-
-#######################################
 # Prints information about how to use this script.
 # Globals:
 #   PROJECT_URL
@@ -849,7 +791,7 @@ stream_failure_notify()
 #######################################
 subscribe()
 {
-  load_subs --no-async
+  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Convert to lowercase
   local -r streamerToSubscribeTo="${1,,}"
@@ -919,7 +861,7 @@ toggle_colors()
 #######################################
 unsubscribe()
 {
-  load_subs
+  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Convert to lowercase
   local -r streamerToUnsubscribeFrom="${1,,}"
