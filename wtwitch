@@ -403,6 +403,13 @@ get_game_name()
     tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=$1")
     gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
+    # Guard against wiping gameid cache
+    # This will happen when tmpJson is null as the result of too many Twitch
+    # API queries in a short amount of time
+    if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
+      exit_script_on_failure "Twitch API rate limit reached"
+    fi
+
     # Cache result for future reference
     tmpJson=$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")
     printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
