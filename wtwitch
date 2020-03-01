@@ -172,14 +172,14 @@ change_player()
   local passedCheckMarker="false"
 
   # Get localized strings
-  mapfile -t strings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" "${LANG_FILE}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" "${LANG_FILE}")"
 
   # Convert user input to lowercase
   local -r playerName="${1,,}"
 
   # Check to make sure user has input player actually installed
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
-    exit_script_on_failure "${strings[0]}: ${playerName}"
+    exit_script_on_failure "${localizedStrings[0]}: ${playerName}"
   fi
 
   # Check against known working players
@@ -190,7 +190,7 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "${strings[1]}" "${NC}" "${strings[2]}" "${playerName}" "${strings[3]}"
+    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "${localizedStrings[1]}" "${NC}" "${localizedStrings[2]}" "${playerName}" "${localizedStrings[3]}"
   fi
 
   write_setting ".player" "${playerName}"
@@ -256,9 +256,9 @@ check_twitch_streams()
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
-  mapfile -t strings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" "${LANG_FILE}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" "${LANG_FILE}")"
 
-  printf "\n %s:" "${strings[0]}"
+  printf "\n %s:" "${localizedStrings[0]}"
 
   # Check cache expiry time
   local dateDiff="0"
@@ -330,12 +330,12 @@ check_twitch_streams()
 
   sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
 
-  printf "\n %s:\n" "${strings[1]}"
+  printf "\n %s:\n" "${localizedStrings[1]}"
 
   sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
 
   # Print settings
-  printf "\n %s:\n   %s %s\n   %s %s\n" "${strings[2]}" "${strings[3]}" "${userPlayer}" "${strings[4]}" "${userQuality}"
+  printf "\n %s:\n   %s %s\n   %s %s\n" "${localizedStrings[2]}" "${localizedStrings[3]}" "${userPlayer}" "${localizedStrings[4]}" "${userQuality}"
 }
 
 #######################################
@@ -434,24 +434,24 @@ get_game_name()
 #######################################
 check_twitch_streams_helper()
 {
-  mapfile -t strings <<< "$(jq -r ".user_name, .game_id, .title" <<< "$1")"
+  mapfile -t streamerData <<< "$(jq -r ".user_name, .game_id, .title" <<< "$1")"
 
   # Get stream game name from game ID
   local streamGame
-  streamGame="$(get_game_name "${strings[1]}")"
+  streamGame="$(get_game_name "${streamerData[1]}")"
 
   # Get streamer-set stream name
   # Truncate stream name if necessary; some streamers have excessively long stream titles
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#strings[0]} + 7))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} + 7))
   
   local streamName
-  streamName="${strings[2]:0:${maxTitleLength}}"
+  streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${strings[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -600,7 +600,7 @@ list_streamers_of_game()
 #######################################
 print_stream_info()
 {
-  mapfile -t strings <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
+  mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
   # Get streamer-set stream name
   local streamName=""
@@ -608,20 +608,20 @@ print_stream_info()
   # Add game name to final string if $5 is present
   local additionalText=""
   if [[ $# -gt 4 ]]; then
-    additionalText="$(get_game_name "${strings[1]}"), "
+    additionalText="$(get_game_name "${streamerData[1]}"), "
   fi
 
   # Truncate stream name if necessary
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#strings[0]} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#streamerData[0]} ))
   
   local streamName
-  streamName="${strings[2]:0:${maxTitleLength}}"
+  streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${strings[0]}" "${NC}" >> "$4"
+  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "${NC}" >> "$4"
 }
 
 #######################################
