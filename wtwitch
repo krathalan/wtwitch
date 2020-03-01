@@ -174,12 +174,15 @@ change_player()
   local -r workingPlayers=("gnome-mpv" "mpv" "mplayer" "vlc")
   local passedCheckMarker="false"
 
+  # Get localized strings
+  mapfile -t strings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" "${LANG_FILE}")"
+
   # Convert user input to lowercase
   local -r playerName="${1,,}"
 
   # Check to make sure user has input player actually installed
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
-    exit_script_on_failure "$(get_localized_string "change_player_not_found"): ${playerName}"
+    exit_script_on_failure "${strings[0]}: ${playerName}"
   fi
 
   # Check against known working players
@@ -190,7 +193,7 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "$(get_localized_string "change_player_warning")" "${NC}" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
+    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "${strings[1]}" "${NC}" "${strings[2]}" "${playerName}" "${strings[3]}"
   fi
 
   write_setting ".player" "${playerName}"
@@ -254,12 +257,16 @@ change_quality()
 check_twitch_streams()
 {
   load_subs --async &
+
+  # Get localized strings
+  mapfile -t strings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" "${LANG_FILE}")"
+  
   wait
 
   # Manually assign userSubscriptions due to asynchronous sub loading
   mapfile -t userSubscriptions < "${LOAD_SUBS_FILE}"
 
-  printf "\n %s:" "$(get_localized_string "check_online")"
+  printf "\n %s:" "${strings[0]}"
 
   # Check cache expiry time
   local dateDiff="0"
@@ -331,12 +338,12 @@ check_twitch_streams()
 
   sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
 
-  printf "\n %s:\n" "$(get_localized_string "check_offline")"
+  printf "\n %s:\n" "${strings[1]}"
 
   sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
 
   # Print settings
-  printf "\n %s:\n   %s %s\n   %s %s\n" "$(get_localized_string "check_settings")" "$(get_localized_string "check_player")" "${userPlayer}" "$(get_localized_string "check_quality")" "${userQuality}"
+  printf "\n %s:\n   %s %s\n   %s %s\n" "${strings[2]}" "${strings[3]}" "${userPlayer}" "${strings[4]}" "${userQuality}"
 }
 
 #######################################
@@ -428,26 +435,24 @@ get_game_name()
 #######################################
 check_twitch_streams_helper()
 {
-  # Get current info of streamer
-  local -r streamerJson="$1"
-  local userName
-  userName=$(jq -r ".user_name" <<< "${streamerJson}")
+  mapfile -t strings <<< "$(jq -r ".user_name, .game_id" <<< "$1")"
 
   # Get stream game name from game ID
   local streamGame
-  streamGame="$(get_game_name "$(jq -r ".game_id" <<< "${streamerJson}")")"
+  streamGame="$(get_game_name "${strings[1]}")"
 
   # Get streamer-set stream name
   # Truncate stream name if necessary; some streamers have excessively long stream titles
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#userName} + 7))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#strings[0]} + 7))
+  
   local streamName
-  streamName=$(jq -r ".title[0:${maxTitleLength}]" <<< "${streamerJson}")
+  streamName="$(jq -r ".title[0:${maxTitleLength}]" <<< "$1")"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${strings[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
 }
 
 #######################################
