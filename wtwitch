@@ -78,6 +78,20 @@ readonly TERMINAL_WIDTH=$(tput cols)
 readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
+# Colors
+GREEN=$(tput bold && tput setaf 2)
+GREY=$(tput setaf 8)
+LIGHTGREEN=$(tput setaf 10)
+NC=$(tput sgr0) # No color/turn off all tput attributes
+ORANGE=$(tput setaf 3)
+PURPLE=$(tput setaf 13)
+RED=$(tput bold && tput setaf 1)
+TURQOISE=$(tput setaf 6)
+
+# -----------------------------------------
+# ------- Pre-script: check & load --------
+# -----------------------------------------
+
 # Check files
 # Create config file if it doesnt exist
 if [[ ! -f "${CONFIG_FILE}" ]]; then
@@ -101,16 +115,6 @@ fi
 
 # Load settings
 read -r useColors userPlayer userQuality <<< "$(jq -r ".colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
-
-# Colors
-GREEN=$(tput bold && tput setaf 2)
-GREY=$(tput setaf 8)
-LIGHTGREEN=$(tput setaf 10)
-NC=$(tput sgr0) # No color/turn off all tput attributes
-ORANGE=$(tput setaf 3)
-PURPLE=$(tput setaf 13)
-RED=$(tput bold && tput setaf 1)
-TURQOISE=$(tput setaf 6)
 
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
@@ -149,7 +153,7 @@ fi
 # ------------- User variables ------------
 # -----------------------------------------
 
-# Values are loaded from $CONFIG_FILE
+# Values are loaded from $CONFIG_FILE when needed
 userSubscriptions=()
 
 # -----------------------------------------
@@ -900,7 +904,7 @@ write_setting()
 }
 
 # -----------------------------------------
-# ---------------- Script -----------------
+# ---------- Parse user options -----------
 # -----------------------------------------
 
 if [[ $# -eq 0 ]]; then
