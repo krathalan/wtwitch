@@ -435,7 +435,7 @@ get_game_name()
 #######################################
 check_twitch_streams_helper()
 {
-  mapfile -t strings <<< "$(jq -r ".user_name, .game_id" <<< "$1")"
+  mapfile -t strings <<< "$(jq -r ".user_name, .game_id, .title" <<< "$1")"
 
   # Get stream game name from game ID
   local streamGame
@@ -446,7 +446,7 @@ check_twitch_streams_helper()
   local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#strings[0]} + 7))
   
   local streamName
-  streamName="$(jq -r ".title[0:${maxTitleLength}]" <<< "$1")"
+  streamName="${strings[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
@@ -602,33 +602,28 @@ list_streamers_of_game()
 #######################################
 print_stream_info()
 {
-  local index="$1"
-  local twitchJson="$2"
-  # name of streamer = $3
+  mapfile -t strings <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
   # Get streamer-set stream name
   local streamName=""
 
-  # Get number of current stream viewers
-  local viewers=""
-  viewers=$(jq -r ".data[${index}].viewer_count" <<< "${twitchJson}")
-
   # Add game name to final string if $5 is present
   local additionalText=""
   if [[ $# -gt 4 ]]; then
-    additionalText="$(get_game_name "$(jq -r ".data[${index}].game_id" <<< "${twitchJson}")"), "
+    additionalText="$(get_game_name "${strings[1]}"), "
   fi
 
   # Truncate stream name if necessary
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#viewers} ))
+  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#strings[0]} ))
+  
   local streamName
-  streamName=$(jq -r ".data[${index}].title[0:${maxTitleLength}]" <<< "${twitchJson}")
+  streamName="${strings[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${viewers}" "${NC}" >> "$4"
+  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${strings[0]}" "${NC}" >> "$4"
 }
 
 #######################################
