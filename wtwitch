@@ -43,16 +43,6 @@ readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
 readonly VERSION="1.3.0"
 
-# Colors
-readonly GREEN=$(tput bold && tput setaf 2)
-readonly GREY=$(tput setaf 8)
-readonly LIGHTGREEN=$(tput setaf 10)
-readonly NC=$(tput sgr0) # No color/turn off all tput attributes
-readonly ORANGE=$(tput setaf 3)
-readonly PURPLE=$(tput setaf 13)
-readonly RED=$(tput bold && tput setaf 1)
-readonly TURQOISE=$(tput setaf 6)
-
 # Locale file
 readonly LANG_FILE="/usr/lib/wtwitch/locale.json"
 
@@ -91,6 +81,51 @@ readonly LOAD_SUBS_FILE="${CACHE_FILE_DIRECTORY}/subs.tmp"
 readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
+# Check files
+# Create config file if it doesnt exist
+if [[ ! -f "${CONFIG_FILE}" ]]; then
+  if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
+    mkdir -p "${CONFIG_FILE_DIRECTORY}"
+  fi
+
+  # Default config
+  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+fi
+
+# Create cache folder if it doesn't exist
+if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
+  mkdir -p "${CACHE_FILE_DIRECTORY}"
+fi
+
+# Create gameids cache file
+if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
+  printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
+fi
+
+# Load settings
+read -r useColors userPlayer userQuality <<< "$(jq -r ".colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+
+# Colors
+GREEN=$(tput bold && tput setaf 2)
+GREY=$(tput setaf 8)
+LIGHTGREEN=$(tput setaf 10)
+NC=$(tput sgr0) # No color/turn off all tput attributes
+ORANGE=$(tput setaf 3)
+PURPLE=$(tput setaf 13)
+RED=$(tput bold && tput setaf 1)
+TURQOISE=$(tput setaf 6)
+
+# Deactivate colors if useColors is false
+if [[ "${useColors}" == "false" ]]; then
+  GREEN="${NC}"
+  GREY="${NC}"
+  LIGHTGREEN="${NC}"
+  ORANGE="${NC}"
+  PURPLE="${NC}"
+  RED="${NC}"
+  TURQOISE="${NC}"
+fi
+
 # Debugging
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
   # Avoid subshells, print full wget output, and more behavioral changes
@@ -117,10 +152,7 @@ fi
 # ------------- User variables ------------
 # -----------------------------------------
 
-# Values are loaded from $CONFIG_FILE (see load_config())
-useColors=""
-userPlayer=""
-userQuality=""
+# Values are loaded from $CONFIG_FILE
 userSubscriptions=()
 
 # -----------------------------------------
@@ -139,9 +171,6 @@ userSubscriptions=()
 #######################################
 change_player()
 {
-  # Load config for useColors
-  load_config
-
   local -r workingPlayers=("gnome-mpv" "mpv" "mplayer" "vlc")
   local passedCheckMarker="false"
 
@@ -161,11 +190,7 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    if [[ "${useColors}" == "true" ]]; then
-      printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "$(get_localized_string "change_player_warning")" "${NC}" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
-    else
-      printf "\n %s: %s %s %s.\n" "$(get_localized_string "change_player_warning")" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
-    fi
+    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "$(get_localized_string "change_player_warning")" "${NC}" "$(get_localized_string "change_player_player")" "${playerName}" "$(get_localized_string "change_player_warning_text")"
   fi
 
   write_setting ".player" "${playerName}"
@@ -210,40 +235,6 @@ change_quality()
 }
 
 #######################################
-# Creates the cache and config directories and files if they are missing.
-# Globals:
-#   CACHE_FILE_DIRECTORY
-#   CONFIG_FILE
-#   CONFIG_FILE_DIRECTORY
-# Arguments:
-#   $1: command to test
-# Returns:
-#   none
-#######################################
-check_files()
-{
-  # Create config file if it doesnt exist
-  if [[ ! -f "${CONFIG_FILE}" ]]; then
-    if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-      mkdir -p "${CONFIG_FILE_DIRECTORY}"
-    fi
-
-    # Default config
-    printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
-  fi
-
-  # Create cache folder if it doesn't exist
-  if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-    mkdir -p "${CACHE_FILE_DIRECTORY}"
-  fi
-
-  # Create gameids cache file
-  if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
-    printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
-  fi
-}
-
-#######################################
 # Checks to see which subscribed Twitch streams are online and prints the user's settings.
 # Globals:
 #   CACHE_EXPIRY_TIME
@@ -263,8 +254,6 @@ check_files()
 check_twitch_streams()
 {
   load_subs --async &
-  load_config
-
   wait
 
   # Manually assign userSubscriptions due to asynchronous sub loading
@@ -386,11 +375,7 @@ get_offline_streams()
 get_offline_streams_helper()
 {
   if ! grep -qi "$1" <<< "$2"; then
-    if [[ "${useColors}" == "true" ]]; then
-      printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
-    else
-      printf "   %s\n" "$1" >> "${CACHE_OFFLINE_TEXT_FILE}"
-    fi
+    printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
 }
 
@@ -462,11 +447,7 @@ check_twitch_streams_helper()
     streamName+="…"
   fi
 
-  if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
-  else
-    printf "   %s: %s (playing %s)\n" "${userName}" "${streamName}" "${streamGame}" >> "${CACHE_ONLINE_TEXT_FILE}"
-  fi
+  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${userName}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -554,9 +535,6 @@ get_localized_string()
 #######################################
 list_streamers_of_game()
 {
-  # Load config for useColors
-  load_config
-
   printf "\n %s streamers:\n" "$1"
 
   # Replace spaces in game name with %20 for URL
@@ -645,11 +623,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  if [[ "${useColors}" == "true" ]]; then
-    printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${viewers}" "${NC}" >> "$4"
-  else
-    printf "   %s: %s (%s viewers)\n" "$3" "${streamName}" "${viewers}" >> "$4"
-  fi
+  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${viewers}" "${NC}" >> "$4"
 }
 
 #######################################
@@ -668,9 +642,6 @@ print_stream_info()
 #######################################
 list_top()
 {
-  # Load config for useColors
-  load_config
-
   printf "\n Top games:\n"
 
   # Remove old cache files
@@ -692,11 +663,7 @@ list_top()
   gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
 
   while [[ "${gameName}" != "null" ]]; do
-    if [[ "${useColors}" == "true" ]]; then
-      printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
-    else
-      printf "   %s. %s\n" $(( whileCounter + 1 )) "${gameName}" >> "${CACHE_MISC_TEXT_FILE}"
-    fi
+    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
 
     # Refresh data
     whileCounter=$(( whileCounter + 1 ))
@@ -749,29 +716,6 @@ list_top_streams()
 }
 
 #######################################
-# Loads user player and quality settings from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
-# Globals:
-#   CONFIG_FILE
-#   useColors
-#   userPlayer
-#   userQuality
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-load_config()
-{
-  # Make sure cache and config directories exist
-  check_files
-
-  # Load settings
-  useColors=$(jq -r ".colors" "${CONFIG_FILE}")
-  userPlayer=$(jq -r ".player" "${CONFIG_FILE}")
-  userQuality=$(jq -r ".quality" "${CONFIG_FILE}")
-}
-
-#######################################
 # Loads user subscriptions from $CONFIG_FILE (usually ~/.config/wtwitch/config.json).
 # Globals:
 #   CONFIG_FILE
@@ -784,9 +728,6 @@ load_config()
 #######################################
 load_subs()
 {
-  # Make sure cache directory and config file exists
-  check_files
-
   # Erase possible existing temp file
   rm -f "${LOAD_SUBS_FILE}"
   touch "${LOAD_SUBS_FILE}"
@@ -951,7 +892,8 @@ subscribe()
 #######################################
 toggle_colors()
 {
-  load_config
+  # "Re-fill" green from empty
+  GREEN=$(tput bold && tput setaf 2)
 
   # Reverse "colors" value
   if [[ "${useColors}" == "true" ]]; then
@@ -1184,8 +1126,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-load_config
 
 # If quality="audio_only" OR debugging, do not open streamlink as a background process
 if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
