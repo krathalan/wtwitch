@@ -353,7 +353,11 @@ check_twitch_streams()
     local -r allStreamerJson=$(download_file "${initialRequestURL}")
 
     # Figure out offline streamers in background
-    get_offline_streams "${allStreamerJson}"
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      get_offline_streams "${allStreamerJson}"
+    else
+      get_offline_streams "${allStreamerJson}" &
+    fi
 
     # Pass each streamer json data to check_twitch_streams_helper to parse, 
     # get game name for, and print
