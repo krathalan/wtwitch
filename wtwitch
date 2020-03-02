@@ -39,7 +39,7 @@ set -Eeuo pipefail
 # -----------------------------------------
 
 # Script (self) information
-readonly SCRIPT_NAME=$(basename "$0")
+readonly SCRIPT_NAME="$(basename "$0")"
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
 readonly VERSION="1.3.0"
 
@@ -67,7 +67,7 @@ readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 # be present in a printed line; ergo they must be subtracted from the total
 # terminal width to get the effective maximum stream title length.
 readonly TITLE_CHARACTERS=18
-readonly TERMINAL_WIDTH=$(tput cols)
+readonly TERMINAL_WIDTH="$(tput cols)"
 
 # Twitch API information
 # This API key is intended to be used for wtwitch only -- do not use this API
@@ -76,20 +76,20 @@ readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # Colors
-GREEN=$(tput bold && tput setaf 2)
-GREY=$(tput setaf 8)
-LIGHTGREEN=$(tput setaf 10)
-NC=$(tput sgr0) # No color/turn off all tput attributes
-ORANGE=$(tput setaf 3)
-PURPLE=$(tput setaf 13)
-RED=$(tput bold && tput setaf 1)
-TURQOISE=$(tput setaf 6)
+GREEN="$(tput bold && tput setaf 2)"
+GREY="$(tput setaf 8)"
+LIGHTGREEN="$(tput setaf 10)"
+NC="$(tput sgr0)" # No color/turn off all tput attributes
+ORANGE="$(tput setaf 3)"
+PURPLE="$(tput setaf 13)"
+RED="$(tput bold && tput setaf 1)"
+TURQOISE="$(tput setaf 6)"
 
 # -----------------------------------------
 # ------------- Translations --------------
 # -----------------------------------------
 
-readonly TRANSLATIONS=$(cat <<EOF
+readonly TRANSLATIONS="$(cat <<EOF
 {
   "change_player_not_found": {
     "en": "media player not found",
@@ -138,7 +138,7 @@ readonly TRANSLATIONS=$(cat <<EOF
   }
 }
 EOF
-)
+)"
 
 # -----------------------------------------
 # ------- Pre-script: check & load --------
@@ -319,7 +319,7 @@ check_twitch_streams()
   # Check cache expiry time
   local dateDiff="0"
   local lastSubscriptionUpdate
-  lastSubscriptionUpdate=$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")
+  lastSubscriptionUpdate="$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")"
 
   # Check for older (e.g. "Sun Nov  3 14:54:55 PST 2019") style lastSubscriptionUpdate
   if ! [[ "${lastSubscriptionUpdate}" =~ ^[0-9]+$ ]] ; then
@@ -327,8 +327,8 @@ check_twitch_streams()
   fi
 
   if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-    local -r currentDate=$(LANG=C date +%s -d "now")
-    dateDiff=$(( currentDate - lastSubscriptionUpdate ))
+    local -r currentDate="$(LANG=C date +%s -d "now")"
+    dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
   fi
 
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
@@ -350,7 +350,7 @@ check_twitch_streams()
     done
 
     # Get data of all online streamers (sans game names)
-    local -r allStreamerJson=$(download_file "${initialRequestURL}")
+    local -r allStreamerJson="$(download_file "${initialRequestURL}")"
 
     # Figure out offline streamers in background
     if [[ "${DEBUGGING}" == "on" ]]; then
@@ -364,7 +364,7 @@ check_twitch_streams()
     local whileCounter=0
 
     local streamerToProcess=""
-    streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
+    streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
 
     while [[ "${streamerToProcess}" != "null" ]]; do
       # Don't use subshells when debugging is on
@@ -375,8 +375,8 @@ check_twitch_streams()
       fi
 
       # Refresh data
-      whileCounter=$(( whileCounter + 1 ))
-      streamerToProcess=$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")
+      whileCounter="$(( whileCounter + 1 ))"
+      streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
     done
 
     # Wait for all background processes, offline and online, to finish
@@ -460,7 +460,7 @@ get_game_name()
   # If game id not cached, fetch from Twitch API
   if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
     local tmpJson
-    tmpJson=$(download_file "${TWITCH_API_URL}/helix/games?id=$1")
+    tmpJson="$(download_file "${TWITCH_API_URL}/helix/games?id=$1")"
     gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
     # Guard against wiping gameid cache
@@ -471,7 +471,7 @@ get_game_name()
     fi
 
     # Cache result for future reference
-    tmpJson=$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")
+    tmpJson="$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")"
     printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
   fi
 
@@ -501,11 +501,11 @@ check_twitch_streams_helper()
   streamGame="$(get_game_name "${streamerData[1]}")"
 
   # Get streamer-set stream name
-  # Truncate stream name if necessary; some streamers have excessively long stream titles
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} + 7))
+  # Truncate stream name if necessary; some streamers have stream titles longer
+  # than the terminal width and cause ugly output
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} + 7))"
   
-  local streamName
-  streamName="${streamerData[2]:0:${maxTitleLength}}"
+  local streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
@@ -590,12 +590,12 @@ list_streamers_of_game()
 
   # Get game_id
   local twitchJson
-  twitchJson=$(download_file "${TWITCH_API_URL}/helix/games?name=${gameName}")
+  twitchJson="$(download_file "${TWITCH_API_URL}/helix/games?name=${gameName}")"
 
-  local -r gameID=$(jq -r ".data[0].id" <<< "${twitchJson}")
+  local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
 
   # Get streamers
-  twitchJson=$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")
+  twitchJson="$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")"
   
   # Remove old cache files
   clean_up
@@ -603,7 +603,7 @@ list_streamers_of_game()
   local whileCounter=0
 
   local streamerName=""
-  streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+  streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -614,8 +614,8 @@ list_streamers_of_game()
     fi
 
     # Refresh data
-    whileCounter=$(( whileCounter + 1 ))
-    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")
+    whileCounter="$(( whileCounter + 1 ))"
+    streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
   done
 
   wait
@@ -656,11 +656,11 @@ print_stream_info()
     additionalText="$(get_game_name "${streamerData[1]}"), "
   fi
 
-  # Truncate stream name if necessary
-  local -r maxTitleLength=$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#streamerData[0]} ))
+  # Truncate stream name if necessary; some streamers have stream titles longer
+  # than the terminal width and cause ugly output
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#streamerData[0]} ))"
   
-  local streamName
-  streamName="${streamerData[2]:0:${maxTitleLength}}"
+  local streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
@@ -698,19 +698,19 @@ list_top()
   fi
 
   # Figure out top games in foreground
-  local -r topGamesJson=$(download_file "${TWITCH_API_URL}/helix/games/top")
+  local -r topGamesJson="$(download_file "${TWITCH_API_URL}/helix/games/top")"
 
   local whileCounter=0
 
   local gameName=""
-  gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
+  gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
 
   while [[ "${gameName}" != "null" ]]; do
     printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
 
     # Refresh data
-    whileCounter=$(( whileCounter + 1 ))
-    gameName=$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")
+    whileCounter="$(( whileCounter + 1 ))"
+    gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
   done
 
   # Wait for list_top_streams() to finish
@@ -735,12 +735,12 @@ list_top()
 #######################################
 list_top_streams()
 {
-  local -r topStreamsJson=$(download_file "${TWITCH_API_URL}/helix/streams?first=20")
+  local -r topStreamsJson="$(download_file "${TWITCH_API_URL}/helix/streams?first=20")"
 
   local whileCounter=0
 
   local streamerName=""
-  streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+  streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")"
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -751,8 +751,8 @@ list_top_streams()
     fi
 
     # Refresh data
-    whileCounter=$(( whileCounter + 1 ))
-    streamerName=$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")
+    whileCounter="$(( whileCounter + 1 ))"
+    streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")"
   done
 
   wait
@@ -796,7 +796,7 @@ stream()
 
   # Check to make sure streamer is online
   # Get current info of streamer
-  local -r streamerJson=$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")
+  local -r streamerJson="$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")"
 
   if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
     stream_failure_notify "$1" "Streamer $1 is not online."
@@ -858,7 +858,7 @@ subscribe()
     while [[ ${whileCounter} -lt ${#userSubscriptions[@]} ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
       currentSubscription="${userSubscriptions[${whileCounter}]}"
-      whileCounter=$(( whileCounter + 1))
+      whileCounter="$(( whileCounter + 1))"
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
@@ -867,7 +867,7 @@ subscribe()
   fi
 
   # Add subscription (can't use write_setting here due to unique jq syntax)
-  local -r tmpJson=$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")
+  local -r tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
@@ -887,7 +887,7 @@ subscribe()
 toggle_colors()
 {
   # "Re-fill" green from empty
-  GREEN=$(tput bold && tput setaf 2)
+  GREEN="$(tput bold && tput setaf 2)"
 
   # Reverse "colors" value
   if [[ "${useColors}" == "true" ]]; then
@@ -922,12 +922,12 @@ unsubscribe()
   local whileCounter=0
 
   local currentSubscription
-  currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+  currentSubscription="$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")"
 
   while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
     # Refresh data
-    whileCounter=$(( whileCounter + 1 ))
-    currentSubscription=$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")
+    whileCounter="$(( whileCounter + 1 ))"
+    currentSubscription="$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")"
   done
 
   # Check to make sure user is subscribed before unsubscribing
@@ -936,7 +936,7 @@ unsubscribe()
   fi
 
   # Remove subscription
-  local -r tmpJson=$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")
+  local -r tmpJson="$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
   # Invalidate cache
@@ -955,7 +955,7 @@ unsubscribe()
 #######################################
 write_setting()
 {
-  local -r tmpJson=$(jq "$1 = \"$2\"" "${CONFIG_FILE}")
+  local -r tmpJson="$(jq "$1 = \"$2\"" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 }
 
@@ -997,7 +997,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        gameToCheck=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
+        gameToCheck="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         list_streamers_of_game "${gameToCheck}"
       else
         exit_script_on_failure "No game specified."
@@ -1025,7 +1025,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        player=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
+        player="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         change_player "${player}"
       else
         exit_script_on_failure "No media player specified."
@@ -1048,7 +1048,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        quality=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
+        quality="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         change_quality "${quality}"
       else
         exit_script_on_failure "No quality specified."
@@ -1071,7 +1071,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToSubscribeTo=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
+        streamerToSubscribeTo="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         subscribe "${streamerToSubscribeTo}"
       else
         exit_script_on_failure "No streamer specified."
@@ -1099,7 +1099,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToUnsubscribeFrom=$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')
+        streamerToUnsubscribeFrom="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         unsubscribe "${streamerToUnsubscribeFrom}"
       else
         exit_script_on_failure "No streamer specified."
