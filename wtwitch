@@ -43,9 +43,6 @@ readonly SCRIPT_NAME=$(basename "$0")
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
 readonly VERSION="1.3.0"
 
-# Locale file
-readonly LANG_FILE="/usr/lib/wtwitch/locale.json"
-
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
@@ -87,6 +84,61 @@ ORANGE=$(tput setaf 3)
 PURPLE=$(tput setaf 13)
 RED=$(tput bold && tput setaf 1)
 TURQOISE=$(tput setaf 6)
+
+# -----------------------------------------
+# ------------- Translations --------------
+# -----------------------------------------
+
+readonly TRANSLATIONS=$(cat <<EOF
+{
+  "change_player_not_found": {
+    "en": "media player not found",
+    "de": "Videospieler nicht gefunden",
+    "es": "reproductor de vídeo no encontrado"
+  },
+  "change_player_warning": {
+    "en": "Warning",
+    "de": "Warnung",
+    "es": "Advertencia"
+  },
+  "change_player_player": {
+    "en": "player",
+    "de": "Videospieler",
+    "es": "reproductor"
+  },
+  "change_player_warning_text": {
+    "en": "may not work properly with Streamlink",
+    "de": "funktioniert möglicherweise nicht richtig mit Streamlink",
+    "es": "puede no funcionar correctamente con Streamlink"
+  },
+  "check_online": {
+    "en": "Live channels",
+    "de": "Live Kanäle",
+    "es": "Canales en directo"
+  },
+  "check_offline": {
+    "en": "Offline",
+    "de": "Offline",
+    "es": "Desconectado"
+  },
+  "check_settings": {
+    "en": "Settings",
+    "de": "Einstellungen",
+    "es": "Ajuste"
+  },
+  "check_player": {
+    "en": "Player set to",
+    "de": "Videospieler eingestellt auf",
+    "es": "Reproductor de vídeo configurado en"
+  },
+  "check_quality": {
+    "en": "Quality set to",
+    "de": "Qualität eingestellt auf",
+    "es": "Calidad configurado en"
+  }
+}
+EOF
+)
 
 # -----------------------------------------
 # ------- Pre-script: check & load --------
@@ -176,7 +228,7 @@ change_player()
   local passedCheckMarker="false"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" "${LANG_FILE}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" <<< "${TRANSLATIONS}")"
 
   # Convert user input to lowercase
   local -r playerName="${1,,}"
@@ -260,7 +312,7 @@ check_twitch_streams()
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" "${LANG_FILE}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" <<< "${TRANSLATIONS}")"
 
   printf "\n %s:" "${localizedStrings[0]}"
 
