@@ -63,10 +63,6 @@ readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
-# Why is TITLE_CHARACTERS=18? Because that's how many characters will always
-# be present in a printed line; ergo they must be subtracted from the total
-# terminal width to get the effective maximum stream title length.
-readonly TITLE_CHARACTERS=18
 readonly TERMINAL_WIDTH="$(tput cols)"
 
 # Twitch API information
@@ -135,6 +131,41 @@ readonly TRANSLATIONS="$(cat <<EOF
     "en": "Quality set to",
     "de": "Qualität eingestellt auf",
     "es": "Calidad configurado en"
+  },
+  "top_games": {
+    "en": "Top games",
+    "de": "Beliebteste Spiele",
+    "es": "Juegos más populares"
+  },
+  "top_streams": {
+    "en": "Top channels",
+    "de": "Beliebteste Kanäle",
+    "es": "Los canales más populares"
+  },
+  "viewers": {
+    "en": "viewers",
+    "de": "Beobachter",
+    "es": "espectadores"
+  },
+  "channels": {
+    "en": "channels",
+    "de": "Kanäle",
+    "es": "Canales de"
+  },
+  "no_channels": {
+    "en": "No one is streaming",
+    "de": "No one is streaming",
+    "es": "No one is streaming"
+  },
+  "error": {
+    "en": "Error",
+    "de": "Fehler",
+    "es": "Error"
+  },
+  "exiting": {
+    "en": "Exiting",
+    "de": "Verlassen von",
+    "es": "Saliendo de"
   }
 }
 EOF
@@ -200,6 +231,24 @@ if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
 else
   readonly DEBUGGING="off"
 fi
+
+# Add language-specific ".viewer" string count to TITLE_CHARACTERS
+# Why is TITLE_CHARACTERS=11? Because that's how many characters will always
+# be present in a printed line; ergo they must be subtracted from the total
+# terminal width to get the effective maximum stream title length.
+TITLE_CHARACTERS=11
+
+case "${LANG%_*}" in
+  "en")
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
+    ;;
+  "de")
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 10 ))"
+    ;;
+  "es")
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 12 ))"
+    ;;
+esac
 
 # -----------------------------------------
 # ------------- User variables ------------
@@ -562,8 +611,10 @@ download_file()
 #######################################
 exit_script_on_failure()
 {
+  mapfile -t localizedStrings <<< "$(jq -r ".error.${LANG%_*}, .exiting.${LANG%_*}" <<< "${TRANSLATIONS}")"
+
   if [[ $# -gt 0 ]]; then
-    printf "\n %sError%s: %s\n\n Exiting %s.\n%s" "${RED}" "${NC}" "$1" "${SCRIPT_NAME}" "${NC}" >&2
+    printf "\n %s%s%s: %s\n\n %s %s.\n%s" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
   fi
 
   clean_up
@@ -583,7 +634,14 @@ exit_script_on_failure()
 #######################################
 list_streamers_of_game()
 {
-  printf "\n %s streamers:\n" "$1"
+  mapfile -t localizedStrings <<< "$(jq -r ".channels.${LANG%_*}, .no_channels.${LANG%_*}" <<< "${TRANSLATIONS}")"
+
+  # Spanish has a different structure
+  if [[ "${LANG%_*}" == "es" ]]; then
+    printf "\n %s %s:\n" "${localizedStrings[0]}" "$1"
+  else
+    printf "\n %s %s:\n" "$1" "${localizedStrings[0]}"
+  fi
 
   # Replace spaces in game name with %20 for URL
   local -r gameName=${1// /%20}
@@ -623,7 +681,7 @@ list_streamers_of_game()
   if [[ -f "${CACHE_MISC_TEXT_FILE}" ]]; then
     cat "${CACHE_MISC_TEXT_FILE}"
   else
-    printf " No one is streaming %s.\n" "$1"
+    printf " %s %s.\n" "${localizedStrings[1]}" "$1"
   fi
 }
 
@@ -666,7 +724,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s%s viewers)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "${NC}" >> "$4"
+  printf "   %s%s%s: %s %s(%s%s %s)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${LANG%_*}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
 }
 
 #######################################
@@ -685,7 +743,9 @@ print_stream_info()
 #######################################
 list_top()
 {
-  printf "\n Top games:\n"
+  mapfile -t localizedStrings <<< "$(jq -r ".top_games.${LANG%_*}, .top_streams.${LANG%_*}" <<< "${TRANSLATIONS}")"
+
+  printf "\n %s:\n" "${localizedStrings[0]}"
 
   # Remove old cache files
   clean_up
@@ -718,7 +778,7 @@ list_top()
 
   cat "${CACHE_MISC_TEXT_FILE}"
 
-  printf "\n Top streams:\n"
+  printf "\n %s:\n" "${localizedStrings[1]}"
   cat "${CACHE_TOP_STREAMS_TEXT_FILE}"
 }
 
