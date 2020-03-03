@@ -140,7 +140,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   "top_streams": {
     "en": "Top channels",
     "de": "Beliebteste Kanäle",
-    "es": "Los canales más populares"
+    "es": "Canales más populares"
   },
   "viewers": {
     "en": "viewers",
@@ -232,20 +232,23 @@ else
   readonly DEBUGGING="off"
 fi
 
-# Add language-specific ".viewer" string count to TITLE_CHARACTERS
 # Why is TITLE_CHARACTERS=11? Because that's how many characters will always
 # be present in a printed line; ergo they must be subtracted from the total
 # terminal width to get the effective maximum stream title length.
 TITLE_CHARACTERS=11
 
+# Add language-specific ".viewer" character count to TITLE_CHARACTERS
 case "${LANG%_*}" in
   "en")
+    # viewers=7
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
     ;;
   "de")
+    # Beobachter=10
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 10 ))"
     ;;
   "es")
+    # espectadores=11
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 12 ))"
     ;;
 esac
