@@ -107,6 +107,11 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "funktioniert möglicherweise nicht richtig mit Streamlink",
     "es": "puede no funcionar correctamente con Streamlink"
   },
+  "change_quality_error": {
+    "en": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
+    "de": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
+    "es": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\""
+  },
   "check_online": {
     "en": "Live channels",
     "de": "Live Kanäle",
@@ -166,6 +171,86 @@ readonly TRANSLATIONS="$(cat <<EOF
     "en": "Exiting",
     "de": "Verlassen von",
     "es": "Saliendo de"
+  },
+  "print_help": {
+    "en": "View the man page at",
+    "de": "View the man page at",
+    "es": "View the man page at"
+  },
+  "stream_failure_player_one": {
+    "en": "Player",
+    "de": "Videospieler",
+    "es": "Reproductor"
+  },
+  "stream_failure_player_two": {
+    "en": "not found",
+    "de": "nicht gefunden",
+    "es": "no encontrado"
+  },
+  "stream_failure_offline_one": {
+    "en": "Streamer",
+    "de": "Streamer",
+    "es": "Streamer"
+  },
+  "stream_failure_offline_two": {
+    "en": "is not online",
+    "de": "is not online",
+    "es": "is not online"
+  },
+  "stream_failure_quality": {
+    "en": "stream does not support quality",
+    "de": "stream does not support quality",
+    "es": "stream does not support quality"
+  },
+  "stream_failure_one": {
+    "en": "watching",
+    "de": "Beobachtung von",
+    "es": "viendo"
+  },
+  "stream_failure_two": {
+    "en": "failed",
+    "de": "fehlgeschlagen",
+    "es": "falló"
+  },
+  "stream_watching": {
+    "en": "Watching",
+    "de": "beobachten",
+    "es": "Viendo"
+  },
+  "stream_on_twitch": {
+    "en": "on Twitch",
+    "de": "auf Twitch",
+    "es": "en Twitch"
+  },
+  "colors_off": {
+    "en": "Turned colors off",
+    "de": "Abgeschaltete Farben",
+    "es": "Apagó los colores"
+  },
+  "colors_on": {
+    "en": "Turned colors on",
+    "de": "Eingeschaltete Farben",
+    "es": "Encendió los colores"
+  },
+  "flags_no_game": {
+    "en": "No game specified",
+    "de": "Kein Spiel angegeben",
+    "es": "No se especifica ningún juego"
+  },
+  "flags_no_player": {
+    "en": "No player specified",
+    "de": "Kein Videospeiler angegeben",
+    "es": "No se especifica el reproductor de vídeo"
+  },
+  "flags_no_quality": {
+    "en": "No quality specified",
+    "de": "Kein Qualität angegeben",
+    "es": "No se especifica la calidad"
+  },
+  "flags_no_streamer": {
+    "en": "No streamer specified",
+    "de": "Kein Kanal angegeben",
+    "es": "No se especifica ningún canal"
   }
 }
 EOF
@@ -331,7 +416,7 @@ change_quality()
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
   else
-    exit_script_on_failure "Quality ${specifiedQuality} is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"."
+    exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${LANG%_*}" <<< "${TRANSLATIONS}")."
   fi
 }
 
@@ -825,7 +910,7 @@ list_top_streams()
 #######################################
 print_help()
 {
-  man wtwitch || exit_script_on_failure "View the man page at ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
+  man wtwitch || exit_script_on_failure "$(jq -r ".print_help.${LANG%_*}" <<< "${TRANSLATIONS}") ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
 }
 
 #######################################
@@ -841,12 +926,15 @@ print_help()
 #######################################
 stream()
 {
+  # Get localized strings
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_player_one.${LANG%_*}, .stream_failure_player_two.${LANG%_*}, .stream_failure_offline_one.${LANG%_*}, .stream_failure_offline_two.${LANG%_*}, .stream_failure_quality.${LANG%_*}, .stream_watching.${LANG%_*}, .stream_on_twitch.${LANG%_*}" <<< "${TRANSLATIONS}")"
+
   # Use VLC as backup player if mpv is not installed
   if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
     if [[ -x "$(command -v "vlc")" ]]; then
       userPlayer="vlc"
     else
-      stream_failure_notify "$1" "Media player ${userPlayer} not found."
+      stream_failure_notify "$1" "${localizedStrings[0]} ${userPlayer} ${localizedStrings[1]}."
     fi
   fi
 
@@ -855,7 +943,7 @@ stream()
   local -r streamerJson="$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")"
 
   if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
-    stream_failure_notify "$1" "Streamer $1 is not online."
+    stream_failure_notify "$1" "${localizedStrings[2]} $1 ${localizedStrings[3]}."
   fi
 
   # If using mpv: add window title, enable hardware dec, and use wayland if possible
@@ -866,9 +954,15 @@ stream()
       userPlayer+=" --gpu-context=wayland"
     fi
 
-    streamlink -p "${userPlayer}" --title "Watching $1 on Twitch (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's stream does not support quality ${userQuality}."
+    if [[ "${LANG%_*}" == "de" ]]; then
+      mpvWindowTitle="$1 ${localizedStrings[6]} ${localizedStrings[5]}"
+    else
+      mpvWindowTitle="${localizedStrings[5]} $1 ${localizedStrings[6]}"
+    fi
+
+    streamlink -p "${userPlayer}" --title "${mpvWindowTitle} (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   else
-    streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's stream does not support quality ${userQuality}."
+    streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   fi
 }
 
@@ -884,7 +978,9 @@ stream()
 #######################################
 stream_failure_notify()
 {
-  notify-send -i "gnome-twitch" "Wtwitch: streaming $1 failed" "$2"
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${LANG%_*}, .stream_failure_two.${LANG%_*}" <<< "${TRANSLATIONS}")"
+
+  notify-send -i "gnome-twitch" "Wtwitch: ${localizedStrings[0]} $1 ${localizedStrings[1]}" "$2"
   exit_script_on_failure
 }
 
@@ -918,7 +1014,7 @@ subscribe()
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
-      exit_script_on_failure "You are already subscribed to ${streamerToSubscribeTo}."
+      exit_script_on_failure "$(jq -r ".subscribe_failure.${LANG%_*}" <<< "${TRANSLATIONS}") ${streamerToSubscribeTo}."
     fi
   fi
 
@@ -942,17 +1038,22 @@ subscribe()
 #######################################
 toggle_colors()
 {
-  # "Re-fill" green from empty
-  GREEN="$(tput bold && tput setaf 2)"
-
   # Reverse "colors" value
   if [[ "${useColors}" == "true" ]]; then
+    # "Empty" green
+    GREEN="${NC}"
+
     write_setting ".colors" "false"
-    printf "\n Turned colors OFF.\n"
+    local -r toPrint="$(jq -r ".colors_off.${LANG%_*}" <<< "${TRANSLATIONS}")"
   else
+    # "Re-fill" green from empty
+    GREEN="$(tput bold && tput setaf 2)"
+
     write_setting ".colors" "true"
-    printf "\n %sTurned colors ON.%s\n" "${GREEN}" "${NC}"
+    local -r toPrint="$(jq -r ".colors_on.${LANG%_*}" <<< "${TRANSLATIONS}")"
   fi
+
+  printf "\n %s%s.%s\n" "${GREEN}" "${toPrint}" "${NC}"
 
   # Invalidate cache as it may or may not have colors
   write_setting ".lastSubscriptionUpdate" "null"
@@ -988,7 +1089,7 @@ unsubscribe()
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
-    exit_script_on_failure "You aren't subscribed to ${streamerToUnsubscribeFrom}."
+    exit_script_on_failure "$(jq -r ".unsubscribe_failure.${LANG%_*}" <<< "${TRANSLATIONS}") ${streamerToUnsubscribeFrom}."
   fi
 
   # Remove subscription
@@ -1044,7 +1145,7 @@ while [[ $# -gt 0 ]]; do
         list_streamers_of_game "$1"
         printf "%s" "${NC}" && exit 0
       else
-        exit_script_on_failure "No game specified."
+        exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1056,7 +1157,7 @@ while [[ $# -gt 0 ]]; do
         gameToCheck="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         list_streamers_of_game "${gameToCheck}"
       else
-        exit_script_on_failure "No game specified."
+        exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       printf "%s" "${NC}" && exit 0
       break
@@ -1072,7 +1173,7 @@ while [[ $# -gt 0 ]]; do
         change_player "$1"
         printf "%s" "${NC}" && exit 0
       else
-        exit_script_on_failure "No media player specified."
+        exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1084,7 +1185,7 @@ while [[ $# -gt 0 ]]; do
         player="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         change_player "${player}"
       else
-        exit_script_on_failure "No media player specified."
+        exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       printf "%s" "${NC}" && exit 0
       break
@@ -1095,7 +1196,7 @@ while [[ $# -gt 0 ]]; do
         change_quality "$1"
         printf "%s" "${NC}" && exit 0
       else
-        exit_script_on_failure "No quality specified."
+        exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1107,7 +1208,7 @@ while [[ $# -gt 0 ]]; do
         quality="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         change_quality "${quality}"
       else
-        exit_script_on_failure "No quality specified."
+        exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       printf "%s" "${NC}" && exit 0
       break
@@ -1118,7 +1219,7 @@ while [[ $# -gt 0 ]]; do
         subscribe "$1"
         printf "%s" "${NC}" && exit 0
       else
-        exit_script_on_failure "No streamer specified."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1130,7 +1231,7 @@ while [[ $# -gt 0 ]]; do
         streamerToSubscribeTo="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         subscribe "${streamerToSubscribeTo}"
       else
-        exit_script_on_failure "No streamer specified."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       printf "%s" "${NC}" && exit 0
       break
@@ -1146,7 +1247,7 @@ while [[ $# -gt 0 ]]; do
         unsubscribe "$1"
         printf "%s" "${NC}" && exit 0
       else
-        exit_script_on_failure "No streamer specified."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1158,7 +1259,7 @@ while [[ $# -gt 0 ]]; do
         streamerToUnsubscribeFrom="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
         unsubscribe "${streamerToUnsubscribeFrom}"
       else
-        exit_script_on_failure "No streamer specified."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
       printf "%s" "${NC}" && exit 0
       break
