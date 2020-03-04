@@ -222,6 +222,16 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "auf Twitch",
     "es": "en Twitch"
   },
+  "subscribe_failure": {
+    "en": "You are already subscribed to",
+    "de": "You are already subscribed to",
+    "es": "You are already subscribed to"
+  },
+  "unsubscribe_failure": {
+    "en": "You are not subscribed to",
+    "de": "You are not subscribed to",
+    "es": "You are not subscribed to"
+  },
   "colors_off": {
     "en": "Turned colors off",
     "de": "Abgeschaltete Farben",
@@ -341,6 +351,22 @@ esac
 # -----------------------------------------
 # --------------- Functions ---------------
 # -----------------------------------------
+
+#######################################
+# Extracts an argument from a --flag=argument.
+# Globals:
+#   none
+# Arguments:
+#   $1: full --flag=argument string
+# Returns:
+#   extracted argument
+#######################################
+extract_argument()
+{
+  # From:
+  # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
+  printf "%s" "$1" | sed -e "s/^[^=]*=//g"
+}
 
 #######################################
 # Changes the default player in $CONFIG_FILE that gets passed to streamlink.
@@ -1154,7 +1180,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        gameToCheck="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
+        gameToCheck="$(extract_argument "$1")"
         list_streamers_of_game "${gameToCheck}"
       else
         exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
@@ -1182,7 +1208,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        player="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
+        player="$(extract_argument "$1")"
         change_player "${player}"
       else
         exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
@@ -1205,7 +1231,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        quality="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
+        quality="$(extract_argument "$1")"
         change_quality "${quality}"
       else
         exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
@@ -1228,7 +1254,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToSubscribeTo="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
+        streamerToSubscribeTo="$(extract_argument "$1")"
         subscribe "${streamerToSubscribeTo}"
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
@@ -1256,7 +1282,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToUnsubscribeFrom="$(printf "%s" "$1" | sed -e 's/^[^=]*=//g')"
+        streamerToUnsubscribeFrom="$(extract_argument "$1")"
         unsubscribe "${streamerToUnsubscribeFrom}"
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
