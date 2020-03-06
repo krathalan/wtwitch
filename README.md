@@ -39,7 +39,9 @@ $ sudo apt install streamlink
 Afterwards, download the script manually like any distro other than Arch.
 
 ### Any distro
-Download the script manually: [wtwitch](wtwitch)
+Clone the repository (recommended): `git clone https://git.sr.ht/~krathalan/wtwitch`
+
+Or download the script manually: [wtwitch](wtwitch)
 
 ## More information
 See `man wtwitch` if you have the AUR package installed. 
