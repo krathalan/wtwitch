@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.2.0"]
+wtwitch(1) ["Version 1.4.0"]
 
 # NAME
 
@@ -110,6 +110,10 @@ ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json
 View the wtwitch changelog with the command:
 
 pacman -Qc wtwitch
+
+# LANGUAGES
+
+Wtwitch fully supports English and has nearly-complete support for German/Deutsch and Spanish/Español. User-contributed translations are welcome!
 
 # BUGS
 
