@@ -3,10 +3,15 @@
 3. Add notes to CHANGELOG and copy to wtwitch AUR repo
 4. git checkout master
 5. git merge dev
-6. git tag versionnumber
-7. cd ~/downloads
-8. wget https://git.sr.ht/~krathalan/wtwitch/archive/tagname.tar.gz
-9. mv wtwitch-tagname.tar.gz tagname.tar.gz
-10. sign_sourcehut tagname.tar.gz
-11. sha256sum tagname.tar.gz*
-12. Update PKGBUILD for new version number and new sha256 sums
+6. git push
+7. git tag versionnumber && git push --tags
+8. cd ~/downloads
+9. wget https://git.sr.ht/~krathalan/wtwitch/archive/versionnumber.tar.gz
+10. mv wtwitch-versionnumber.tar.gz versionnumber.tar.gz
+11. sign_sourcehut versionnumber.tar.gz
+12. sha256sum versionnumber.tar.gz*
+13. cp versionnumber.tar.gz.sig ~/git/wtwitch/signatures
+14. cd ~/git/wtwitch
+15. git add signatures/versionnumber.tar.gz.sig
+16. gitcam && gitpoc
+17. Update PKGBUILD for new version number and new sha256 sums
