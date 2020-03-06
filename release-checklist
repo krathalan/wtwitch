@@ -7,11 +7,10 @@
 7. git tag versionnumber && git push --tags
 8. cd ~/downloads
 9. wget https://git.sr.ht/~krathalan/wtwitch/archive/versionnumber.tar.gz
-10. mv wtwitch-versionnumber.tar.gz versionnumber.tar.gz
-11. sign_sourcehut versionnumber.tar.gz
-12. sha256sum versionnumber.tar.gz*
-13. cp versionnumber.tar.gz.sig ~/git/wtwitch/signatures
-14. cd ~/git/wtwitch
-15. git add signatures/versionnumber.tar.gz.sig
-16. gitcam && gitpoc
-17. Update PKGBUILD for new version number and new sha256 sums
+10. sign_sourcehut versionnumber.tar.gz
+11. sha256sum versionnumber.tar.gz*
+12. cp versionnumber.tar.gz.sig ~/git/wtwitch/signatures
+13. cd ~/git/wtwitch
+14. git add signatures/versionnumber.tar.gz.sig
+15. gitcam && gitpoc
+16. Update PKGBUILD for new version number and new sha256 sums
