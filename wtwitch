@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME="$(basename "$0")"
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.4.0"
+readonly VERSION="1.4.1"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -811,6 +811,10 @@ list_streamers_of_game()
 print_stream_info()
 {
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
+
+  if [ "${streamerData[1]:-x}" = "x" ]; then
+    exit
+  fi
 
   # Get streamer-set stream name
   local streamName=""
