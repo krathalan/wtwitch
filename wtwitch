@@ -812,6 +812,10 @@ print_stream_info()
 {
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
+  if [ "${streamerData[1]:-x}" = "x" ]; then
+    exit
+  fi
+
   # Get streamer-set stream name
   local streamName=""
 
