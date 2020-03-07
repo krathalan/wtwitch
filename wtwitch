@@ -72,14 +72,14 @@ readonly TWITCH_API_URL="https://api.twitch.tv"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 
 # Colors
-GREEN="$(tput bold && tput setaf 2)"
-GREY="$(tput setaf 8)"
-LIGHTGREEN="$(tput setaf 10)"
-NC="$(tput sgr0)" # No color/turn off all tput attributes
-ORANGE="$(tput setaf 3)"
-PURPLE="$(tput setaf 13)"
-RED="$(tput bold && tput setaf 1)"
-TURQOISE="$(tput setaf 6)"
+GREEN="\e[1m\e[32m"
+GREY="\e[90m"
+LIGHTGREEN="\e[92m"
+NC="\e[0m" # No color/turn off all tput attributes
+ORANGE="\e[93m"
+PURPLE="\e[95m"
+RED="\e[1m\e[91m"
+TURQOISE="\e[96m"
 
 # -----------------------------------------
 # ------------- Translations --------------
@@ -402,7 +402,7 @@ change_player()
   done
 
   if [[ "${passedCheckMarker}" != "true" ]]; then
-    printf "\n %s%s%s: %s %s %s.\n" "${ORANGE}" "${localizedStrings[1]}" "${NC}" "${localizedStrings[2]}" "${playerName}" "${localizedStrings[3]}"
+    printf "\n %b%s%b: %s %s %s.\n" "${ORANGE}" "${localizedStrings[1]}" "${NC}" "${localizedStrings[2]}" "${playerName}" "${localizedStrings[3]}"
   fi
 
   write_setting ".player" "${playerName}"
@@ -590,7 +590,7 @@ get_offline_streams()
 get_offline_streams_helper()
 {
   if ! grep -qi "$1" <<< "$2"; then
-    printf "   %s%s%s\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    printf "   %b%s%b\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
 }
 
@@ -667,7 +667,7 @@ check_twitch_streams_helper()
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s)%s\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+  printf "   %b%s%b: %s %b(%s)%b\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -721,7 +721,7 @@ exit_script_on_failure()
   mapfile -t localizedStrings <<< "$(jq -r ".error.${LANG%_*}, .exiting.${LANG%_*}" <<< "${TRANSLATIONS}")"
 
   if [[ $# -gt 0 ]]; then
-    printf "\n %s%s%s: %s\n\n %s %s.\n%s" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
+    printf "\n %b%s%b: %s\n\n %s %s.\n%b" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
   fi
 
   clean_up
@@ -835,7 +835,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %s%s%s: %s %s(%s%s %s)%s\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${LANG%_*}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${LANG%_*}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
 }
 
 #######################################
@@ -877,7 +877,7 @@ list_top()
   gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %s%s%s\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s. %b%s%b\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
 
     # Refresh data
     whileCounter="$(( whileCounter + 1 ))"
@@ -1083,7 +1083,7 @@ toggle_colors()
     local -r toPrint="$(jq -r ".colors_on.${LANG%_*}" <<< "${TRANSLATIONS}")"
   fi
 
-  printf "\n %s%s.%s\n" "${GREEN}" "${toPrint}" "${NC}"
+  printf "\n %b%s.%b\n" "${GREEN}" "${toPrint}" "${NC}"
 
   # Invalidate cache as it may or may not have colors
   write_setting ".lastSubscriptionUpdate" "null"
@@ -1152,7 +1152,7 @@ write_setting()
 
 if [[ $# -eq 0 ]]; then
   print_help
-  printf "%s" "${NC}" && exit 0
+  printf "%b" "${NC}" && exit 0
 fi
 
 # Parse flags. From:
@@ -1161,19 +1161,19 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       print_help
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -c|--check)
       check_twitch_streams
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -g)
       shift
       if [[ $# -gt 0 ]]; then
         list_streamers_of_game "$1"
-        printf "%s" "${NC}" && exit 0
+        printf "%b" "${NC}" && exit 0
       else
         exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
@@ -1189,19 +1189,19 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -l|--toggle-colors)
       toggle_colors
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -p)
       shift
       if [[ $# -gt 0 ]]; then
         change_player "$1"
-        printf "%s" "${NC}" && exit 0
+        printf "%b" "${NC}" && exit 0
       else
         exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
@@ -1217,14 +1217,14 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -q)
       shift
       if [[ $# -gt 0 ]]; then
         change_quality "$1"
-        printf "%s" "${NC}" && exit 0
+        printf "%b" "${NC}" && exit 0
       else
         exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
@@ -1240,14 +1240,14 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -s)
       shift
       if [[ $# -gt 0 ]]; then
         subscribe "$1"
-        printf "%s" "${NC}" && exit 0
+        printf "%b" "${NC}" && exit 0
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
@@ -1263,19 +1263,19 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -t|--top)
       list_top
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -u)
       shift
       if [[ $# -gt 0 ]]; then
         unsubscribe "$1"
-        printf "%s" "${NC}" && exit 0
+        printf "%b" "${NC}" && exit 0
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
@@ -1291,7 +1291,7 @@ while [[ $# -gt 0 ]]; do
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
       fi
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     -v|--version)
@@ -1299,7 +1299,7 @@ while [[ $# -gt 0 ]]; do
       printf "Copyright (C) %s 2019-%s\n" "${CONTRIBUTORS}" "$(date +%Y)"
       printf "This is free software: you are free to change and redistribute it.\n"
       printf "There is NO WARRANTY, to the extent permitted by law.\n"
-      printf "%s" "${NC}" && exit 0
+      printf "%b" "${NC}" && exit 0
       break
       ;;
     *)
