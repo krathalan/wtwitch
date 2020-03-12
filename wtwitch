@@ -812,6 +812,7 @@ print_stream_info()
 {
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
+  # If streamer data is empty, exit
   if [ "${streamerData[1]:-x}" = "x" ]; then
     exit
   fi
@@ -821,7 +822,7 @@ print_stream_info()
 
   # Add game name to final string if $5 is present
   local additionalText=""
-  if [[ $# -gt 4 ]]; then
+  if [[ "$*" == *"--print-game"* ]]; then
     additionalText="$(get_game_name "${streamerData[1]}"), "
   fi
 
@@ -916,9 +917,9 @@ list_top_streams()
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game"
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" --print-game
     else
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" "print_game" &
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" --print-game &
     fi
 
     # Refresh data
