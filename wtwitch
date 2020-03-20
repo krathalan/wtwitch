@@ -261,6 +261,11 @@ readonly TRANSLATIONS="$(cat <<EOF
     "en": "No streamer specified",
     "de": "Kein Kanal angegeben",
     "es": "No se especifica ningún canal"
+  },
+  "no_subs": {
+    "en": "You aren't subscribed to any channels",
+    "de": "You aren't subscribed to any channels",
+    "es": "You aren't subscribed to any channels"
   }
 }
 EOF
@@ -468,87 +473,91 @@ check_twitch_streams()
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}, .no_subs.${LANG%_*}" <<< "${TRANSLATIONS}")"
 
-  printf "\n %s:" "${localizedStrings[0]}"
+  if [[ -z "${userSubscriptions[@]}" ]]; then
+    printf "\n %s\n" "${localizedStrings[5]}"
+  else
+    printf "\n %s:" "${localizedStrings[0]}"
 
-  # Check cache expiry time
-  local dateDiff="0"
-  local lastSubscriptionUpdate
-  lastSubscriptionUpdate="$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")"
+    # Check cache expiry time
+    local dateDiff="0"
+    local lastSubscriptionUpdate
+    lastSubscriptionUpdate="$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")"
 
-  # Check for older (e.g. "Sun Nov  3 14:54:55 PST 2019") style lastSubscriptionUpdate
-  if ! [[ "${lastSubscriptionUpdate}" =~ ^[0-9]+$ ]] ; then
-    lastSubscriptionUpdate=0
-  fi
-
-  if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-    local -r currentDate="$(LANG=C date +%s -d "now")"
-    dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
-  fi
-
-  # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
-  # if the time between now and the last subscription update is greater than the cache expiry time, OR
-  # if either of the cache files do NOT exist yet
-  if  [[ "${lastSubscriptionUpdate}" == "null" ]] || [[ $dateDiff -gt $CACHE_EXPIRY_TIME ]] \
-  || [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
-    # Remove old cache files
-    clean_up
-
-    # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
-    touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
-    
-    # Build inital request URL
-    local initialRequestURL="${TWITCH_API_URL}/helix/streams?"
-
-    for stream in "${userSubscriptions[@]}"; do
-      initialRequestURL+="user_login=${stream}&"
-    done
-
-    # Get data of all online streamers (sans game names)
-    local -r allStreamerJson="$(download_file "${initialRequestURL}")"
-
-    # Figure out offline streamers in background
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      get_offline_streams "${allStreamerJson}"
-    else
-      get_offline_streams "${allStreamerJson}" &
+    # Check for older (e.g. "Sun Nov  3 14:54:55 PST 2019") style lastSubscriptionUpdate
+    if ! [[ "${lastSubscriptionUpdate}" =~ ^[0-9]+$ ]] ; then
+      lastSubscriptionUpdate=0
     fi
 
-    # Pass each streamer json data to check_twitch_streams_helper to parse, 
-    # get game name for, and print
-    local whileCounter=0
+    if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
+      local -r currentDate="$(LANG=C date +%s -d "now")"
+      dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
+    fi
 
-    local streamerToProcess=""
-    streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+    # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
+    # if the time between now and the last subscription update is greater than the cache expiry time, OR
+    # if either of the cache files do NOT exist yet
+    if  [[ "${lastSubscriptionUpdate}" == "null" ]] || [[ $dateDiff -gt $CACHE_EXPIRY_TIME ]] \
+    || [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
+      # Remove old cache files
+      clean_up
 
-    while [[ "${streamerToProcess}" != "null" ]]; do
-      # Don't use subshells when debugging is on
+      # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
+      touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
+
+      # Build inital request URL
+      local initialRequestURL="${TWITCH_API_URL}/helix/streams?"
+
+      for stream in "${userSubscriptions[@]}"; do
+        initialRequestURL+="user_login=${stream}&"
+      done
+
+      # Get data of all online streamers (sans game names)
+      local -r allStreamerJson="$(download_file "${initialRequestURL}")"
+
+      # Figure out offline streamers in background
       if [[ "${DEBUGGING}" == "on" ]]; then
-        check_twitch_streams_helper "${streamerToProcess}"
+        get_offline_streams "${allStreamerJson}"
       else
-        check_twitch_streams_helper "${streamerToProcess}" &
+        get_offline_streams "${allStreamerJson}" &
       fi
 
-      # Refresh data
-      whileCounter="$(( whileCounter + 1 ))"
+      # Pass each streamer json data to check_twitch_streams_helper to parse,
+      # get game name for, and print
+      local whileCounter=0
+
+      local streamerToProcess=""
       streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-    done
 
-    # Wait for all background processes, offline and online, to finish
-    wait
+      while [[ "${streamerToProcess}" != "null" ]]; do
+        # Don't use subshells when debugging is on
+        if [[ "${DEBUGGING}" == "on" ]]; then
+          check_twitch_streams_helper "${streamerToProcess}"
+        else
+          check_twitch_streams_helper "${streamerToProcess}" &
+        fi
 
-    # Update lastSubscriptionUpdate time
-    write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s -d "now")"
+        # Refresh data
+        whileCounter="$(( whileCounter + 1 ))"
+        streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+      done
+
+      # Wait for all background processes, offline and online, to finish
+      wait
+
+      # Update lastSubscriptionUpdate time
+      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s -d "now")"
+    fi
+
+    printf "\n"
+
+    sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
+
+    printf "\n %s:\n" "${localizedStrings[1]}"
+
+    sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
   fi
-
-  printf "\n"
-
-  sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
-
-  printf "\n %s:\n" "${localizedStrings[1]}"
-
-  sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
 
   # Print settings
   printf "\n %s:\n   %s %s\n   %s %s\n" "${localizedStrings[2]}" "${localizedStrings[3]}" "${userPlayer}" "${localizedStrings[4]}" "${userQuality}"
@@ -660,7 +669,7 @@ check_twitch_streams_helper()
   # Truncate stream name if necessary; some streamers have stream titles longer
   # than the terminal width and cause ugly output
   local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} + 7))"
-  
+
   local streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
@@ -761,7 +770,7 @@ list_streamers_of_game()
 
   # Get streamers
   twitchJson="$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")"
-  
+
   # Remove old cache files
   clean_up
 
@@ -829,7 +838,7 @@ print_stream_info()
   # Truncate stream name if necessary; some streamers have stream titles longer
   # than the terminal width and cause ugly output
   local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#streamerData[0]} ))"
-  
+
   local streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
