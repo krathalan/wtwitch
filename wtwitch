@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME="$(basename "$0")"
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.4.1"
+readonly VERSION="1.4.2"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
