@@ -475,7 +475,7 @@ check_twitch_streams()
   # Get localized strings
   mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}, .no_subs.${LANG%_*}" <<< "${TRANSLATIONS}")"
 
-  if [[ -z "${userSubscriptions[@]}" ]]; then
+  if [[ -z "${userSubscriptions[*]}" ]]; then
     printf "\n %s\n" "${localizedStrings[5]}"
   else
     printf "\n %s:" "${localizedStrings[0]}"
