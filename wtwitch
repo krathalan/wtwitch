@@ -370,7 +370,8 @@ extract_argument()
 {
   # From:
   # https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
-  printf "%s" "$1" | sed -e "s/^[^=]*=//g"
+  # Updated to use variable search replace instead of sed
+  printf "%s" "${1#--*[ =]}"
 }
 
 #######################################
