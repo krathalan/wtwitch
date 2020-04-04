@@ -70,7 +70,9 @@ readonly TERMINAL_WIDTH="$(tput cols)"
 # This API key is intended to be used for wtwitch only -- do not use this API
 # key for any other reason!
 readonly TWITCH_API_URL="https://api.twitch.tv"
+readonly TWITCH_ID_URL="https://id.twitch.tv/oauth2/token"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
+readonly TWITCH_API_SECRET="gaofxvult280l3sbz8n6btvk5fdswp"
 
 # Colors
 GREEN="\e[1m\e[32m"
@@ -718,6 +720,21 @@ download_file()
   else
     wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
   fi
+}
+
+#######################################
+# Facilitates the usage of OAuth tokens for the Twitch API.
+# Globals:
+#   TWITCH_API_KEY
+#   TWITCH_API_SECRET
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+download_token()
+{
+  wget --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}"
 }
 
 #######################################
