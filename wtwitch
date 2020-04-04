@@ -82,6 +82,9 @@ PURPLE="\e[95m"
 RED="\e[1m\e[91m"
 TURQOISE="\e[96m"
 
+# Get beginning of $LANG for translations
+readonly WTWITCH_LANG="${LANG%_*}"
+
 # -----------------------------------------
 # ------------- Translations --------------
 # -----------------------------------------
@@ -339,7 +342,7 @@ fi
 TITLE_CHARACTERS=11
 
 # Add language-specific ".viewer" character count to TITLE_CHARACTERS
-case "${LANG%_*}" in
+case "${WTWITCH_LANG}" in
   "en")
     # viewers=7
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
@@ -391,7 +394,7 @@ change_player()
   local passedCheckMarker="false"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${LANG%_*}, .change_player_warning.${LANG%_*}, .change_player_player.${LANG%_*}, .change_player_warning_text.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Convert user input to lowercase
   local -r playerName="${1,,}"
@@ -449,7 +452,7 @@ change_quality()
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
   else
-    exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${LANG%_*}" <<< "${TRANSLATIONS}")."
+    exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
   fi
 }
 
@@ -475,7 +478,7 @@ check_twitch_streams()
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${LANG%_*}, .check_offline.${LANG%_*}, .check_settings.${LANG%_*}, .check_player.${LANG%_*}, .check_quality.${LANG%_*}, .no_subs.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".check_online.${WTWITCH_LANG}, .check_offline.${WTWITCH_LANG}, .check_settings.${WTWITCH_LANG}, .check_player.${WTWITCH_LANG}, .check_quality.${WTWITCH_LANG}, .no_subs.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   if [[ -z "${userSubscriptions[*]}" ]]; then
     printf "\n %s\n" "${localizedStrings[5]}"
@@ -729,7 +732,7 @@ download_file()
 #######################################
 exit_script_on_failure()
 {
-  mapfile -t localizedStrings <<< "$(jq -r ".error.${LANG%_*}, .exiting.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".error.${WTWITCH_LANG}, .exiting.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   if [[ $# -gt 0 ]]; then
     printf "\n %b%s%b: %s\n\n %s %s.\n%b" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
@@ -752,10 +755,10 @@ exit_script_on_failure()
 #######################################
 list_streamers_of_game()
 {
-  mapfile -t localizedStrings <<< "$(jq -r ".channels.${LANG%_*}, .no_channels.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
-  if [[ "${LANG%_*}" == "es" ]]; then
+  if [[ "${WTWITCH_LANG}" == "es" ]]; then
     printf "\n %s %s:\n" "${localizedStrings[0]}" "$1"
   else
     printf "\n %s %s:\n" "$1" "${localizedStrings[0]}"
@@ -847,7 +850,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${LANG%_*}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
 }
 
 #######################################
@@ -866,7 +869,7 @@ print_stream_info()
 #######################################
 list_top()
 {
-  mapfile -t localizedStrings <<< "$(jq -r ".top_games.${LANG%_*}, .top_streams.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".top_games.${WTWITCH_LANG}, .top_streams.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   printf "\n %s:\n" "${localizedStrings[0]}"
 
@@ -952,7 +955,7 @@ list_top_streams()
 #######################################
 print_help()
 {
-  man wtwitch || exit_script_on_failure "$(jq -r ".print_help.${LANG%_*}" <<< "${TRANSLATIONS}") ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
+  man wtwitch || exit_script_on_failure "$(jq -r ".print_help.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
 }
 
 #######################################
@@ -969,7 +972,7 @@ print_help()
 stream()
 {
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_player_one.${LANG%_*}, .stream_failure_player_two.${LANG%_*}, .stream_failure_offline_one.${LANG%_*}, .stream_failure_offline_two.${LANG%_*}, .stream_failure_quality.${LANG%_*}, .stream_watching.${LANG%_*}, .stream_on_twitch.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_player_one.${WTWITCH_LANG}, .stream_failure_player_two.${WTWITCH_LANG}, .stream_failure_offline_one.${WTWITCH_LANG}, .stream_failure_offline_two.${WTWITCH_LANG}, .stream_failure_quality.${WTWITCH_LANG}, .stream_watching.${WTWITCH_LANG}, .stream_on_twitch.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Use VLC as backup player if mpv is not installed
   if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
@@ -996,7 +999,7 @@ stream()
       userPlayer+=" --gpu-context=wayland"
     fi
 
-    if [[ "${LANG%_*}" == "de" ]]; then
+    if [[ "${WTWITCH_LANG}" == "de" ]]; then
       mpvWindowTitle="$1 ${localizedStrings[6]} ${localizedStrings[5]}"
     else
       mpvWindowTitle="${localizedStrings[5]} $1 ${localizedStrings[6]}"
@@ -1020,7 +1023,7 @@ stream()
 #######################################
 stream_failure_notify()
 {
-  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${LANG%_*}, .stream_failure_two.${LANG%_*}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${WTWITCH_LANG}, .stream_failure_two.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   notify-send -i "gnome-twitch" "Wtwitch: ${localizedStrings[0]} $1 ${localizedStrings[1]}" "$2"
   exit_script_on_failure
@@ -1056,7 +1059,7 @@ subscribe()
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
-      exit_script_on_failure "$(jq -r ".subscribe_failure.${LANG%_*}" <<< "${TRANSLATIONS}") ${streamerToSubscribeTo}."
+      exit_script_on_failure "$(jq -r ".subscribe_failure.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${streamerToSubscribeTo}."
     fi
   fi
 
@@ -1086,13 +1089,13 @@ toggle_colors()
     GREEN="${NC}"
 
     write_setting ".colors" "false"
-    local -r toPrint="$(jq -r ".colors_off.${LANG%_*}" <<< "${TRANSLATIONS}")"
+    local -r toPrint="$(jq -r ".colors_off.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
   else
     # "Re-fill" green from empty
     GREEN="$(tput bold && tput setaf 2)"
 
     write_setting ".colors" "true"
-    local -r toPrint="$(jq -r ".colors_on.${LANG%_*}" <<< "${TRANSLATIONS}")"
+    local -r toPrint="$(jq -r ".colors_on.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
   fi
 
   printf "\n %b%s.%b\n" "${GREEN}" "${toPrint}" "${NC}"
@@ -1131,7 +1134,7 @@ unsubscribe()
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
-    exit_script_on_failure "$(jq -r ".unsubscribe_failure.${LANG%_*}" <<< "${TRANSLATIONS}") ${streamerToUnsubscribeFrom}."
+    exit_script_on_failure "$(jq -r ".unsubscribe_failure.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${streamerToUnsubscribeFrom}."
   fi
 
   # Remove subscription
@@ -1187,7 +1190,7 @@ while [[ $# -gt 0 ]]; do
         list_streamers_of_game "$1"
         printf "%b" "${NC}" && exit 0
       else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1199,7 +1202,7 @@ while [[ $# -gt 0 ]]; do
         gameToCheck="$(extract_argument "$1")"
         list_streamers_of_game "${gameToCheck}"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       printf "%b" "${NC}" && exit 0
       break
@@ -1215,7 +1218,7 @@ while [[ $# -gt 0 ]]; do
         change_player "$1"
         printf "%b" "${NC}" && exit 0
       else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1227,7 +1230,7 @@ while [[ $# -gt 0 ]]; do
         player="$(extract_argument "$1")"
         change_player "${player}"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       printf "%b" "${NC}" && exit 0
       break
@@ -1238,7 +1241,7 @@ while [[ $# -gt 0 ]]; do
         change_quality "$1"
         printf "%b" "${NC}" && exit 0
       else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1250,7 +1253,7 @@ while [[ $# -gt 0 ]]; do
         quality="$(extract_argument "$1")"
         change_quality "${quality}"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       printf "%b" "${NC}" && exit 0
       break
@@ -1261,7 +1264,7 @@ while [[ $# -gt 0 ]]; do
         subscribe "$1"
         printf "%b" "${NC}" && exit 0
       else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1273,7 +1276,7 @@ while [[ $# -gt 0 ]]; do
         streamerToSubscribeTo="$(extract_argument "$1")"
         subscribe "${streamerToSubscribeTo}"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       printf "%b" "${NC}" && exit 0
       break
@@ -1289,7 +1292,7 @@ while [[ $# -gt 0 ]]; do
         unsubscribe "$1"
         printf "%b" "${NC}" && exit 0
       else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       break
       ;;
@@ -1301,7 +1304,7 @@ while [[ $# -gt 0 ]]; do
         streamerToUnsubscribeFrom="$(extract_argument "$1")"
         unsubscribe "${streamerToUnsubscribeFrom}"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${LANG%_*}" <<< "${TRANSLATIONS}")."
+        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
       printf "%b" "${NC}" && exit 0
       break
