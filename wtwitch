@@ -45,7 +45,7 @@ readonly VERSION="1.4.2"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
-readonly CACHE_FILE_DIRECTORY="${HOME}/.cache/${SCRIPT_NAME}"
+readonly CACHE_FILE_DIRECTORY="${XDG_CACHE_HOME:-${HOME}/.cache}/${SCRIPT_NAME}"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
 
@@ -58,7 +58,8 @@ readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streame
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 
 # Config
-readonly CONFIG_FILE_DIRECTORY="${HOME}/.config/${SCRIPT_NAME}"
+readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
+
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
