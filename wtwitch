@@ -303,7 +303,7 @@ if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
 fi
 
 # Load settings
-read -r useColors userPlayer userQuality <<< "$(jq -r ".colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+read -r apiToken useColors userPlayer userQuality <<< "$(jq -r ".access_token, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
 
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
@@ -734,7 +734,25 @@ download_file()
 #######################################
 download_token()
 {
-  wget --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}"
+  # If the API token is null (e.g. there is no token), OR
+  # if the API token is expired
+  if [[ "${apiToken}" == "null" ]]; then
+    # Do not pass --quiet flag to wget if debugging
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      local -r flags="--quiet"
+    else
+      local -r flags=""
+    fi
+
+    # Get token
+    local -r tmpJson="$(wget "${flags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
+
+    # Add token to config
+
+
+    # Update token expiration date
+    write_setting ".apiTokenExpiry" "$(( $(date +%s) + $(jq -r ".expires_in" <<< "${tmpJson}" ) ))"
+  fi
 }
 
 #######################################
