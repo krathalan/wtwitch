@@ -303,7 +303,8 @@ if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
 fi
 
 # Load settings
-read -r apiToken useColors userPlayer userQuality <<< "$(jq -r ".access_token, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+read -r apiToken apiTokenExpiry useColors userPlayer userQuality \
+<<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
 
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
@@ -320,6 +321,7 @@ fi
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
   # Avoid subshells, print full wget output, and more behavioral changes
   readonly DEBUGGING="on"
+  readonly wgetFlags=""
 
   # Print log information
   readonly _dashes="-----------------------------------------------------------"
@@ -330,12 +332,14 @@ if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nVersions: wtwitch-%s %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
+  printf "Starting wtwitch debug log\nPackage: %s\nVersions: wtwitch-%s %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" \
+  "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
 
   # Print all commands
   set -x
 else
   readonly DEBUGGING="off"
+  readonly wgetFlags="--quiet"
 fi
 
 # Why is TITLE_CHARACTERS=11? Because that's how many characters will always
@@ -358,6 +362,54 @@ case "${WTWITCH_LANG}" in
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 12 ))"
     ;;
 esac
+
+# -----------------------------------------
+# --------------- API Token ---------------
+# -----------------------------------------
+
+#######################################
+# Writes a setting value to the config file.
+# Globals:
+#   CONFIG_FILE
+# Arguments:
+#   $1: key
+#   $2: value
+# Returns:
+#   none
+#######################################
+write_setting()
+{
+  local -r tmpJson="$(jq "$1 = \"$2\"" "${CONFIG_FILE}")"
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
+}
+
+#######################################
+# Gets an OAuth token for the Twitch API.
+# Globals:
+#   TWITCH_API_KEY
+#   TWITCH_API_SECRET
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+download_token()
+{
+  # Get token
+  local -r tmpJson="$(wget "${wgetFlags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
+
+  # Add token to config
+  write_setting ".apiToken" "$(jq -r ".access_token" <<< "${tmpJson}")"
+
+  # Update token expiration date
+  write_setting ".apiTokenExpiry" "$(( $(date +%s) + $(jq -r ".expires_in" <<< "${tmpJson}" ) ))"
+}
+
+# If the API token is null (e.g. there is no token),
+# OR if API token is expired
+if [[ "${apiToken}" == "null" ]] || [[ "$(date +%s)" -gt "${apiTokenExpiry}" ]]; then
+  download_token
+fi
 
 # -----------------------------------------
 # --------------- Functions ---------------
@@ -714,45 +766,7 @@ clean_up()
 #######################################
 download_file()
 {
-  # Do not pass --quiet flag to wget if debugging
-  if [[ "${DEBUGGING}" == "on" ]]; then
-    wget --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
-  else
-    wget --quiet --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
-  fi
-}
-
-#######################################
-# Facilitates the usage of OAuth tokens for the Twitch API.
-# Globals:
-#   TWITCH_API_KEY
-#   TWITCH_API_SECRET
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-download_token()
-{
-  # If the API token is null (e.g. there is no token), OR
-  # if the API token is expired
-  if [[ "${apiToken}" == "null" ]]; then
-    # Do not pass --quiet flag to wget if debugging
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      local -r flags="--quiet"
-    else
-      local -r flags=""
-    fi
-
-    # Get token
-    local -r tmpJson="$(wget "${flags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
-
-    # Add token to config
-
-
-    # Update token expiration date
-    write_setting ".apiTokenExpiry" "$(( $(date +%s) + $(jq -r ".expires_in" <<< "${tmpJson}" ) ))"
-  fi
+  wget "${wgetFlags}" --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
 }
 
 #######################################
@@ -1178,22 +1192,6 @@ unsubscribe()
 
   # Invalidate cache
   write_setting ".lastSubscriptionUpdate" "null"
-}
-
-#######################################
-# Writes a setting value to the config file.
-# Globals:
-#   CONFIG_FILE
-# Arguments:
-#   $1: key
-#   $2: value
-# Returns:
-#   none
-#######################################
-write_setting()
-{
-  local -r tmpJson="$(jq "$1 = \"$2\"" "${CONFIG_FILE}")"
-  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 }
 
 # -----------------------------------------
