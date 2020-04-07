@@ -402,12 +402,12 @@ download_token()
   write_setting ".apiToken" "$(jq -r ".access_token" <<< "${tmpJson}")"
 
   # Update token expiration date
-  write_setting ".apiTokenExpiry" "$(( $(date +%s) + $(jq -r ".expires_in" <<< "${tmpJson}" ) ))"
+  write_setting ".apiTokenExpiry" "$(( $(LANG=C date +%s) + $(jq -r ".expires_in" <<< "${tmpJson}" ) ))"
 }
 
 # If the API token is null (e.g. there is no token),
 # OR if API token is expired
-if [[ "${apiToken}" == "null" ]] || [[ "$(date +%s)" -gt "${apiTokenExpiry}" ]]; then
+if [[ "${apiToken}" == "null" ]] || [[ "$(LANG=C date +%s)" -gt "${apiTokenExpiry}" ]]; then
   download_token
 fi
 
@@ -550,7 +550,7 @@ check_twitch_streams()
     fi
 
     if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-      local -r currentDate="$(LANG=C date +%s -d "now")"
+      local -r currentDate="$(LANG=C date +%s)"
       dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
     fi
 
@@ -606,7 +606,7 @@ check_twitch_streams()
       wait
 
       # Update lastSubscriptionUpdate time
-      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s -d "now")"
+      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s)"
     fi
 
     printf "\n"
