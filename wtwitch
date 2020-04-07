@@ -766,7 +766,8 @@ clean_up()
 #######################################
 download_file()
 {
-  wget "${wgetFlags}" --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" "$1"
+  wget "${wgetFlags}" --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" \
+  --header="Authorization: Bearer ${apiToken}" "$1"
 }
 
 #######################################
