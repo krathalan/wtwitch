@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.4.2"]
+wtwitch(1) ["Version 1.5.0"]
 
 # NAME
 
@@ -8,7 +8,7 @@ wtwitch - terminal user interface for Twitch
 
 wtwitch [*(no option)* _streamer_|*-t*|*-g* _game_|*-s* _streamer_|*-u* _streamer_|*-c*|*-p* _player_|*-q* _quality_|*-l*|*-d*|*-v*]
 
-# DESCRIPTION 
+# DESCRIPTION
 
 Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account, and without loading or executing Twitch's proprietary JavaScript.
 
@@ -97,7 +97,7 @@ You should never need to edit these files; you should use the options listed abo
 
 # SYNCING SUBSCRIPTIONS
 
-Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a utility already installed on your GNU/Linux computer. Syncthing is a powerful synchronization program for multiple operating systems licensed under the Mozilla Public License v2, which is FSF approved. You can look at Syncthing's homepage for more information, as well as their user documentation: 
+Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a utility already installed on your GNU/Linux computer. Syncthing is a powerful synchronization program for multiple operating systems licensed under the Mozilla Public License v2, which is FSF approved. You can look at Syncthing's homepage for more information, as well as their user documentation:
 
 https://docs.syncthing.net/intro/getting-started.html
 
