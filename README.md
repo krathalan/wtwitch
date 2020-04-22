@@ -14,7 +14,7 @@ Table of contents:
 ### Arch Linux
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
-AUR releases are signed so you'll need to import my GPG key:  
+AUR releases are signed so you'll need to import my GPG key:
 `02AA A23A BDF1 D538 BD88  9D25 1AAD E5E7 28FF C667`
 
 ### Ubuntu
@@ -44,7 +44,7 @@ Clone the repository (recommended): `git clone https://git.sr.ht/~krathalan/wtwi
 Or download the script manually: [wtwitch](wtwitch)
 
 ## More information
-See `man wtwitch` if you have the AUR package installed. 
+See `man wtwitch` if you have the AUR package installed.
 
 Otherwise, download the manual here: [wtwitch.1.scd](wtwitch.1.scd)
 
@@ -56,12 +56,17 @@ Then view the man page:
 
 > `$ man -l wtwitch.1`
 
-## Bugs
+## Bugs and feature requests
 To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
 
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+Please file feature requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
 Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
+
+## Contributions
+All contributions are welcome. Please try to adhere to the Google Shell Style Guide (https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at Dylan's Pure Bash Bible (https://github.com/dylanaraps/pure-bash-bible) before using an external program.
+
+Most needed are translations for languages other than English. No coding knowledge is necessary to submit translations. Anyone can contribute translations in any format they wish, and I will incorporate them into the program.
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
@@ -73,7 +78,7 @@ When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 M
 
 Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
 
-> `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/`  
+> `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/`
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
@@ -88,7 +93,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 ---
 
-> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/`  
+> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/`
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
@@ -107,7 +112,7 @@ Wtwitch never collects any usage data or data about the user. Wtwitch only conne
 ## Technical information
 Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.)
 
-Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in: 
+Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in:
 
 - [Wget](https://savannah.gnu.org/projects/wget/), written mostly in C
 - [GNU coreutils](https://github.com/coreutils/coreutils), written nearly entirely in C and shell
