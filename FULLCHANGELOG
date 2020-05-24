@@ -111,3 +111,6 @@
     Add OAuth tokens for API requests as required by Twitch:
         https://discuss.dev.twitch.tv/t/requiring-oauth-for-helix-twitch-api-endpoints/23916
     Add support for XDG Base Directory spec
+
+1.5.1 (May 24, 2020)
+    Set OAuth token expiry for 1 day after acquisition
