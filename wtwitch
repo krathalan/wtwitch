@@ -3,7 +3,7 @@
 # Description: Browse and watch Twitch without being tracked.
 #
 # Copyright (C) 2019-2020:
-readonly CONTRIBUTORS="krathalan, nycko123"
+readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux"
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -96,182 +96,218 @@ readonly TRANSLATIONS="$(cat <<EOF
   "change_player_not_found": {
     "en": "media player not found",
     "de": "Videospieler nicht gefunden",
-    "es": "reproductor de vídeo no encontrado"
+    "es": "reproductor de vídeo no encontrado",
+    "fr": "lecteur vidéo non trouvé"
   },
   "change_player_warning": {
     "en": "Warning",
     "de": "Warnung",
-    "es": "Advertencia"
+    "es": "Advertencia",
+    "fr": "Attention"
   },
   "change_player_player": {
     "en": "player",
     "de": "Videospieler",
-    "es": "reproductor"
+    "es": "reproductor",
+    "fr": "lecteur"
   },
   "change_player_warning_text": {
     "en": "may not work properly with Streamlink",
     "de": "funktioniert möglicherweise nicht richtig mit Streamlink",
-    "es": "puede no funcionar correctamente con Streamlink"
+    "es": "puede no funcionar correctamente con Streamlink",
+    "fr": "peut ne pas fonctionner correctement avec Streamlink"
   },
   "change_quality_error": {
     "en": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
     "de": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
-    "es": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\""
+    "es": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
+    "fr": "n'est pas une qualité acceptable. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, et audio_only sont les qualités acceptables. Vous pouvez spécifier des qualités de repli séparées par des virgules, par exemple : \"720p,480p,worst\""
   },
   "check_online": {
     "en": "Live channels",
     "de": "Live Kanäle",
-    "es": "Canales en directo"
+    "es": "Canales en directo",
+    "fr": "Chaînes en direct"
   },
   "check_offline": {
     "en": "Offline",
     "de": "Offline",
-    "es": "Desconectado"
+    "es": "Desconectado",
+    "fr": "Déconnecté"
   },
   "check_settings": {
     "en": "Settings",
     "de": "Einstellungen",
-    "es": "Ajuste"
+    "es": "Ajuste",
+    "fr": "Configuration"
   },
   "check_player": {
     "en": "Player set to",
     "de": "Videospieler eingestellt auf",
-    "es": "Reproductor de vídeo configurado en"
+    "es": "Reproductor de vídeo configurado en",
+    "fr": "Lecteur configuré à"
   },
   "check_quality": {
     "en": "Quality set to",
     "de": "Qualität eingestellt auf",
-    "es": "Calidad configurado en"
+    "es": "Calidad configurado en",
+    "fr": "Qualité configurée à"
   },
   "top_games": {
     "en": "Top games",
     "de": "Beliebteste Spiele",
-    "es": "Juegos más populares"
+    "es": "Juegos más populares",
+    "fr": "Jeux les plus populaires"
   },
   "top_streams": {
     "en": "Top channels",
     "de": "Beliebteste Kanäle",
-    "es": "Canales más populares"
+    "es": "Canales más populares",
+    "fr": "Chaînes les plus populaires"
   },
   "viewers": {
     "en": "viewers",
     "de": "Beobachter",
-    "es": "espectadores"
+    "es": "espectadores",
+    "fr": "spectateurs"
   },
   "channels": {
     "en": "channels",
     "de": "Kanäle",
-    "es": "Canales de"
+    "es": "Canales de",
+    "fr": "Chaînes de"
   },
   "no_channels": {
     "en": "No one is streaming",
     "de": "No one is streaming",
-    "es": "No one is streaming"
+    "es": "No one is streaming",
+    "fr": "Personne n'est en direct"
   },
   "error": {
     "en": "Error",
     "de": "Fehler",
-    "es": "Error"
+    "es": "Error",
+    "fr": "Érreur"
   },
   "exiting": {
     "en": "Exiting",
     "de": "Verlassen von",
-    "es": "Saliendo de"
+    "es": "Saliendo de",
+    "fr": "Fermeture de"
   },
   "print_help": {
     "en": "View the man page at",
     "de": "View the man page at",
-    "es": "View the man page at"
+    "es": "View the man page at",
+    "fr": "Voir le manuel à"
   },
   "stream_failure_player_one": {
     "en": "Player",
     "de": "Videospieler",
-    "es": "Reproductor"
+    "es": "Reproductor",
+    "fr": "Lecteur"
   },
   "stream_failure_player_two": {
     "en": "not found",
     "de": "nicht gefunden",
-    "es": "no encontrado"
+    "es": "no encontrado",
+    "fr": "non trouvé"
   },
   "stream_failure_offline_one": {
     "en": "Streamer",
     "de": "Streamer",
-    "es": "Streamer"
+    "es": "Streamer",
+    "fr": "La chaîne"
   },
   "stream_failure_offline_two": {
     "en": "is not online",
     "de": "is not online",
-    "es": "is not online"
+    "es": "is not online",
+    "fr": "n'est pas en ligne"
   },
   "stream_failure_quality": {
     "en": "stream does not support quality",
     "de": "stream does not support quality",
-    "es": "stream does not support quality"
+    "es": "stream does not support quality",
+    "fr": "n'est pas diffusé dans la qualité"
   },
   "stream_failure_one": {
     "en": "watching",
     "de": "Beobachtung von",
-    "es": "viendo"
+    "es": "viendo",
+    "fr": "le visionnage de"
   },
   "stream_failure_two": {
     "en": "failed",
     "de": "fehlgeschlagen",
-    "es": "falló"
+    "es": "falló",
+    "fr": "a échoué"
   },
   "stream_watching": {
     "en": "Watching",
     "de": "beobachten",
-    "es": "Viendo"
+    "es": "Viendo",
+    "fr": "Visionnage de"
   },
   "stream_on_twitch": {
     "en": "on Twitch",
     "de": "auf Twitch",
-    "es": "en Twitch"
+    "es": "en Twitch",
+    "fr": "sur Twitch"
   },
   "subscribe_failure": {
     "en": "You are already subscribed to",
     "de": "You are already subscribed to",
-    "es": "You are already subscribed to"
+    "es": "You are already subscribed to",
+    "fr": "Vous êtes déjà abonné à"
   },
   "unsubscribe_failure": {
     "en": "You are not subscribed to",
     "de": "You are not subscribed to",
-    "es": "You are not subscribed to"
+    "es": "You are not subscribed to",
+    "fr": "Vous n'êtes pas abonné à"
   },
   "colors_off": {
     "en": "Turned colors off",
     "de": "Abgeschaltete Farben",
-    "es": "Apagó los colores"
+    "es": "Apagó los colores",
+    "fr": "Couleurs désactivées"
   },
   "colors_on": {
     "en": "Turned colors on",
     "de": "Eingeschaltete Farben",
-    "es": "Encendió los colores"
+    "es": "Encendió los colores",
+    "fr": "Couleurs activées"
   },
   "flags_no_game": {
     "en": "No game specified",
     "de": "Kein Spiel angegeben",
-    "es": "No se especifica ningún juego"
+    "es": "No se especifica ningún juego",
+    "fr": "Pas de jeu spécifié"
   },
   "flags_no_player": {
     "en": "No player specified",
     "de": "Kein Videospeiler angegeben",
-    "es": "No se especifica el reproductor de vídeo"
+    "es": "No se especifica el reproductor de vídeo",
+    "fr": "Pas de lecteur vidéo spécifié"
   },
   "flags_no_quality": {
     "en": "No quality specified",
     "de": "Kein Qualität angegeben",
-    "es": "No se especifica la calidad"
+    "es": "No se especifica la calidad",
+    "fr": "Pas de qualité spécifiée"
   },
   "flags_no_streamer": {
     "en": "No streamer specified",
     "de": "Kein Kanal angegeben",
-    "es": "No se especifica ningún canal"
+    "es": "No se especifica ningún canal",
+    "fr": "Pas de chaîne spécifiée"
   },
   "no_subs": {
     "en": "You aren't subscribed to any channels",
     "de": "You aren't subscribed to any channels",
-    "es": "You aren't subscribed to any channels"
+    "es": "You aren't subscribed to any channels",
+    "fr": "Vous n'êtes abonné à aucune chaîne"
   }
 }
 EOF
@@ -358,8 +394,12 @@ case "${WTWITCH_LANG}" in
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 10 ))"
     ;;
   "es")
-    # espectadores=11
+    # espectadores=12
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 12 ))"
+    ;;
+  "fr")
+    # spectateurs=11
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 11 ))"
     ;;
 esac
 
@@ -808,7 +848,7 @@ list_streamers_of_game()
   mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
-  if [[ "${WTWITCH_LANG}" == "es" ]]; then
+  if [[ "${WTWITCH_LANG}" == "es" ]] || [[ "${WTWITCH_LANG}" == "fr" ]]; then
     printf "\n %s %s:\n" "${localizedStrings[0]}" "$1"
   else
     printf "\n %s %s:\n" "$1" "${localizedStrings[0]}"
