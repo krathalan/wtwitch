@@ -114,3 +114,6 @@
 
 1.5.1 (May 24, 2020)
     Set OAuth token expiry for 1 day after acquisition
+
+1.6.0 (May 28, 2020)
+    Add French translation patch from Léo Villeveygoux
