@@ -117,3 +117,6 @@
 
 1.6.0 (May 28, 2020)
     Add French translation patch from Léo Villeveygoux
+
+1.6.1 (June 8, 2020)
+    Fixed an issue where any language not officially supported would print "null" for each localized string
