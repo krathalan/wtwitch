@@ -85,7 +85,7 @@ RED="\e[1m\e[91m"
 TURQOISE="\e[96m"
 
 # Get beginning of $LANG for translations
-readonly WTWITCH_LANG="${LANG%_*}"
+WTWITCH_LANG="${LANG%_*}"
 
 # -----------------------------------------
 # ------------- Translations --------------
@@ -385,10 +385,6 @@ TITLE_CHARACTERS=11
 
 # Add language-specific ".viewer" character count to TITLE_CHARACTERS
 case "${WTWITCH_LANG}" in
-  "en")
-    # viewers=7
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
-    ;;
   "de")
     # Beobachter=10
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 10 ))"
@@ -400,6 +396,12 @@ case "${WTWITCH_LANG}" in
   "fr")
     # spectateurs=11
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 11 ))"
+    ;;
+  *)
+    # Default to English if language isn't supported
+    WTWITCH_LANG="en"
+    # viewers=7
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
     ;;
 esac
 
