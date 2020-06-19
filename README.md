@@ -36,19 +36,17 @@ $ sudo apt update
 $ sudo apt install streamlink
 ```
 
-Afterwards, clone the repo or download the script manually like any distro other than Arch.
+Afterwards, clone the repo like any distro other than Arch.
 
 ### Any distro
-Clone the repository (recommended): `git clone https://git.sr.ht/~krathalan/wtwitch`
+Clone the repository: `git clone https://git.sr.ht/~krathalan/wtwitch`
 
-Or download the script manually: [wtwitch](wtwitch)
+Then add the cloned wtwitch directory to your `$PATH`.
 
 ## More information
 See `man wtwitch` if you have the AUR package installed.
 
-Otherwise, download the manual here: [wtwitch.1.scd](wtwitch.1.scd)
-
-You can then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
+Otherwise, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
 
 > `$ scdoc < wtwitch.1.scd > wtwitch.1`
 
@@ -67,6 +65,8 @@ Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
 All contributions are welcome. Please try to adhere to the Google Shell Style Guide (https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at Dylan's Pure Bash Bible (https://github.com/dylanaraps/pure-bash-bible) before using an external program.
 
 Most needed are translations for languages other than English. No coding knowledge is necessary to submit translations. Anyone can contribute translations in any format they wish, and I will incorporate them into the program.
+
+If you provide a better method of installation for a distro other than Arch, such as an Ubuntu PPA or Fedora Copr repo, please let me know and I will add it to this README.
 
 ## FAQ
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
