@@ -439,9 +439,9 @@ download_token()
 {
   # Get token
   local -r tmpJson="$(wget "${wgetFlags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
-  
+
   local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
-  
+
   # Update in-memory api token
   apiToken="${newToken}"
 
