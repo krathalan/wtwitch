@@ -1,6 +1,6 @@
 1. git checkout dev
 2. Bump version number in script and scdoc man page
-3. Add notes to CHANGELOG and copy to wtwitch AUR repo
+3. Add notes to CHANGELOG
 4. gitcam && gitpoc
 5. git checkout master
 6. git merge dev
@@ -9,9 +9,10 @@
 9. cd ~/downloads
 10. wget https://git.sr.ht/~krathalan/wtwitch/archive/versionnumber.tar.gz
 11. sign_sourcehut versionnumber.tar.gz
-12. sha256sum versionnumber.tar.gz*
-13. cp versionnumber.tar.gz.sig ~/git/wtwitch/signatures
-14. cd ~/git/wtwitch
-15. git add signatures/versionnumber.tar.gz.sig
-16. gitcam && gitpoc
-17. Update PKGBUILD for new version number and new sha256 sums
+12. sha512sum versionnumber.tar.gz*
+13. Copy new CHANGELOG to aur repo
+14. cp versionnumber.tar.gz.sig ~/git/wtwitch/signatures
+15. cd ~/git/wtwitch
+16. git add signatures/versionnumber.tar.gz.sig
+17. gitcam && gitpoc
+18. Update PKGBUILD for new version number and new sha256 sums
