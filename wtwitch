@@ -348,9 +348,9 @@ fi
 
 # Debugging
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
-  # Avoid subshells, print full wget output, and more behavioral changes
+  # Avoid subshells, print full curl output, and more behavioral changes
   readonly DEBUGGING="on"
-  readonly wgetFlags=""
+  readonly curlFlags="--verbose"
 
   # Print log information
   readonly _dashes="-----------------------------------------------------------"
@@ -368,7 +368,7 @@ if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
   set -x
 else
   readonly DEBUGGING="off"
-  readonly wgetFlags="--quiet"
+  readonly curlFlags="--silent"
 fi
 
 # Why is TITLE_CHARACTERS=11? Because that's how many characters will always
@@ -431,7 +431,7 @@ write_setting()
 download_token()
 {
   # Get token
-  local -r tmpJson="$(wget "${wgetFlags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
+  local -r tmpJson="$(curl "${curlFlags}" -d "client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
 
   local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
 
@@ -472,7 +472,7 @@ clean_up()
 }
 
 #######################################
-# Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
+# Downloads a file quietly using curl and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
 # Globals:
 #   apiToken
 #   TWITCH_API_KEY
@@ -483,8 +483,8 @@ clean_up()
 #######################################
 download_file()
 {
-  wget "${wgetFlags}" --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" \
-  --header="Authorization: Bearer ${apiToken}" "$1"
+  curl "${curlFlags}" --header "Client-ID: ${TWITCH_API_KEY}" \
+  --header "Authorization: Bearer ${apiToken}" "$1"
 }
 
 #######################################
