@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.6.2"]
+wtwitch(1) ["Version 1.7"]
 
 # NAME
 
@@ -28,6 +28,13 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     View the top streamers for a specified _game_. Game names with spaces must be quoted, or the spaces must be escaped with \\.++
     e.g. wtwitch *-g* _"world of warcraft"_++
     e.g. wtwitch *-g* _world\\ of\\ warcraft_
+
+*-b* streamer, *--blacklist=*_streamer_++
+    Blacklist a specified _streamer_, preventing them from being listed in any output.++
+    If the streamer is already blacklisted, blacklisting them again will remove them from the blacklist.++
+    Use *-b* without specifying a streamer to list your blacklist.++
+    e.g. wtwitch *-b* _overwatchleague_++
+    e.g. wtwitch *-b*
 
 ## Subscriptions
 
@@ -85,15 +92,15 @@ Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer
 
 ## Caching
 
-To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to or unsubscribe from a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
+To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or blacklist a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
 
 For the same reason, every game ID/game name pair fetched from the Twitch API is also stored in the cache directory. However, this cache file does not expire.
 
 # FILES
 
-The configuration file is at ~/.config/wtwitch/config.json. Cache files are kept in ~/.cache/wtwitch.
+Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME and $XDG_CACHE_HOME are their default values (~/.config and ~/.cache respectively), the configuration file and blacklist file is at ~/.config/wtwitch/config.json and cache files are kept in ~/.cache/wtwitch.
 
-You should never need to edit these files; you should use the options listed above. However you may easily edit them manually.
+You should never need to edit these files manually; you should use the options listed under *OPTIONS* above.
 
 # SYNCING SUBSCRIPTIONS
 

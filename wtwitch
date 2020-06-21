@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.6.2"
+readonly VERSION="1.7"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -59,8 +59,8 @@ readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
-
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
+readonly BLACKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blacklist"
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
@@ -317,30 +317,23 @@ EOF
 # ------- Pre-script: check & load --------
 # -----------------------------------------
 
-# Check files
-# Create config file if it doesnt exist
-if [[ ! -f "${CONFIG_FILE}" ]]; then
-  if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-    mkdir -p "${CONFIG_FILE_DIRECTORY}"
-  fi
+# Check files -- create cache/config directories and required files
+mkdir -p "${CONFIG_FILE_DIRECTORY}" "${CACHE_FILE_DIRECTORY}"
+touch "${BLACKLIST_FILE}"
 
-  # Default config
-  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
-fi
-
-# Create cache folder if it doesn't exist
-if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-  mkdir -p "${CACHE_FILE_DIRECTORY}"
-fi
-
-# Create gameids cache file
 if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
   printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
+fi
+
+if [[ ! -f "${CONFIG_FILE}" ]]; then
+  # Default config
+  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
 fi
 
 # Load settings
 read -r apiToken apiTokenExpiry useColors userPlayer userQuality \
 <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+readonly blacklist="$(<"${BLACKLIST_FILE}")"
 
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
@@ -921,6 +914,11 @@ print_stream_info()
 {
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
+  # Do not show streamer if blacklisted
+  if [[ "${blacklist}" == *"${3,,}"* ]]; then
+    exit 0
+  fi
+
   # If streamer data is empty, exit
   if [ "${streamerData[1]:-x}" = "x" ]; then
     exit
@@ -1240,6 +1238,33 @@ unsubscribe()
   write_setting ".lastSubscriptionUpdate" "null"
 }
 
+#######################################
+# Blacklists a specific streamer.
+# Globals:
+#   BLACKLIST_FILE
+# Arguments:
+#   $1: streamer to blacklist
+# Returns:
+#   none
+#######################################
+blacklist()
+{
+  # Convert to lowercase
+  local -r streamerToBlacklist="${1,,}"
+
+  # If streamer is already blacklisted, un-blacklist them
+  if [[ "${blacklist}" == *"${streamerToBlacklist}"* ]]; then
+    sed -i "/${streamerToBlacklist}/d" "${BLACKLIST_FILE}"
+    printf "\nRemoved %s from blacklist.\n" "${streamerToBlacklist}"
+  else
+    printf "%s\n" "${streamerToBlacklist}" >> "${BLACKLIST_FILE}"
+    printf "\nAdded %s to blacklist.\n" "${streamerToBlacklist}"
+  fi
+
+  # Invalidate cache
+  write_setting ".lastSubscriptionUpdate" "null"
+}
+
 # -----------------------------------------
 # ---------- Parse user options -----------
 # -----------------------------------------
@@ -1278,8 +1303,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        gameToCheck="$(extract_argument "$1")"
-        list_streamers_of_game "${gameToCheck}"
+        list_streamers_of_game "$(extract_argument "$1")"
       else
         exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
@@ -1306,8 +1330,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        player="$(extract_argument "$1")"
-        change_player "${player}"
+        change_player "$(extract_argument "$1")"
       else
         exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
@@ -1329,8 +1352,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        quality="$(extract_argument "$1")"
-        change_quality "${quality}"
+        change_quality "$(extract_argument "$1")"
       else
         exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
@@ -1352,8 +1374,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToSubscribeTo="$(extract_argument "$1")"
-        subscribe "${streamerToSubscribeTo}"
+        subscribe "$(extract_argument "$1")"
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
       fi
@@ -1380,10 +1401,34 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       if [[ $# -gt 0 ]]; then
-        streamerToUnsubscribeFrom="$(extract_argument "$1")"
-        unsubscribe "${streamerToUnsubscribeFrom}"
+        unsubscribe "$(extract_argument "$1")"
       else
         exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+      fi
+      printf "%b" "${NC}" && exit 0
+      break
+      ;;
+    -b)
+      shift
+      if [[ $# -gt 0 ]] && [[ ! "$*" == *"-d"* ]] && [[ ! "$*" == *"--debug"* ]]; then
+        blacklist "$1"
+        printf "%b" "${NC}" && exit 0
+      else
+        printf "\n Blacklist:\n"
+        sed -e 's/^/  /' "${BLACKLIST_FILE}"
+      fi
+      printf "%b" "${NC}" && exit 0
+      break
+      ;;
+    --blacklist*)
+      if [[ $# -gt 1 ]]; then
+        shift
+      fi
+      if [[ $# -gt 0 ]] && [[ ! "$*" == *"-d"* ]] && [[ ! "$*" == *"--debug"* ]]; then
+        blacklist "$(extract_argument "$1")"
+      else
+        printf "\n Blacklist:\n"
+        sed -e 's/^/  /' "${BLACKLIST_FILE}"
       fi
       printf "%b" "${NC}" && exit 0
       break
