@@ -1,0 +1,5 @@
+
+ [1m[91mError[0m: 1080p,490p is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. "720p,480p,worst".
+
+ Exiting wtwitch.
+[0m
