@@ -361,8 +361,12 @@ if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nVersions: wtwitch-%s %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" \
-  "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
+  printf "Starting wtwitch debug log\n"
+  printf "Package: %s\n" "${_packageinfo}"
+  printf "Versions: bash-%s wtwitch-%s %s\n" "${BASH_VERSION}" "${VERSION}" "$(jq --version) $(streamlink --version)"
+  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(date)" "$*"
+  printf "Config file:\n\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
+  printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
 
   # Print all commands
   set -x
@@ -1194,7 +1198,7 @@ subscribe()
     while [[ ${whileCounter} -lt ${#userSubscriptions[@]} ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
       currentSubscription="${userSubscriptions[${whileCounter}]}"
-      whileCounter="$(( whileCounter + 1))"
+      whileCounter="$(( whileCounter + 1 ))"
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
