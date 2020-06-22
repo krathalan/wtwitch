@@ -672,6 +672,7 @@ change_player()
   fi
 
   write_setting ".player" "${playerName}"
+  printf "\n Changed player to %s.\n" "$1"
 }
 
 #######################################
@@ -706,6 +707,7 @@ change_quality()
   # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
+    printf "\n Quality changed to %s.\n" "$1"
   else
     exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
   fi
@@ -1210,6 +1212,8 @@ subscribe()
   local -r tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
+  printf "\n Subscribed to %s.\n" "$1"
+
   invalidate_cache
 }
 
@@ -1282,6 +1286,8 @@ unsubscribe()
   local -r tmpJson="$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
+  printf "\n Unsubscribed from %s.\n" "$1"
+
   invalidate_cache
 }
 
@@ -1301,10 +1307,10 @@ blacklist()
   # If streamer is already blacklisted, un-blacklist them
   if [[ "${blacklist}" == *"${streamerToBlacklist}"* ]]; then
     sed -i "/${streamerToBlacklist}/d" "${BLACKLIST_FILE}"
-    printf "\nRemoved %s from blacklist.\n" "${streamerToBlacklist}"
+    printf "\n Removed %s from blacklist.\n" "${streamerToBlacklist}"
   else
     printf "%s\n" "${streamerToBlacklist}" >> "${BLACKLIST_FILE}"
-    printf "\nAdded %s to blacklist.\n" "${streamerToBlacklist}"
+    printf "\n Added %s to blacklist.\n" "${streamerToBlacklist}"
   fi
 
   invalidate_cache
