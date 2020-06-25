@@ -792,24 +792,32 @@ check_twitch_streams()
       local streamerToProcess=""
       streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
 
-      while [[ "${streamerToProcess}" != "null" ]]; do
-        # Don't use subshells when debugging is on
-        if [[ "${DEBUGGING}" == "on" ]]; then
+      # Don't use subshells when debugging is on
+      # Code is duplicated here because testing if DEBUGGING=on every iteration
+      # of the while loop takes a lot more time (~20-30% more)
+      if [[ "${DEBUGGING}" == "on" ]]; then
+        while [[ "${streamerToProcess}" != "null" ]]; do
           check_twitch_streams_helper "${streamerToProcess}"
-        else
-          check_twitch_streams_helper "${streamerToProcess}" &
-        fi
 
-        # Refresh data
-        whileCounter="$(( whileCounter + 1 ))"
-        streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-      done
+          # Refresh data
+          whileCounter="$(( whileCounter + 1 ))"
+          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+        done
+      else
+        while [[ "${streamerToProcess}" != "null" ]]; do
+          check_twitch_streams_helper "${streamerToProcess}" &
+
+          # Refresh data
+          whileCounter="$(( whileCounter + 1 ))"
+          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+        done
+      fi
 
       # Wait for all background processes, offline and online, to finish
       wait
 
       # Update lastSubscriptionUpdate time
-      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s)"
+      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s)" &
     fi
 
     printf "\n"
@@ -823,6 +831,9 @@ check_twitch_streams()
 
   # Print settings
   printf "\n %s:\n   %s %s\n   %s %s\n" "${localizedStrings[2]}" "${localizedStrings[3]}" "${userPlayer}" "${localizedStrings[4]}" "${userQuality}"
+
+  # Wait for write_setting if it's still going
+  wait
 }
 
 #######################################
@@ -837,14 +848,18 @@ check_twitch_streams()
 #######################################
 get_offline_streams()
 {
-  for streamerName in "${userSubscriptions[@]}"; do
-    # Don't use subshells if debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      get_offline_streams_helper "${streamerName}" "$1"
-    else
-      get_offline_streams_helper "${streamerName}" "$1" &
-    fi
-  done
+  # Don't use subshells if debugging is on
+  # Code is duplicated here because testing if DEBUGGING=on every iteration
+  # of the for loop takes a lot more time (~20-30% more)
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    for streamerName in "${userSubscriptions[@]}"; do
+        get_offline_streams_helper "${streamerName}" "$1"
+    done
+  else
+    for streamerName in "${userSubscriptions[@]}"; do
+        get_offline_streams_helper "${streamerName}" "$1" &
+    done
+  fi
 }
 
 #######################################
@@ -860,7 +875,8 @@ get_offline_streams()
 #######################################
 get_offline_streams_helper()
 {
-  if ! grep -qi "$1" <<< "$2"; then
+  # If the streamer to check is not found in json, then it is offline
+  if [[ "$2" != *"$1"* ]]; then
     printf "   %b%s%b\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
 }
