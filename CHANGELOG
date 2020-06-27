@@ -1,9 +1,6 @@
 See the full changelog at
 https://git.sr.ht/~krathalan/wtwitch/tree/master/FULLCHANGELOG
 
-1.5.1 (May 24, 2020)
-    Set OAuth token expiry for 1 day after acquisition
-
 1.6.0 (May 28, 2020)
     Add French translation patch from Léo Villeveygoux
 
@@ -14,3 +11,9 @@ https://git.sr.ht/~krathalan/wtwitch/tree/master/FULLCHANGELOG
 1.6.2 (June 19, 2020)
     Fixed a bug where the first Twitch request of the day would fail due to not
       updating the in-memory api token
+
+1.7.0 (TBD)
+    Add -b/--block feature to hide specified streamers from all output except -c/--check
+    Switch to cURL, away from wget (it's faster now that less requests are being made)
+    Speed improvements for -c/--check
+    Small man page improvements
