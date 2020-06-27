@@ -114,7 +114,7 @@ Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It 
 
 Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in:
 
-- [Wget](https://savannah.gnu.org/projects/wget/), written mostly in C
+- [cURL](https://github.com/curl/curl), written mostly in C
 - [GNU coreutils](https://github.com/coreutils/coreutils), written nearly entirely in C and shell
 - [jq](https://github.com/stedolan/jq), written nearly entirely in C
 

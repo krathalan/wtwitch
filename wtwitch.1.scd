@@ -136,7 +136,7 @@ jq is licensed under the MIT license.
 
 Streamlink is licensed under the 2-clause BSD license.
 
-Wget is licensed under the GPLv3.
+cURL is licensed under the MIT license.
 
 VLC and mpv, should you choose either as your player, are both licensed under both the GPLv2 and LGPLv2.1 licenses.
 
