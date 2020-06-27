@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*(no option)* _streamer_|*-t*|*-g* _game_|*-s* _streamer_|*-u* _streamer_|*-c*|*-p* _player_|*-q* _quality_|*-l*|*-d*|*-v*]
+wtwitch [*(no option)* _streamer_|*-t*|*-g* _game_|*-b* _streamer_|*-s* _streamer_|*-u* _streamer_|*-c*|*-p* _player_|*-q* _quality_|*-l*|*-d*|*-v*]
 
 # DESCRIPTION
 
@@ -29,10 +29,8 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     e.g. wtwitch *-g* _"world of warcraft"_++
     e.g. wtwitch *-g* _world\\ of\\ warcraft_
 
-*-b* streamer, *--blacklist=*_streamer_++
-    Blacklist a specified _streamer_, preventing them from being listed in any output.++
-    If the streamer is already blacklisted, blacklisting them again will remove them from the blacklist.++
-    Use *-b* without specifying a streamer to list your blacklist.++
+*-b* streamer, *--block=*_streamer_++
+    Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *-b* without specifying a streamer to show your blocklist.++
     e.g. wtwitch *-b* _overwatchleague_++
     e.g. wtwitch *-b*
 
@@ -47,7 +45,7 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     e.g. wtwitch *-u* _overwatchleague_
 
 *-c*, *--check*++
-    View your settings and the status of the streamers you are subscribed to.++
+    View your player/quality settings and the status of the streamers you are subscribed to.++
     e.g. wtwitch *-c*
 
 ## Configuration options
@@ -86,19 +84,19 @@ You can set which video player you'd like wtwitch to pass to Streamlink with wtw
 
 Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch *-q* _quality_. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
 
-## Miscellaneous
+## Ads
 
 Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as Twitch takes 50% of the subscription fee.
 
 ## Caching
 
-To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or blacklist a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
+To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or block a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
 
 For the same reason, every game ID/game name pair fetched from the Twitch API is also stored in the cache directory. However, this cache file does not expire.
 
 # FILES
 
-Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME and $XDG_CACHE_HOME are their default values (~/.config and ~/.cache respectively), the configuration file and blacklist file is at ~/.config/wtwitch/config.json and cache files are kept in ~/.cache/wtwitch.
+Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME and $XDG_CACHE_HOME are their default values (~/.config and ~/.cache respectively), the configuration file and blocklist file is at ~/.config/wtwitch/config.json and cache files are kept in ~/.cache/wtwitch.
 
 You should never need to edit these files manually; you should use the options listed under *OPTIONS* above.
 

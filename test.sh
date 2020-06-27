@@ -140,15 +140,15 @@ if [ "$(whoami)" = "root" ]; then
   exit_script_on_failure "This script should NOT be run as root (or sudo)!"
 fi
 
-printf "\n%s. Testing blacklist functionality...\n" "${stepWithColor}"
+printf "\n%s. Testing blocklist functionality...\n" "${stepWithColor}"
 
-testName="Add to blacklist"
+testName="Add to blocklist"
 bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
-compare_output "blacklist_one" "${testName}"
+compare_output "blocklist_one" "${testName}"
 
-testName="Remove from blacklist"
+testName="Remove from blocklist"
 bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
-compare_output "blacklist_two" "${testName}"
+compare_output "blocklist_two" "${testName}"
 
 complete_step
 
