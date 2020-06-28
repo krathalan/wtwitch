@@ -12,7 +12,7 @@ https://git.sr.ht/~krathalan/wtwitch/tree/master/FULLCHANGELOG
     Fixed a bug where the first Twitch request of the day would fail due to not
       updating the in-memory api token
 
-1.7.0 (TBD)
+1.7.0 (June 28, 2020)
     Add -b/--block feature to hide specified streamers from all output except
       -c/--check
     Switch to cURL, away from wget (it's faster now that less requests are
