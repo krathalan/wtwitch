@@ -13,7 +13,9 @@ https://git.sr.ht/~krathalan/wtwitch/tree/master/FULLCHANGELOG
       updating the in-memory api token
 
 1.7.0 (TBD)
-    Add -b/--block feature to hide specified streamers from all output except -c/--check
-    Switch to cURL, away from wget (it's faster now that less requests are being made)
+    Add -b/--block feature to hide specified streamers from all output except
+      -c/--check
+    Switch to cURL, away from wget (it's faster now that less requests are
+      being made)
     Speed improvements for -c/--check
     Small man page improvements
