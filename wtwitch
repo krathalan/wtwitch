@@ -1338,7 +1338,6 @@ block()
 
 if [[ $# -eq 0 ]]; then
   print_help
-  printf "%b" "${NC}" && exit 0
 fi
 
 # Parse flags. From:
@@ -1347,157 +1346,108 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       print_help
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -c|--check)
       check_twitch_streams
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -g)
       shift
-      if [[ $# -gt 0 ]]; then
-        list_streamers_of_game "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      list_streamers_of_game "$1"
       break
       ;;
     --get-streamers*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        list_streamers_of_game "$(extract_argument "$1")"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      list_streamers_of_game "$(extract_argument "$1")"
       break
       ;;
     -l|--toggle-colors)
       toggle_colors
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -p)
       shift
-      if [[ $# -gt 0 ]]; then
-        change_player "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_player "$1"
       break
       ;;
     --change-player*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        change_player "$(extract_argument "$1")"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_player "$(extract_argument "$1")"
       break
       ;;
     -q)
       shift
-      if [[ $# -gt 0 ]]; then
-        change_quality "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$1"
       break
       ;;
     --change-quality*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        change_quality "$(extract_argument "$1")"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$(extract_argument "$1")"
       break
       ;;
     -s)
       shift
-      if [[ $# -gt 0 ]]; then
-        subscribe "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$1"
       break
       ;;
     --subscribe*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        subscribe "$(extract_argument "$1")"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$(extract_argument "$1")"
       break
       ;;
     -t|--top)
       list_top
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -u)
       shift
-      if [[ $# -gt 0 ]]; then
-        unsubscribe "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$1"
       break
       ;;
     --unsubscribe*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        unsubscribe "$(extract_argument "$1")"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$(extract_argument "$1")"
       break
       ;;
     -b)
       shift
-      if [[ $# -gt 0 ]] && [[ ! "$*" == *"-d"* ]] && [[ ! "$*" == *"--debug"* ]]; then
+      if [[ $# -gt 0 ]]; then
         block "$1"
-        printf "%b" "${NC}" && exit 0
       else
         printf "\n Blocklist:\n"
         sed -e 's/^/  /' "${BLOCKLIST_FILE}"
       fi
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     --block*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]] && [[ ! "$*" == *"-d"* ]] && [[ ! "$*" == *"--debug"* ]]; then
+      [[ $# -gt 1 ]] && shift
+      if [[ $# -gt 0 ]]; then
         block "$(extract_argument "$1")"
       else
         printf "\n Blocklist:\n"
         sed -e 's/^/  /' "${BLOCKLIST_FILE}"
       fi
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -v|--version)
@@ -1505,18 +1455,18 @@ while [[ $# -gt 0 ]]; do
       printf "Copyright (C) %s 2019-%s\n" "${CONTRIBUTORS}" "$(date +%Y)"
       printf "This is free software: you are free to change and redistribute it.\n"
       printf "There is NO WARRANTY, to the extent permitted by law.\n"
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     *)
+      # If quality="audio_only" OR debugging, do not open streamlink as a background process
+      if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
+        stream "$1"
+      else
+        stream "$1" &> /dev/null &
+      fi
       break
       ;;
   esac
 done
 
-# If quality="audio_only" OR debugging, do not open streamlink as a background process
-if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
-  stream "$1"
-else
-  stream "$1" &> /dev/null &
-fi
+printf "%b" "${NC}" && exit 0
