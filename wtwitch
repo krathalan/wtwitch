@@ -1007,7 +1007,7 @@ print_stream_info()
   fi
 
   # If streamer data is empty, exit
-  if [ "${streamerData[1]:-x}" = "x" ]; then
+  if [[ "${streamerData[1]:-x}" == "x" ]]; then
     exit
   fi
 
