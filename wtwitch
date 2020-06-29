@@ -41,7 +41,7 @@ set -Eeuo pipefail
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
 readonly PROJECT_URL="https://git.sr.ht/~krathalan/wtwitch"
-readonly VERSION="1.6.2"
+readonly VERSION="1.7"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -59,8 +59,8 @@ readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
-
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
+readonly BLOCKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blocklist"
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
@@ -317,30 +317,23 @@ EOF
 # ------- Pre-script: check & load --------
 # -----------------------------------------
 
-# Check files
-# Create config file if it doesnt exist
-if [[ ! -f "${CONFIG_FILE}" ]]; then
-  if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-    mkdir -p "${CONFIG_FILE_DIRECTORY}"
-  fi
+# Check files -- create cache/config directories and required files
+mkdir -p "${CONFIG_FILE_DIRECTORY}" "${CACHE_FILE_DIRECTORY}"
+touch "${BLOCKLIST_FILE}"
 
-  # Default config
-  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
-fi
-
-# Create cache folder if it doesn't exist
-if [[ ! -d "${CACHE_FILE_DIRECTORY}" ]]; then
-  mkdir -p "${CACHE_FILE_DIRECTORY}"
-fi
-
-# Create gameids cache file
 if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
   printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
+fi
+
+if [[ ! -f "${CONFIG_FILE}" ]]; then
+  # Default config
+  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
 fi
 
 # Load settings
 read -r apiToken apiTokenExpiry useColors userPlayer userQuality \
 <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+readonly blocklist="$(<"${BLOCKLIST_FILE}")"
 
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
@@ -355,9 +348,9 @@ fi
 
 # Debugging
 if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
-  # Avoid subshells, print full wget output, and more behavioral changes
+  # Avoid subshells, print full curl output, and more behavioral changes
   readonly DEBUGGING="on"
-  readonly wgetFlags=""
+  readonly curlFlags="--verbose"
 
   # Print log information
   readonly _dashes="-----------------------------------------------------------"
@@ -368,14 +361,18 @@ if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\nPackage: %s\nVersions: wtwitch-%s %s\nDate: %s\n\nCommand: wtwitch %s\n\nConfig file:\n\n%s\n\n%s\nBegin log\n%s\n\n" \
-  "${_packageinfo}" "${VERSION}" "$(jq --version) $(streamlink --version)" "$(date)" "$*" "$(jq -r "." "${CONFIG_FILE}")" "${_dashes}" "${_dashes}"
+  printf "Starting wtwitch debug log\n"
+  printf "Package: %s\n" "${_packageinfo}"
+  printf "Versions: bash-%s wtwitch-%s %s\n" "${BASH_VERSION}" "${VERSION}" "$(jq --version) $(streamlink --version)"
+  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(date)" "$*"
+  printf "Config file:\n\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
+  printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
 
   # Print all commands
   set -x
 else
   readonly DEBUGGING="off"
-  readonly wgetFlags="--quiet"
+  readonly curlFlags="--silent"
 fi
 
 # Why is TITLE_CHARACTERS=11? Because that's how many characters will always
@@ -438,7 +435,7 @@ write_setting()
 download_token()
 {
   # Get token
-  local -r tmpJson="$(wget "${wgetFlags}" --output-document=- --post-data="client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
+  local -r tmpJson="$(curl "${curlFlags}" -d "client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
 
   local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
 
@@ -457,8 +454,64 @@ if [[ "${apiToken}" == "null" ]] || [[ "$(LANG=C date +%s)" -gt "${apiTokenExpir
 fi
 
 # -----------------------------------------
-# --------------- Functions ---------------
+# --------------- "Library" ---------------
 # -----------------------------------------
+
+#######################################
+# Cleans up temporary file(s).
+# Globals:
+#   CACHE_ONLINE_TEXT_FILE
+#   CACHE_OFFLINE_TEXT_FILE
+#   CACHE_MISC_TEXT_FILE
+#   CACHE_TOP_STREAMS_TEXT_FILE
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+clean_up()
+{
+  # Clean up
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
+}
+
+#######################################
+# Downloads a file quietly using curl and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
+# Globals:
+#   apiToken
+#   TWITCH_API_KEY
+# Arguments:
+#   $1: file to download
+# Returns:
+#   downloaded file
+#######################################
+download_file()
+{
+  curl "${curlFlags}" --header "Client-ID: ${TWITCH_API_KEY}" \
+  --header "Authorization: Bearer ${apiToken}" "$1"
+}
+
+#######################################
+# Prints passed error message before premature exit. Prints everything to >&2 (STDERR).
+# Globals:
+#   Colors: RED, NC
+#   SCRIPT_NAME
+# Arguments:
+#   $1: error message to print
+# Returns:
+#   none
+#######################################
+exit_script_on_failure()
+{
+  mapfile -t localizedStrings <<< "$(jq -r ".error.${WTWITCH_LANG}, .exiting.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+
+  if [[ $# -gt 0 ]]; then
+    printf "\n %b%s%b: %s\n\n %s %s.\n%b" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
+  fi
+
+  clean_up
+  exit 1
+}
 
 #######################################
 # Extracts an argument from a --flag=argument.
@@ -478,6 +531,111 @@ extract_argument()
 }
 
 #######################################
+# Returns the game name for a specified game ID. Attempts to get game name from
+# cache, but if game ID not present, retrieves it from the Twitch API.
+# Globals:
+#   CACHE_GAME_ID_FILE
+# Arguments:
+#   $1: game ID to get game name of
+# Returns:
+#   game name of specified ID
+#######################################
+get_game_name()
+{
+  # Add "id" prefix as jq does not accept numerical identifiers
+  local -r gameID="id$1"
+
+  # Attempt to extract game name from cached game ids
+  local gameName
+  gameName="$(jq -r ".data | add | .${gameID}" "${CACHE_GAME_ID_FILE}")"
+
+  # If game id not cached, fetch from Twitch API
+  if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
+    local tmpJson
+    tmpJson="$(download_file "${TWITCH_API_URL}/helix/games?id=$1")"
+    gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
+
+    # Guard against wiping gameid cache
+    # This will happen when tmpJson is null as the result of too many Twitch
+    # API queries in a short amount of time
+    if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
+      exit_script_on_failure "Twitch API rate limit reached"
+    fi
+
+    # Cache result for future reference
+    tmpJson="$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")"
+    printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
+  fi
+
+  printf "%s" "${gameName}"
+}
+
+#######################################
+# Converts a string to lowercase.
+# Globals:
+#   none
+# Arguments:
+#   $1: string to convert
+# Returns:
+#   none
+#######################################
+to_lowercase() {
+    printf '%s\n' "${1,,}"
+}
+
+#######################################
+# Notifies the user if streaming failed.
+# Globals:
+#   none
+# Arguments:
+#   $1: name of streamer
+#   $2: error message to print
+# Returns:
+#   none
+#######################################
+stream_failure_notify()
+{
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${WTWITCH_LANG}, .stream_failure_two.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+
+  notify-send -i "gnome-twitch" "Wtwitch: ${localizedStrings[0]} $1 ${localizedStrings[1]}" "$2"
+  exit_script_on_failure
+}
+
+#######################################
+# Writes a setting value to the config file.
+# Globals:
+#   CONFIG_FILE
+# Arguments:
+#   $1: key
+#   $2: value
+# Returns:
+#   none
+#######################################
+write_setting()
+{
+  local -r tmpJson="$(jq "$1 = \"$2\"" "${CONFIG_FILE}")"
+  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
+}
+
+#######################################
+# Invalidates the cache generated from -c/--check.
+# Globals:
+#   none
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+invalidate_cache()
+{
+  write_setting ".lastSubscriptionUpdate" "null"
+}
+
+# -----------------------------------------
+# --------------- Functions ---------------
+# -----------------------------------------
+
+#######################################
 # Changes the default player in $CONFIG_FILE that gets passed to streamlink.
 # Globals:
 #   Colors: ORANGE, NC
@@ -495,8 +653,7 @@ change_player()
   # Get localized strings
   mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
-  # Convert user input to lowercase
-  local -r playerName="${1,,}"
+  local -r playerName="$(to_lowercase "$1")"
 
   # Check to make sure user has input player actually installed
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
@@ -515,6 +672,7 @@ change_player()
   fi
 
   write_setting ".player" "${playerName}"
+  printf "\n Changed player to %s.\n" "$1"
 }
 
 #######################################
@@ -531,8 +689,7 @@ change_quality()
   local -r acceptableQualities=("audio_only" "worst" "160p" "360p" "480p" "720p" "720p60" "1080p60" "best")
   local passedCheckMarkerArray=()
 
-  # Convert user input to lowercase
-  local -r specifiedQuality="${1,,}"
+  local -r specifiedQuality="$(to_lowercase "$1")"
 
   # User may try and enter fallback qualities; code should account for this
   IFS=',' read -r -a qualityArray <<< "$specifiedQuality"
@@ -550,6 +707,7 @@ change_quality()
   # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
+    printf "\n Quality changed to %s.\n" "$1"
   else
     exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
   fi
@@ -634,24 +792,32 @@ check_twitch_streams()
       local streamerToProcess=""
       streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
 
-      while [[ "${streamerToProcess}" != "null" ]]; do
-        # Don't use subshells when debugging is on
-        if [[ "${DEBUGGING}" == "on" ]]; then
+      # Don't use subshells when debugging is on
+      # Code is duplicated here because testing if DEBUGGING=on every iteration
+      # of the while loop takes a lot more time (~20-30% more)
+      if [[ "${DEBUGGING}" == "on" ]]; then
+        while [[ "${streamerToProcess}" != "null" ]]; do
           check_twitch_streams_helper "${streamerToProcess}"
-        else
-          check_twitch_streams_helper "${streamerToProcess}" &
-        fi
 
-        # Refresh data
-        whileCounter="$(( whileCounter + 1 ))"
-        streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-      done
+          # Refresh data
+          whileCounter="$(( whileCounter + 1 ))"
+          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+        done
+      else
+        while [[ "${streamerToProcess}" != "null" ]]; do
+          check_twitch_streams_helper "${streamerToProcess}" &
+
+          # Refresh data
+          whileCounter="$(( whileCounter + 1 ))"
+          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+        done
+      fi
 
       # Wait for all background processes, offline and online, to finish
       wait
 
       # Update lastSubscriptionUpdate time
-      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s)"
+      write_setting ".lastSubscriptionUpdate" "$(LANG=C date +%s)" &
     fi
 
     printf "\n"
@@ -665,6 +831,9 @@ check_twitch_streams()
 
   # Print settings
   printf "\n %s:\n   %s %s\n   %s %s\n" "${localizedStrings[2]}" "${localizedStrings[3]}" "${userPlayer}" "${localizedStrings[4]}" "${userQuality}"
+
+  # Wait for write_setting if it's still going
+  wait
 }
 
 #######################################
@@ -679,14 +848,18 @@ check_twitch_streams()
 #######################################
 get_offline_streams()
 {
-  for streamerName in "${userSubscriptions[@]}"; do
-    # Don't use subshells if debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
-      get_offline_streams_helper "${streamerName}" "$1"
-    else
-      get_offline_streams_helper "${streamerName}" "$1" &
-    fi
-  done
+  # Don't use subshells if debugging is on
+  # Code is duplicated here because testing if DEBUGGING=on every iteration
+  # of the for loop takes a lot more time (~20-30% more)
+  if [[ "${DEBUGGING}" == "on" ]]; then
+    for streamerName in "${userSubscriptions[@]}"; do
+        get_offline_streams_helper "${streamerName}" "$1"
+    done
+  else
+    for streamerName in "${userSubscriptions[@]}"; do
+        get_offline_streams_helper "${streamerName}" "$1" &
+    done
+  fi
 }
 
 #######################################
@@ -702,49 +875,10 @@ get_offline_streams()
 #######################################
 get_offline_streams_helper()
 {
-  if ! grep -qi "$1" <<< "$2"; then
+  # If the streamer to check is not found in json, then it is offline
+  if [[ "$2" != *"$1"* ]]; then
     printf "   %b%s%b\n" "${GREY}" "$1" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
   fi
-}
-
-#######################################
-# Returns the game name for a specified game ID. Attempts to get game name from
-# cache, but if game ID not present, retrieves it from the Twitch API.
-# Globals:
-#   CACHE_GAME_ID_FILE
-# Arguments:
-#   $1: game ID to get game name of
-# Returns:
-#   game name of specified ID
-#######################################
-get_game_name()
-{
-  # Add "id" prefix as jq does not accept numerical identifiers
-  local -r gameID="id$1"
-
-  # Attempt to extract game name from cached game ids
-  local gameName
-  gameName="$(jq -r ".data | add | .${gameID}" "${CACHE_GAME_ID_FILE}")"
-
-  # If game id not cached, fetch from Twitch API
-  if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
-    local tmpJson
-    tmpJson="$(download_file "${TWITCH_API_URL}/helix/games?id=$1")"
-    gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
-
-    # Guard against wiping gameid cache
-    # This will happen when tmpJson is null as the result of too many Twitch
-    # API queries in a short amount of time
-    if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
-      exit_script_on_failure "Twitch API rate limit reached"
-    fi
-
-    # Cache result for future reference
-    tmpJson="$(jq ".data[.data | length] |= . + {\"${gameID}\":\"${gameName}\"}" "${CACHE_GAME_ID_FILE}")"
-    printf "%s" "${tmpJson}" > "${CACHE_GAME_ID_FILE}"
-  fi
-
-  printf "%s" "${gameName}"
 }
 
 #######################################
@@ -781,60 +915,6 @@ check_twitch_streams_helper()
   fi
 
   printf "   %b%s%b: %s %b(%s)%b\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
-}
-
-#######################################
-# Cleans up temporary file(s).
-# Globals:
-#   CACHE_ONLINE_TEXT_FILE
-#   CACHE_OFFLINE_TEXT_FILE
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-clean_up()
-{
-  # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
-}
-
-#######################################
-# Downloads a file quietly using wget and passes the TWITCH_API_KEY as a header to the server. Returns the downloaded file.
-# Globals:
-#   apiToken
-#   TWITCH_API_KEY
-# Arguments:
-#   $1: file to download
-# Returns:
-#   downloaded file
-#######################################
-download_file()
-{
-  wget "${wgetFlags}" --output-document=- --header="Client-ID: ${TWITCH_API_KEY}" \
-  --header="Authorization: Bearer ${apiToken}" "$1"
-}
-
-#######################################
-# Prints passed error message before premature exit. Prints everything to >&2 (STDERR).
-# Globals:
-#   Colors: RED, NC
-#   SCRIPT_NAME
-# Arguments:
-#   $1: error message to print
-# Returns:
-#   none
-#######################################
-exit_script_on_failure()
-{
-  mapfile -t localizedStrings <<< "$(jq -r ".error.${WTWITCH_LANG}, .exiting.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
-
-  if [[ $# -gt 0 ]]; then
-    printf "\n %b%s%b: %s\n\n %s %s.\n%b" "${RED}" "${localizedStrings[0]}" "${NC}" "$1" "${localizedStrings[1]}" "${SCRIPT_NAME}" "${NC}" >&2
-  fi
-
-  clean_up
-  exit 1
 }
 
 #######################################
@@ -921,8 +1001,13 @@ print_stream_info()
 {
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
 
+  # Do not show streamer if blocked
+  if [[ "${blocklist}" == *"$(to_lowercase "$3")"* ]]; then
+    exit 0
+  fi
+
   # If streamer data is empty, exit
-  if [ "${streamerData[1]:-x}" = "x" ]; then
+  if [[ "${streamerData[1]:-x}" == "x" ]]; then
     exit
   fi
 
@@ -1107,24 +1192,6 @@ stream()
 }
 
 #######################################
-# Notifies the user if streaming failed.
-# Globals:
-#   none
-# Arguments:
-#   $1: name of streamer
-#   $2: error message to print
-# Returns:
-#   none
-#######################################
-stream_failure_notify()
-{
-  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${WTWITCH_LANG}, .stream_failure_two.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
-
-  notify-send -i "gnome-twitch" "Wtwitch: ${localizedStrings[0]} $1 ${localizedStrings[1]}" "$2"
-  exit_script_on_failure
-}
-
-#######################################
 # Subscribes to a specific streamer.
 # Globals:
 #   CONFIG_FILE
@@ -1137,8 +1204,7 @@ subscribe()
 {
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
-  # Convert to lowercase
-  local -r streamerToSubscribeTo="${1,,}"
+  local -r streamerToSubscribeTo="$(to_lowercase "$1")"
 
   # Check to make sure user isn't already subscribed
   if [[ ${#userSubscriptions[@]} -gt 0 ]]; then
@@ -1150,7 +1216,7 @@ subscribe()
     while [[ ${whileCounter} -lt ${#userSubscriptions[@]} ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
       # Refresh data
       currentSubscription="${userSubscriptions[${whileCounter}]}"
-      whileCounter="$(( whileCounter + 1))"
+      whileCounter="$(( whileCounter + 1 ))"
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
@@ -1162,8 +1228,9 @@ subscribe()
   local -r tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
-  # Invalidate cache
-  write_setting ".lastSubscriptionUpdate" "null"
+  printf "\n Subscribed to %s.\n" "$1"
+
+  invalidate_cache
 }
 
 #######################################
@@ -1196,7 +1263,7 @@ toggle_colors()
   printf "\n %b%s.%b\n" "${GREEN}" "${toPrint}" "${NC}"
 
   # Invalidate cache as it may or may not have colors
-  write_setting ".lastSubscriptionUpdate" "null"
+  invalidate_cache
 }
 
 #######################################
@@ -1212,8 +1279,7 @@ unsubscribe()
 {
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
-  # Convert to lowercase
-  local -r streamerToUnsubscribeFrom="${1,,}"
+  local -r streamerToUnsubscribeFrom="$(to_lowercase "$1")"
 
   # Find index of streamer in .subscriptions[]
   local whileCounter=0
@@ -1236,8 +1302,34 @@ unsubscribe()
   local -r tmpJson="$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")"
   printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
-  # Invalidate cache
-  write_setting ".lastSubscriptionUpdate" "null"
+  printf "\n Unsubscribed from %s.\n" "$1"
+
+  invalidate_cache
+}
+
+#######################################
+# Blocks a specific streamer.
+# Globals:
+#   BLOCKLIST_FILE
+# Arguments:
+#   $1: streamer to block
+# Returns:
+#   none
+#######################################
+block()
+{
+  local -r streamerToBlock="$(to_lowercase "$1")"
+
+  # If streamer is already blocked, un-block them
+  if [[ "${blocklist}" == *"${streamerToBlock}"* ]]; then
+    sed -i "/${streamerToBlock}/d" "${BLOCKLIST_FILE}"
+    printf "\n Removed %s from blocklist.\n" "${streamerToBlock}"
+  else
+    printf "%s\n" "${streamerToBlock}" >> "${BLOCKLIST_FILE}"
+    printf "\n Added %s to blocklist.\n" "${streamerToBlock}"
+  fi
+
+  invalidate_cache
 }
 
 # -----------------------------------------
@@ -1246,7 +1338,6 @@ unsubscribe()
 
 if [[ $# -eq 0 ]]; then
   print_help
-  printf "%b" "${NC}" && exit 0
 fi
 
 # Parse flags. From:
@@ -1255,137 +1346,108 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help)
       print_help
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -c|--check)
       check_twitch_streams
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -g)
       shift
-      if [[ $# -gt 0 ]]; then
-        list_streamers_of_game "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      list_streamers_of_game "$1"
       break
       ;;
     --get-streamers*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        gameToCheck="$(extract_argument "$1")"
-        list_streamers_of_game "${gameToCheck}"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      list_streamers_of_game "$(extract_argument "$1")"
       break
       ;;
     -l|--toggle-colors)
       toggle_colors
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -p)
       shift
-      if [[ $# -gt 0 ]]; then
-        change_player "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_player "$1"
       break
       ;;
     --change-player*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        player="$(extract_argument "$1")"
-        change_player "${player}"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_player "$(extract_argument "$1")"
       break
       ;;
     -q)
       shift
-      if [[ $# -gt 0 ]]; then
-        change_quality "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$1"
       break
       ;;
     --change-quality*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        quality="$(extract_argument "$1")"
-        change_quality "${quality}"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$(extract_argument "$1")"
       break
       ;;
     -s)
       shift
-      if [[ $# -gt 0 ]]; then
-        subscribe "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$1"
       break
       ;;
     --subscribe*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
-      if [[ $# -gt 0 ]]; then
-        streamerToSubscribeTo="$(extract_argument "$1")"
-        subscribe "${streamerToSubscribeTo}"
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
-      printf "%b" "${NC}" && exit 0
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$(extract_argument "$1")"
       break
       ;;
     -t|--top)
       list_top
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     -u)
       shift
-      if [[ $# -gt 0 ]]; then
-        unsubscribe "$1"
-        printf "%b" "${NC}" && exit 0
-      else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
-      fi
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$1"
       break
       ;;
     --unsubscribe*)
-      if [[ $# -gt 1 ]]; then
-        shift
-      fi
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$(extract_argument "$1")"
+      break
+      ;;
+    -b)
+      shift
       if [[ $# -gt 0 ]]; then
-        streamerToUnsubscribeFrom="$(extract_argument "$1")"
-        unsubscribe "${streamerToUnsubscribeFrom}"
+        block "$1"
       else
-        exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+        printf "\n Blocklist:\n"
+        sed -e 's/^/  /' "${BLOCKLIST_FILE}"
       fi
-      printf "%b" "${NC}" && exit 0
+      break
+      ;;
+    --block*)
+      [[ $# -gt 1 ]] && shift
+      if [[ $# -gt 0 ]]; then
+        block "$(extract_argument "$1")"
+      else
+        printf "\n Blocklist:\n"
+        sed -e 's/^/  /' "${BLOCKLIST_FILE}"
+      fi
       break
       ;;
     -v|--version)
@@ -1393,18 +1455,18 @@ while [[ $# -gt 0 ]]; do
       printf "Copyright (C) %s 2019-%s\n" "${CONTRIBUTORS}" "$(date +%Y)"
       printf "This is free software: you are free to change and redistribute it.\n"
       printf "There is NO WARRANTY, to the extent permitted by law.\n"
-      printf "%b" "${NC}" && exit 0
       break
       ;;
     *)
+      # If quality="audio_only" OR debugging, do not open streamlink as a background process
+      if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
+        stream "$1"
+      else
+        stream "$1" &> /dev/null &
+      fi
       break
       ;;
   esac
 done
 
-# If quality="audio_only" OR debugging, do not open streamlink as a background process
-if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
-  stream "$1"
-else
-  stream "$1" &> /dev/null &
-fi
+printf "%b" "${NC}" && exit 0
