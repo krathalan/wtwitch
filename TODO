@@ -1,7 +1,3 @@
-- Switch options to pash command style
-    DONE in dev branch
-- Add warning for old command style (e.g. -c/--check)
-    DONE in dev branch
 - Allow browsing more than one page of -t/-g results
     https://dev.twitch.tv/docs/api/reference/#get-games
     e.g. wtwitch g overwatch p2, wtwitch g overwatch p3
@@ -11,7 +7,10 @@
     https://dev.twitch.tv/docs/api/reference/#search-channels
     wtwitch e/category category
     wtwitch n/channels channel
-- Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
-    DONE in dev branch
 - Keep track of last time offline subs were seen online
     Keep last seen date value in .subscriptions[] array in config file
+
+    DONE in dev branch
+- Switch options to pash command style
+- Add warning for old command style (e.g. -c/--check)
+- Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
