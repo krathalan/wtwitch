@@ -1373,6 +1373,7 @@ block()
 
 #######################################
 # Prints information about how to use this script.
+# Copyright (C) 2016-2019 Dylan Araps
 # Globals:
 #   PROJECT_URL
 # Arguments:

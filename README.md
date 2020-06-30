@@ -6,9 +6,33 @@ A terminal program for Twitch. Watch and browse Twitch without proprietary JavaS
 
 Table of contents:
 
-1. [Install](https://git.sr.ht/~krathalan/wtwitch#install)
-2. [More information](https://git.sr.ht/~krathalan/wtwitch#more-information)
-3. [FAQ](https://git.sr.ht/~krathalan/wtwitch#faq)
+1. [Usage](https://git.sr.ht/~krathalan/wtwitch#usage)
+2. [Install](https://git.sr.ht/~krathalan/wtwitch#install)
+3. [More information](https://git.sr.ht/~krathalan/wtwitch#more-information)
+4. [FAQ](https://git.sr.ht/~krathalan/wtwitch#faq)
+
+## Usage
+
+```
+=> (no command) [name] - Watch [name] streamer.
+=> [s]ub [name(s)]     - Subscribe to [name] streamer.
+                         You can subscribe to multiple streamers in one command.
+=> [u]nsub [name(s)]   - Unsubscribe from [name] streamer.
+                         You can unsubscribe from multiple streamers in one command.
+=> [c]heck             - View your settings and the status of streamers you are
+                         subscribed to.
+=> [g]ame [name]       - View the top streamers for [name] game/category.
+=> [t]op               - View the top games and streamers on Twitch.
+=> [l]                 - Toggle the usage of colors in wtwitch output.
+=> [p]layer [program]  - Change the player program that gets passed to streamlink.
+=> [q]uality [quality] - Change the video quality that gets passed to streamlink.
+=> [b]lock [name(s)]   - Block [name] streamer, preventing them from appearing in any
+                         output. You can block multiple streamers in one command.
+=> [v]ersion           - Print the current version of wtwitch.
+=> [h]elp              - Print this help.
+
+See man wtwitch for more information.
+```
 
 ## Install
 ### Arch Linux
