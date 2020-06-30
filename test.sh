@@ -143,11 +143,11 @@ fi
 printf "\n%s. Testing blocklist functionality...\n" "${stepWithColor}"
 
 testName="Add to blocklist"
-bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "blocklist_one" "${testName}"
 
 testName="Remove from blocklist"
-bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "blocklist_two" "${testName}"
 
 complete_step
@@ -155,11 +155,11 @@ complete_step
 printf "\n%s. Testing subscribe functionality...\n" "${stepWithColor}"
 
 testName="Subscribe to"
-bash wtwitch -s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "subscribe_success" "${testName}"
 
 testName="Subscribe to (already subscribed)"
-bash wtwitch -s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "subscribe_failure" "${testName}"
 
 complete_step
@@ -167,11 +167,11 @@ complete_step
 printf "\n%s. Testing unsubscribe functionality...\n" "${stepWithColor}"
 
 testName="Unsubscribe from"
-bash wtwitch -u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "unsubscribe_success" "${testName}"
 
 testName="Unsubscribe from (not subscribed)"
-bash wtwitch -u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
 compare_output "unsubscribe_failure" "${testName}"
 
 complete_step
@@ -179,11 +179,11 @@ complete_step
 printf "\n%s. Testing change player functionality...\n" "${stepWithColor}"
 
 testName="Change player"
-bash wtwitch -p mpv > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch p mpv > "${TMP_DIR_FILE}" 2>&1
 compare_output "change_player_success" "${testName}"
 
 testName="Change player (vlc not installed)"
-bash wtwitch -p vlc > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch p vlc > "${TMP_DIR_FILE}" 2>&1
 compare_output "change_player_failure" "${testName}"
 
 complete_step
@@ -191,15 +191,15 @@ complete_step
 printf "\n%s. Testing change quality functionality...\n" "${stepWithColor}"
 
 testName="Change quality"
-bash wtwitch -q 1080p60,720p,best > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch q 1080p60,720p,best > "${TMP_DIR_FILE}" 2>&1
 compare_output "change_quality_success" "${testName}"
 
 testName="Change quality (invalid quality)"
-bash wtwitch -q 1080p,490p > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch q 1080p,490p > "${TMP_DIR_FILE}" 2>&1
 compare_output "change_quality_failure" "${testName}"
 
 # Change back to my setting :)
-bash wtwitch -q best > /dev/null
+bash wtwitch q best > /dev/null
 
 complete_step
 
