@@ -1,15 +1,7 @@
 - Switch options to pash command style
-    e.g. wtwitch -c/--check becomes wtwitch c/check
-    wtwitch t/top
-    wtwitch g/game
-    wtwitch b/block streamer
-    wtwitch s/sub streamer
-    wtwitch u/unsub streamer
-    wtwitch p/player player
-    wtwitch q/quality quality
-    wtwitch l/colors
-    WTWITCH_DEBUG=on wtwitch ...
-    wtwitch v/version
+    DONE in dev branch
+- Add warning for old command style (e.g. -c/--check)
+    DONE in dev branch
 - Allow browsing more than one page of -t/-g results
     https://dev.twitch.tv/docs/api/reference/#get-games
     e.g. wtwitch g overwatch p2, wtwitch g overwatch p3
@@ -19,6 +11,7 @@
     https://dev.twitch.tv/docs/api/reference/#search-channels
     wtwitch e/category category
     wtwitch n/channels channel
-- Allow subscribing/unsubscribing to more than 1 channel at a time
+- Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
+    DONE in dev branch
 - Keep track of last time offline subs were seen online
     Keep last seen date value in .subscriptions[] array in config file

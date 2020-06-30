@@ -1181,45 +1181,6 @@ list_top_streams()
 }
 
 #######################################
-# Prints information about how to use this script.
-# Globals:
-#   PROJECT_URL
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-print_help()
-{
-  man wtwitch || exit_script_on_failure "$(get_translation print_help) ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
-
-  exit 0
-}
-
-#######################################
-# Prints information this script.
-# Globals:
-#   SCRIPT_NAME
-#   VERSION
-#   CONTRIBUTORS
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-print_version()
-{
-  printf "%s" "\
-${SCRIPT_NAME} v${VERSION}
-
-Copyright (C) ${CONTRIBUTORS} 2019-$(date +%Y)
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-"
-exit 0
-}
-
-#######################################
 # Opens a stream with Streamlink.
 # Globals:
 #   TWITCH_API_URL
@@ -1410,12 +1371,71 @@ block()
   invalidate_cache
 }
 
+#######################################
+# Prints information about how to use this script.
+# Globals:
+#   PROJECT_URL
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+print_help()
+{
+  man wtwitch || exit_script_on_failure "$(get_translation print_help) ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
+
+  exit 0
+}
+
+#######################################
+# Prints information this script.
+# Globals:
+#   SCRIPT_NAME
+#   VERSION
+#   CONTRIBUTORS
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+print_version()
+{
+  printf "%s" "\
+${SCRIPT_NAME} v${VERSION}
+
+Copyright (C) ${CONTRIBUTORS} 2019-$(date +%Y)
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"
+exit 0
+}
+
+#######################################
+# Prints information about new command style.
+# Globals:
+#   SCRIPT_NAME
+# Arguments:
+#   $1: user's command
+# Returns:
+#   none
+#######################################
+print_new_usage()
+{
+  printf "The commands for wtwitch have changed.
+Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##-}"
+
+  exit 0
+}
+
 # -----------------------------------------
 # ---------- Parse user options -----------
 # -----------------------------------------
 
 # Check user input
 [[ -z "${1:-}" ]] && print_help
+
+glob "$1" '[-]*' &&
+  print_new_usage "$1"
 
 glob "$1" '[g]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_game)"
