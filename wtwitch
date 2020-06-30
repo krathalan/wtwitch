@@ -49,7 +49,6 @@ readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux"
 # https://google.github.io/styleguide/shell.xml
 
 # This script uses shellcheck: https://www.shellcheck.net/
-# There are no "shellcheck disable=SCXXXX" lines in this script.
 
 # Many functions in this script spawn subshell processes
 trap "clean_up && kill 0" SIGINT
@@ -594,6 +593,21 @@ get_game_name()
 }
 
 #######################################
+# Gets a localized string of the requested key.
+# Globals:
+#   WTWITCH_LANG
+#   TRANSLATIONS
+# Arguments:
+#   $1: key of translation; e.g. flags_no_game
+# Returns:
+#   localized string
+#######################################
+get_translation()
+{
+  jq -r ".$1.${WTWITCH_LANG}" <<< "${TRANSLATIONS}"
+}
+
+#######################################
 # This is a simple wrapper around a case statement to allow
 # for simple string comparisons against globs.
 # Copyright (C) 2016-2019 Dylan Araps
@@ -605,7 +619,8 @@ get_game_name()
 # Returns:
 #   true or false
 #######################################
-glob() {
+glob()
+{
   # Disable this warning as it is the intended behavior.
   # shellcheck disable=2254
   case $1 in $2) return 0; esac; return 1
@@ -750,7 +765,7 @@ change_quality()
     write_setting ".quality" "${specifiedQuality}"
     printf "\n Quality changed to %s.\n" "$1"
   else
-    exit_script_on_failure "${specifiedQuality} $(jq -r ".change_quality_error.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+    exit_script_on_failure "${specifiedQuality} $(get_translation change_quality_error)."
   fi
 }
 
@@ -1071,7 +1086,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(jq -r ".viewers.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(get_translation viewers)" "${NC}" >> "$4"
 }
 
 #######################################
@@ -1176,9 +1191,32 @@ list_top_streams()
 #######################################
 print_help()
 {
-  man wtwitch || exit_script_on_failure "$(jq -r ".print_help.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
+  man wtwitch || exit_script_on_failure "$(get_translation print_help) ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
 
   exit 0
+}
+
+#######################################
+# Prints information this script.
+# Globals:
+#   SCRIPT_NAME
+#   VERSION
+#   CONTRIBUTORS
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+print_version()
+{
+  printf "%s" "\
+${SCRIPT_NAME} v${VERSION}
+
+Copyright (C) ${CONTRIBUTORS} 2019-$(date +%Y)
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+"
+exit 0
 }
 
 #######################################
@@ -1263,7 +1301,7 @@ subscribe()
     done
 
     if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
-      exit_script_on_failure "$(jq -r ".subscribe_failure.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${streamerToSubscribeTo}."
+      exit_script_on_failure "$(get_translation subscribe_failure) ${streamerToSubscribeTo}."
     fi
   fi
 
@@ -1294,13 +1332,13 @@ toggle_colors()
     GREEN="${NC}"
 
     write_setting ".colors" "false"
-    local -r toPrint="$(jq -r ".colors_off.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+    local -r toPrint="$(get_translation colors_off)"
   else
     # "Re-fill" green from empty
     GREEN="$(tput bold && tput setaf 2)"
 
     write_setting ".colors" "true"
-    local -r toPrint="$(jq -r ".colors_on.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+    local -r toPrint="$(get_translation colors_on)"
   fi
 
   printf "\n %b%s.%b\n" "${GREEN}" "${toPrint}" "${NC}"
@@ -1338,7 +1376,7 @@ unsubscribe()
 
   # Check to make sure user is subscribed before unsubscribing
   if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
-    exit_script_on_failure "$(jq -r ".unsubscribe_failure.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${streamerToUnsubscribeFrom}."
+    exit_script_on_failure "$(get_translation unsubscribe_failure) ${streamerToUnsubscribeFrom}."
   fi
 
   # Remove subscription
@@ -1395,16 +1433,16 @@ block()
 [[ -z "${1:-}" ]] && print_help
 
 glob "$1" '[g]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  exit_script_on_failure "$(get_translation flags_no_game)"
 
 glob "$1" '[p]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  exit_script_on_failure "$(get_translation flags_no_player)"
 
 glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  exit_script_on_failure "$(get_translation flags_no_quality)"
 
 glob "$1" '[su]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  exit_script_on_failure "$(get_translation flags_no_streamer)"
 
 case "$1" in
   -h|--help|h*) print_help ;;
@@ -1417,6 +1455,7 @@ case "$1" in
   s*) subscribe "$2" ;;
   u*) unsubscribe "$2" ;;
   b*) block "$@" ;;
+  v*) print_version ;;
   *)
     if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
       stream "$1"
