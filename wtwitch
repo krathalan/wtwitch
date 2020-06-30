@@ -1273,43 +1273,35 @@ stream()
 }
 
 #######################################
-# Subscribes to a specific streamer.
+# Subscribes to streamer(s).
 # Globals:
 #   CONFIG_FILE
 # Arguments:
-#   $1: streamer to subscribe to
+#   $@: streamer(s) to subscribe to
 # Returns:
 #   none
 #######################################
 subscribe()
 {
-  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
+  shift
+  local streamerToSubscribeTo
+  local tmpJson
 
-  local -r streamerToSubscribeTo="$(to_lowercase "$1")"
+  while [[ $# -gt 0 ]]; do
+    streamerToSubscribeTo="$(to_lowercase "$1")"
 
-  # Check to make sure user isn't already subscribed
-  if [[ ${#userSubscriptions[@]} -gt 0 ]]; then
-    local whileCounter=0
-
-    local currentSubscription
-    currentSubscription="${userSubscriptions[${whileCounter}]}"
-
-    while [[ ${whileCounter} -lt ${#userSubscriptions[@]} ]] && [[ "${currentSubscription}" != "${streamerToSubscribeTo}" ]]; do
-      # Refresh data
-      currentSubscription="${userSubscriptions[${whileCounter}]}"
-      whileCounter="$(( whileCounter + 1 ))"
-    done
-
-    if [[ "${currentSubscription}" == "${streamerToSubscribeTo}" ]]; then
+    # Check to make sure user isn't already subscribed
+    glob "$(<"${CONFIG_FILE}")" "*${streamerToSubscribeTo}*" &&
       exit_script_on_failure "$(get_translation subscribe_failure) ${streamerToSubscribeTo}."
-    fi
-  fi
 
-  # Add subscription (can't use write_setting here due to unique jq syntax)
-  local -r tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
-  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
+    # Add subscription (can't use write_setting here due to unique jq syntax)
+    tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
+    printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
-  printf "\n Subscribed to %s.\n" "$1"
+    printf "\n Subscribed to %s.\n" "$1"
+
+    shift
+  done
 
   invalidate_cache
 }
@@ -1348,59 +1340,52 @@ toggle_colors()
 }
 
 #######################################
-# Unsubscribes from a specific streamer.
+# Unsubscribes from streamer(s).
 # Globals:
 #   CONFIG_FILE
 # Arguments:
-#   $1: streamer to unsubscribe from
+#   $@: streamer(s) to unsubscribe from
 # Returns:
 #   none
 #######################################
 unsubscribe()
 {
-  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
+  shift
+  local streamerToUnsubscribeFrom
+  local tmpJson
 
-  local -r streamerToUnsubscribeFrom="$(to_lowercase "$1")"
+  while [[ $# -gt 0 ]]; do
+    streamerToUnsubscribeFrom="$(to_lowercase "$1")"
 
-  # Find index of streamer in .subscriptions[]
-  local whileCounter=0
+    # Check to make sure user is subscribed before unsubscribing
+    glob "$(<"${CONFIG_FILE}")" "*${streamerToUnsubscribeFrom}*" ||
+      exit_script_on_failure "$(get_translation unsubscribe_failure) ${streamerToUnsubscribeFrom}."
 
-  local currentSubscription
-  currentSubscription="$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")"
+    # Remove subscription
+    tmpJson="$(jq "del(.subscriptions[] | select(.streamer == \"${streamerToUnsubscribeFrom}\"))" "${CONFIG_FILE}")"
+    printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
-  while [[ "${currentSubscription}" != "$streamerToUnsubscribeFrom" ]] && [[ "${currentSubscription}" != "null" ]]; do
-    # Refresh data
-    whileCounter="$(( whileCounter + 1 ))"
-    currentSubscription="$(jq -r ".subscriptions[${whileCounter}].streamer" "${CONFIG_FILE}")"
+    printf "\n Unsubscribed from %s.\n" "$1"
+
+    shift
   done
-
-  # Check to make sure user is subscribed before unsubscribing
-  if [[ ! $whileCounter -lt $(jq ".subscriptions | length" "${CONFIG_FILE}") ]]; then
-    exit_script_on_failure "$(get_translation unsubscribe_failure) ${streamerToUnsubscribeFrom}."
-  fi
-
-  # Remove subscription
-  local -r tmpJson="$(jq "del(.subscriptions[${whileCounter}])" "${CONFIG_FILE}")"
-  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
-
-  printf "\n Unsubscribed from %s.\n" "$1"
 
   invalidate_cache
 }
 
 #######################################
-# Blocks a specific streamer.
+# Blocks streamer(s).
 # Globals:
 #   BLOCKLIST_FILE
 # Arguments:
-#   $1: streamer to block
+#   $@: streamer(s) to block
 # Returns:
 #   none
 #######################################
 block()
 {
-  glob "$1" "[b|block]" && shift
-  local streamerToBlock=""
+  shift
+  local streamerToBlock
 
   if [[ $# -gt 0 ]]; then
     while [[ $# -gt 0 ]]; do
@@ -1452,8 +1437,8 @@ case "$1" in
   l*) toggle_colors ;;
   p*) change_player "$2" ;;
   q*) change_quality "$2" ;;
-  s*) subscribe "$2" ;;
-  u*) unsubscribe "$2" ;;
+  s*) subscribe "$@" ;;
+  u*) unsubscribe "$@" ;;
   b*) block "$@" ;;
   v*) print_version ;;
   *)
