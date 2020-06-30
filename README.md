@@ -30,8 +30,6 @@ Table of contents:
                          output. You can block multiple streamers in one command.
 => [v]ersion           - Print the current version of wtwitch.
 => [h]elp              - Print this help.
-
-See man wtwitch for more information.
 ```
 
 ## Install
