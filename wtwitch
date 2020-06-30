@@ -347,7 +347,7 @@ if [[ "${useColors}" == "false" ]]; then
 fi
 
 # Debugging
-if [[ "$*" == *"-d"* ]] || [[ "$*" == *"--debug"* ]]; then
+if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
   # Avoid subshells, print full curl output, and more behavioral changes
   readonly DEBUGGING="on"
   readonly curlFlags="--verbose"
