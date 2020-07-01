@@ -18,7 +18,7 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 *w* _streamer_++
     Watch the specified _streamer_.++
-    e.g. wtwitch w _overwatchleague_
+    e.g. wtwitch *w* _overwatchleague_
 
 *t*, *top*++
     View the top games and streams on Twitch.++
