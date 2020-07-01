@@ -7,10 +7,9 @@
     https://dev.twitch.tv/docs/api/reference/#search-channels
     wtwitch e/category category
     wtwitch n/channels channel
-- Keep track of last time offline subs were seen online
-    Keep last seen date value in .subscriptions[] array in config file
 
-    DONE in dev branch
+===> DONE in dev branch <===
 - Switch options to pash command style
 - Add warning for old command style (e.g. -c/--check)
 - Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
+- Keep track of last time offline subs were seen online
