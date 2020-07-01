@@ -140,11 +140,23 @@ readonly TRANSLATIONS="$(cat <<EOF
     "es": "puede no funcionar correctamente con Streamlink",
     "fr": "peut ne pas fonctionner correctement avec Streamlink"
   },
+  "change_player_success": {
+    "en": "Changed player to",
+    "de": "Changed player to",
+    "es": "Changed player to",
+    "fr": "Changed player to"
+  },
   "change_quality_error": {
     "en": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
     "de": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
     "es": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
     "fr": "n'est pas une qualité acceptable. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, et audio_only sont les qualités acceptables. Vous pouvez spécifier des qualités de repli séparées par des virgules, par exemple : \"720p,480p,worst\""
+  },
+  "change_quality_success": {
+    "en": "Changed quality to",
+    "de": "Changed quality to",
+    "es": "Changed quality to",
+    "fr": "Changed quality to"
   },
   "check_online": {
     "en": "Live channels",
@@ -278,11 +290,23 @@ readonly TRANSLATIONS="$(cat <<EOF
     "es": "You are already subscribed to",
     "fr": "Vous êtes déjà abonné à"
   },
+  "subscribe_success": {
+    "en": "Subscribed to",
+    "de": "Subscribed to",
+    "es": "Subscribed to",
+    "fr": "Subscribed to"
+  },
   "unsubscribe_failure": {
     "en": "You are not subscribed to",
     "de": "You are not subscribed to",
     "es": "You are not subscribed to",
     "fr": "Vous n'êtes pas abonné à"
+  },
+  "unsubscribe_success": {
+    "en": "Unsubscribed from",
+    "de": "Unsubscribed from",
+    "es": "Unsubscribed from",
+    "fr": "Unsubscribed from"
   },
   "colors_off": {
     "en": "Turned colors off",
@@ -325,6 +349,48 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "You aren't subscribed to any channels",
     "es": "You aren't subscribed to any channels",
     "fr": "Vous n'êtes abonné à aucune chaîne"
+  },
+  "twitch_api_limit": {
+    "en": "Twitch API rate limit reached",
+    "de": "Twitch API rate limit reached",
+    "es": "Twitch API rate limit reached",
+    "fr": "Twitch API rate limit reached"
+  },
+  "last_seen": {
+    "en": "last online",
+    "de": "last online",
+    "es": "last online",
+    "fr": "last online"
+  },
+  "removed": {
+    "en": "Removed",
+    "de": "Removed",
+    "es": "Removed",
+    "fr": "Removed"
+  },
+  "added": {
+    "en": "Added",
+    "de": "Added",
+    "es": "Added",
+    "fr": "Added"
+  },
+  "from_blocklist": {
+    "en": "from blocklist",
+    "de": "from blocklist",
+    "es": "from blocklist",
+    "fr": "from blocklist"
+  },
+  "to_blocklist": {
+    "en": "to blocklist",
+    "de": "to blocklist",
+    "es": "to blocklist",
+    "fr": "to blocklist"
+  },
+  "blocklist": {
+    "en": "Blocklist",
+    "de": "Blocklist",
+    "es": "Blocklist",
+    "fr": "Blocklist"
   }
 }
 EOF
@@ -566,7 +632,7 @@ get_game_name()
     # This will happen when tmpJson is null as the result of too many Twitch
     # API queries in a short amount of time
     if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
-      exit_script_on_failure "Twitch API rate limit reached"
+      exit_script_on_failure "$(get_translation twitch_api_limit)"
     fi
 
     # Cache result for future reference
@@ -695,7 +761,7 @@ change_player()
   local passedCheckMarker="false"
 
   # Get localized strings
-  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}, .change_player_success.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   local -r playerName="$(to_lowercase "$1")"
 
@@ -716,7 +782,7 @@ change_player()
   fi
 
   write_setting ".player" "${playerName}"
-  printf "\n Changed player to %s.\n" "$1"
+  printf "\n %s %s.\n" "${localizedStrings[4]}" "$1"
 }
 
 #######################################
@@ -752,7 +818,7 @@ change_quality()
   # Make sure there are an equal number of "true" elements in passedCheckMarkers as there are qualities in specifiedQuality
   if [[ ${#qualityArray[@]} -eq ${#passedCheckMarkerArray[@]} ]]; then
     write_setting ".quality" "${specifiedQuality}"
-    printf "\n Quality changed to %s.\n" "$1"
+    printf "\n %s %s.\n" "$(get_translation change_quality_success)" "$1"
   else
     exit_script_on_failure "${specifiedQuality} $(get_translation change_quality_error)."
   fi
@@ -771,6 +837,7 @@ change_quality()
 #   TWITCH_API_URL
 #   DEBUGGING
 #   CURRENT_TIME_UNIX
+#   LAST_SEEN_TEXT
 #   userPlayer
 #   userQuality
 #   userSubscriptions
@@ -828,14 +895,16 @@ check_twitch_streams()
       # Get data of all online streamers (sans game names)
       local -r allStreamerJson="$(download_file "${initialRequestURL}")"
 
+      # Reduce number of external program calls
+      readonly CURRENT_TIME_UNIX="$(LANG=C date +%s)"
+      readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
+
       # Figure out offline streamers in background
       if [[ "${DEBUGGING}" == "on" ]]; then
         get_offline_streams "${allStreamerJson}"
       else
         get_offline_streams "${allStreamerJson}" &
       fi
-
-      readonly CURRENT_TIME_UNIX="$(LANG=C date +%s)"
 
       # Pass each streamer json data to check_twitch_streams_helper to parse,
       # get game name for, and print
@@ -921,6 +990,7 @@ get_offline_streams()
 #   Colors: NC, GREY
 #   LAST_SEEN_DIRECTORY
 #   CACHE_OFFLINE_TEXT_FILE
+#   LAST_SEEN_TEXT
 # Arguments:
 #   $1: streamer to check
 #   $2: "${allStreamerJson}" to compare with streamer
@@ -933,7 +1003,7 @@ get_offline_streams_helper()
   local -r lastSeenFile="${LAST_SEEN_DIRECTORY}/$1"
 
   if [[ -f "${lastSeenFile}" ]]; then
-    lastSeen=", last online $(date -d "@$(<"${lastSeenFile}")" "+%x")"
+    lastSeen=", ${LAST_SEEN_TEXT} $(date -d "@$(<"${lastSeenFile}")" "+%x")"
   fi
 
   # If the streamer to check is not found in json, then it is offline
@@ -990,6 +1060,7 @@ check_twitch_streams_helper()
 #   TWITCH_API_URL
 #   CACHE_MISC_TEXT_FILE
 #   DEBUGGING
+#   VIEWERS_TEXT
 # Arguments:
 #   $1: game to list top streamers of
 # Returns:
@@ -1026,6 +1097,9 @@ list_streamers_of_game()
   local streamerName=""
   streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
 
+  # Reduce number of external program calls
+  readonly VIEWERS_TEXT="$(get_translation viewers)"
+
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
@@ -1054,6 +1128,7 @@ list_streamers_of_game()
 #   Colors: TURQOISE, NC, ORANGE
 #   TERMINAL_WIDTH
 #   TITLE_CHARACTERS
+#   VIEWERS_TEXT
 # Arguments:
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
@@ -1092,7 +1167,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "$(get_translation viewers)" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "${VIEWERS_TEXT}" "${NC}" >> "$4"
 }
 
 #######################################
@@ -1157,6 +1232,7 @@ list_top()
 #   TWITCH_API_URL
 #   DEBUGGING
 #   CACHE_TOP_STREAMS_TEXT_FILE
+#   VIEWERS_TEXT
 # Arguments:
 #   none
 # Returns:
@@ -1170,6 +1246,9 @@ list_top_streams()
 
   local streamerName=""
   streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")"
+
+  # Reduce number of external program calls
+  readonly VIEWERS_TEXT="$(get_translation viewers)"
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -1266,7 +1345,7 @@ subscribe()
     tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
     printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
 
-    printf "\n Subscribed to %s.\n" "$1"
+    printf "\n %s %s.\n" "$(get_translation subscribe_success)" "$1"
 
     shift
   done
@@ -1340,7 +1419,7 @@ unsubscribe()
     lastSeenFile="${LAST_SEEN_DIRECTORY}/${streamerToUnsubscribeFrom}"
     [[ -f "${lastSeenFile}" ]] && rm -f "${lastSeenFile}"
 
-    printf "\n Unsubscribed from %s.\n" "$1"
+    printf "\n %s %s.\n" "$(get_translation unsubscribe_success)" "$1"
 
     shift
   done
@@ -1359,6 +1438,9 @@ unsubscribe()
 #######################################
 block()
 {
+  # Get localized strings
+  mapfile -t localizedStrings <<< "$(jq -r ".removed.${WTWITCH_LANG}, .added.${WTWITCH_LANG}, .from_blocklist.${WTWITCH_LANG}, .to_blocklist.${WTWITCH_LANG}, .blocklist.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+
   shift
   local streamerToBlock
 
@@ -1369,21 +1451,25 @@ block()
       # If streamer is already blocked, un-block them
       if [[ "${blocklist}" == *"${streamerToBlock}"* ]]; then
         sed -i "/${streamerToBlock}/d" "${BLOCKLIST_FILE}"
-        printf "\n Removed %s from blocklist.\n" "${streamerToBlock}"
+        printf "\n %s %s %s.\n" "${localizedStrings[0]}" "${streamerToBlock}"  "${localizedStrings[2]}"
       else
         printf "%s\n" "${streamerToBlock}" >> "${BLOCKLIST_FILE}"
-        printf "\n Added %s to blocklist.\n" "${streamerToBlock}"
+        printf "\n %s %s %s.\n"  "${localizedStrings[1]}" "${streamerToBlock}"  "${localizedStrings[3]}"
       fi
 
       shift
     done
   else
-    printf "\n Blocklist:\n"
+    printf "\n %s:\n" "${localizedStrings[4]}"
     sed -e 's/^/  /' "${BLOCKLIST_FILE}"
   fi
 
   invalidate_cache
 }
+
+# -----------------------------------------
+# ---------- Informational Texts ----------
+# -----------------------------------------
 
 #######################################
 # Prints information about how to use this script.
