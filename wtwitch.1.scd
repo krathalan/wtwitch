@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*c*|*t*|*l*|*v*|*h*|*(no option)* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*p* _player_|*q* _quality_]
+wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*p* _player_|*q* _quality_]
 
 # DESCRIPTION
 
@@ -16,9 +16,9 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 ## Viewing and browsing streams
 
-*(no option)* _streamer_++
+*w* _streamer_++
     Watch the specified _streamer_.++
-    e.g. wtwitch _overwatchleague_
+    e.g. wtwitch w _overwatchleague_
 
 *t*, *top*++
     View the top games and streams on Twitch.++
