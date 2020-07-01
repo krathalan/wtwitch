@@ -357,10 +357,10 @@ readonly TRANSLATIONS="$(cat <<EOF
     "fr": "Twitch API rate limit reached"
   },
   "last_seen": {
-    "en": "last online",
-    "de": "last online",
-    "es": "last online",
-    "fr": "last online"
+    "en": "last seen online",
+    "de": "last seen online",
+    "es": "last seen online",
+    "fr": "last seen online"
   },
   "removed": {
     "en": "Removed",
@@ -602,7 +602,7 @@ exit_script_on_failure()
 }
 
 #######################################
-# Returns the game name for a specified game ID. 
+# Returns the game name for a specified game ID.
 # Attempts to get game name from cache, but if game
 # ID is not present, retrieves game name from Twitch API.
 # Globals:
@@ -1590,6 +1590,7 @@ case "$1" in
       stream "$2" &> /dev/null &
     fi
   ;;
+  *) print_help ;;
 esac
 
 printf "%b" "${NC}" && exit 0
