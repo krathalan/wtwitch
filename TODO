@@ -1,7 +1,7 @@
-- Allow browsing more than one page of -t/-g results
+- Allow browsing more than one page of t/g results
     https://dev.twitch.tv/docs/api/reference/#get-games
-    e.g. wtwitch g overwatch p2, wtwitch g overwatch p3
-    Using wtwitch g without a "p[1-9]" should reset pagination value
+    e.g. wtwitch g overwatch next
+    Using wtwitch g without a "next" should reset pagination value
 - Add ability to search games and channels
     https://dev.twitch.tv/docs/api/reference/#search-categories
     https://dev.twitch.tv/docs/api/reference/#search-channels
