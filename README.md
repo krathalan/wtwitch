@@ -18,7 +18,7 @@ Examples: `wtwitch emongg`, `wtwitch s emongg`, `wtwitch c`.
 ```
 COMMANDS
 
-=> (no command) [name] - Watch [name] streamer.
+=> [w]atch [name]      - Watch [name] streamer.
 => [s]ub [name(s)]     - Subscribe to [name] streamer.
                          You can subscribe to multiple streamers in one command.
 => [u]nsub [name(s)]   - Unsubscribe from [name] streamer.
