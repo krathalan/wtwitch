@@ -6,13 +6,13 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*(no option)* _streamer_|*-t*|*-g* _game_|*-b* _streamer_|*-s* _streamer_|*-u* _streamer_|*-c*|*-p* _player_|*-q* _quality_|*-l*|*-d*|*-v*]
+wtwitch [*c*|*t*|*l*|*v*|*h*|*(no option)* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*p* _player_|*q* _quality_]
 
 # DESCRIPTION
 
 Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account, and without loading or executing Twitch's proprietary JavaScript.
 
-# OPTIONS
+# COMMANDS
 
 ## Viewing and browsing streams
 
@@ -20,71 +20,81 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     Watch the specified _streamer_.++
     e.g. wtwitch _overwatchleague_
 
-*-t*, *--top*++
+*t*, *top*++
     View the top games and streams on Twitch.++
-    e.g. wtwitch *-t*
+    e.g. wtwitch *t*
 
-*-g* _game_, *--get-streamers=*_game_++
+*g* _game_, *game* _game_++
     View the top streamers for a specified _game_. Game names with spaces must be quoted, or the spaces must be escaped with \\.++
-    e.g. wtwitch *-g* _"world of warcraft"_++
-    e.g. wtwitch *-g* _world\\ of\\ warcraft_
+    e.g. wtwitch *g* _"world of warcraft"_++
+    e.g. wtwitch *g* _world\\ of\\ warcraft_
 
-*-b* streamer, *--block=*_streamer_++
+*b* _streamer_, *block* _streamer_++
     Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *-b* without specifying a streamer to show your blocklist.++
-    e.g. wtwitch *-b* _overwatchleague_++
-    e.g. wtwitch *-b*
+    You can block or unblock multiple streamers at once, by separating them with a space.++
+    e.g. wtwitch *b* _overwatchleague_ _emongg_ _sleepy_++
+    e.g. wtwitch *b* _overwatchleague_++
+    e.g. wtwitch *b*
 
 ## Subscriptions
 
-*-s* _streamer_, *--subscribe=*_streamer_++
+*s* _streamer_, *sub* _streamer_++
     Subscribe to a specific _streamer_.++
-    e.g. wtwitch *-s* _overwatchleague_
+    You can subscribe to multiple streamers at once, by separating them with a space.++
+    e.g. wtwitch *s* _overwatchleague_++
+    e.g. wtwitch *s* _overwatchleague_ _emongg_ _sleepy_
 
-*-u* _streamer_, *--unsubscribe=*_streamer_++
+*u* _streamer_, *unsub* _streamer_++
     Unsubscribe from a specified _streamer_.++
-    e.g. wtwitch *-u* _overwatchleague_
+    You can unsubscribe from multiple streamers at once, by separating them with a space.++
+    e.g. wtwitch *u* _overwatchleague_++
+    e.g. wtwitch *u* _overwatchleague_ _emongg_ _sleepy_
 
-*-c*, *--check*++
+*c*, *check*++
     View your player/quality settings and the status of the streamers you are subscribed to.++
-    e.g. wtwitch *-c*
+    e.g. wtwitch *c*
 
 ## Configuration options
 
-*-p* _player_, *--change-player=*_player_++
+*p* _player_, *player* _player_++
     Change the default _player_ that gets passed to Streamlink.++
-    e.g. wtwitch *-p* _vlc_
+    e.g. wtwitch *p* _vlc_
 
-*-q* _quality_, *--change-quality=*_quality_++
+*q* _quality_, *quality* _quality_++
     Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma.++
-    e.g. wtwitch *-q* _720p60,720p,best_
+    e.g. wtwitch *q* _720p60,720p,best_
 
-*-l*, *--toggle-colors*++
-    Toggle the usage of colors in wtwitch output.++
-    e.g. wtwitch *-l*
+*l*
+	Toggle the usage of colors in wtwitch output.++
+    e.g. wtwitch *l*
 
 ## Miscellaneous
 
-*-v*, *--version*++
+*h*, *help*++
+    Print a short usage guide.++
+    e.g. wtwitch *h*
+
+*v*, *version*++
     Print the version of wtwitch.++
-    e.g. wtwitch *-v*
+    e.g. wtwitch *v*
 
 ## Debugging
 
-Start wtwitch with the environment variable WTWITCH_DEBUG=on set. You should also redirect all output to a _log file_. You can run it in a one-off command by prefixing your wtwitch command (e.g. wtwitch -c) with WTWITCH_DEBUG=on, like so:
+To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a _log file_. You can run wtwitch in debug mode in a one-off command like so:
 
-WTWITCH_DEBUG=on wtwitch -c _&> debug.log_
+WTWITCH_DEBUG=on wtwitch [command] _&> debug.log_
 
 # DEFAULT BEHAVIOR
 
 ## Player
 
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland, and the author of this program has also written an AppArmor profile for mpv (https://git.sr.ht/~krathalan/apparmor-profiles). Mpv also supports custom window titles, like "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and custom window titles, such as "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
 
-You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *-p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
+You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
 ## Quality
 
-Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch *-q* _quality_. You can pass any quality you'd pass to Streamlink, even fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
+Wtwitch tells Streamlink to choose the "best" quality by default. You can set which quality you'd like wtwitch to pass to Streamlink with wtwitch *q* _quality_. You can pass any quality you'd pass to Streamlink, including fallback qualities (like "720p,480p,worst"), and wtwitch will make sure your input is valid.
 
 ## Ads
 
@@ -92,15 +102,15 @@ Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer
 
 ## Caching
 
-To reduce strain on the Twitch API, the output of wtwitch *-c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or block a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *-c*.
+To reduce strain on the Twitch API, the output of wtwitch *c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or block a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *c*.
 
 For the same reason, every game ID/game name pair fetched from the Twitch API is also stored in the cache directory. However, this cache file does not expire.
 
 # FILES
 
-Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME and $XDG_CACHE_HOME are their default values (~/.config and ~/.cache respectively), the configuration file and blocklist file is at ~/.config/wtwitch/config.json and cache files are kept in ~/.cache/wtwitch.
+Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME and $XDG_CACHE_HOME are their default values (~/.config and ~/.cache respectively), the configuration and blocklist files are at ~/.config/wtwitch/config.json, and cache files are kept in ~/.cache/wtwitch.
 
-You should never need to edit these files manually; you should use the options listed under *OPTIONS* above.
+You should never need to edit these files manually; you should use the commands listed under *COMMANDS* above.
 
 # SYNCING SUBSCRIPTIONS
 
@@ -120,7 +130,15 @@ pacman -Qc wtwitch
 
 # LANGUAGES
 
-Wtwitch fully supports English and has nearly-complete support for German/Deutsch and Spanish/Español. User-contributed translations are welcome!
+Full support:++
+    English++
+    French/Français
+
+Partial support:++
+    German/Deutsch++
+    Spanish/Español
+
+User-contributed translations are welcome!
 
 # BUGS
 
