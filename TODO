@@ -19,6 +19,5 @@
     https://dev.twitch.tv/docs/api/reference/#search-channels
     wtwitch e/category category
     wtwitch n/channels channel
-- Allow subscribing/unsubscribing to more than 1 channel at a time
 - Keep track of last time offline subs were seen online
     Keep last seen date value in .subscriptions[] array in config file
