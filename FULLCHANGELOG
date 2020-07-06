@@ -133,3 +133,7 @@
       being made)
     Speed improvements for -c/--check
     Small man page improvements
+
+1.7.1 (July 6, 2020)
+    Fixed issue #5 where user settings may be read incorrectly
+      https://todo.sr.ht/~krathalan/wtwitch/5
