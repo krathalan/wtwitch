@@ -17,29 +17,6 @@ readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux"
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# This file incorporates work from https://github.com/dylanaraps/pash,
-# covered by the following copyright and permission notice:
-#
-#     Copyright (c) 2016-2019, Dylan Araps
-#
-#     Permission is hereby granted, free of charge, to any person obtaining a copy
-#     of this software and associated documentation files (the "Software"), to deal
-#     in the Software without restriction, including without limitation the rights
-#     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#     copies of the Software, and to permit persons to whom the Software is
-#     furnished to do so, subject to the following conditions:
-#
-#     The above copyright notice and this permission notice shall be included in all
-#     copies or substantial portions of the Software.
-#
-#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#     SOFTWARE.
 
 # -----------------------------------------
 # -------------- Guidelines ---------------
@@ -591,24 +568,6 @@ get_game_name()
   fi
 
   printf "%s" "${gameName}"
-}
-
-#######################################
-# This is a simple wrapper around a case statement to allow
-# for simple string comparisons against globs.
-# Copyright (C) 2016-2019 Dylan Araps
-# Globals:
-#   none
-# Arguments:
-#   $1: string to check against glob
-#   $2: glob
-# Returns:
-#   true or false
-#######################################
-glob() {
-  # Disable this warning as it is the intended behavior.
-  # shellcheck disable=2254
-  case $1 in $2) return 0; esac; return 1
 }
 
 #######################################
@@ -1177,8 +1136,6 @@ list_top_streams()
 print_help()
 {
   man wtwitch || exit_script_on_failure "$(jq -r ".print_help.${WTWITCH_LANG}" <<< "${TRANSLATIONS}") ${PROJECT_URL}/tree/${VERSION}/wtwitch.1.scd"
-
-  exit 0
 }
 
 #######################################
@@ -1361,27 +1318,15 @@ unsubscribe()
 #######################################
 block()
 {
-  glob "$1" "[b|block]" && shift
-  local streamerToBlock=""
+  local -r streamerToBlock="$(to_lowercase "$1")"
 
-  if [[ $# -gt 0 ]]; then
-    while [[ $# -gt 0 ]]; do
-      streamerToBlock="$(to_lowercase "$1")"
-
-      # If streamer is already blocked, un-block them
-      if [[ "${blocklist}" == *"${streamerToBlock}"* ]]; then
-        sed -i "/${streamerToBlock}/d" "${BLOCKLIST_FILE}"
-        printf "\n Removed %s from blocklist.\n" "${streamerToBlock}"
-      else
-        printf "%s\n" "${streamerToBlock}" >> "${BLOCKLIST_FILE}"
-        printf "\n Added %s to blocklist.\n" "${streamerToBlock}"
-      fi
-
-      shift
-    done
+  # If streamer is already blocked, un-block them
+  if [[ "${blocklist}" == *"${streamerToBlock}"* ]]; then
+    sed -i "/${streamerToBlock}/d" "${BLOCKLIST_FILE}"
+    printf "\n Removed %s from blocklist.\n" "${streamerToBlock}"
   else
-    printf "\n Blocklist:\n"
-    sed -e 's/^/  /' "${BLOCKLIST_FILE}"
+    printf "%s\n" "${streamerToBlock}" >> "${BLOCKLIST_FILE}"
+    printf "\n Added %s to blocklist.\n" "${streamerToBlock}"
   fi
 
   invalidate_cache
@@ -1391,39 +1336,137 @@ block()
 # ---------- Parse user options -----------
 # -----------------------------------------
 
-# Check user input
-[[ -z "${1:-}" ]] && print_help
+if [[ $# -eq 0 ]]; then
+  print_help
+fi
 
-glob "$1" '[g]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+# Parse flags. From:
+# https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash/7069755#7069755
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      print_help
+      break
+      ;;
+    -c|--check)
+      check_twitch_streams
+      break
+      ;;
+    -g)
+      shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
 
-glob "$1" '[p]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+      list_streamers_of_game "$1"
+      break
+      ;;
+    --get-streamers*)
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_game.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
 
-glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+      list_streamers_of_game "$(extract_argument "$1")"
+      break
+      ;;
+    -l|--toggle-colors)
+      toggle_colors
+      break
+      ;;
+    -p)
+      shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
 
-glob "$1" '[su]*' && [[ -z "${2:-}" ]] &&
-  exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+      change_player "$1"
+      break
+      ;;
+    --change-player*)
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_player.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
 
-case "$1" in
-  -h|--help|h*) print_help ;;
-  c*) check_twitch_streams ;;
-  g*) list_streamers_of_game "$2" ;;
-  t*) list_top ;;
-  l*) toggle_colors ;;
-  p*) change_player "$2" ;;
-  q*) change_quality "$2" ;;
-  s*) subscribe "$2" ;;
-  u*) unsubscribe "$2" ;;
-  b*) block "$@" ;;
-  *)
-    if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
-      stream "$1"
-    else
-      stream "$1" &> /dev/null &
-    fi
-  ;;
-esac
+      change_player "$(extract_argument "$1")"
+      break
+      ;;
+    -q)
+      shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$1"
+      break
+      ;;
+    --change-quality*)
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_quality.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      change_quality "$(extract_argument "$1")"
+      break
+      ;;
+    -s)
+      shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$1"
+      break
+      ;;
+    --subscribe*)
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      subscribe "$(extract_argument "$1")"
+      break
+      ;;
+    -t|--top)
+      list_top
+      break
+      ;;
+    -u)
+      shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$1"
+      break
+      ;;
+    --unsubscribe*)
+      [[ $# -gt 1 ]] && shift
+      [[ ! $# -gt 0 ]] && exit_script_on_failure "$(jq -r ".flags_no_streamer.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")."
+
+      unsubscribe "$(extract_argument "$1")"
+      break
+      ;;
+    -b)
+      shift
+      if [[ $# -gt 0 ]]; then
+        block "$1"
+      else
+        printf "\n Blocklist:\n"
+        sed -e 's/^/  /' "${BLOCKLIST_FILE}"
+      fi
+      break
+      ;;
+    --block*)
+      [[ $# -gt 1 ]] && shift
+      if [[ $# -gt 0 ]]; then
+        block "$(extract_argument "$1")"
+      else
+        printf "\n Blocklist:\n"
+        sed -e 's/^/  /' "${BLOCKLIST_FILE}"
+      fi
+      break
+      ;;
+    -v|--version)
+      printf "wtwitch v%s\n" "${VERSION}"
+      printf "Copyright (C) %s 2019-%s\n" "${CONTRIBUTORS}" "$(date +%Y)"
+      printf "This is free software: you are free to change and redistribute it.\n"
+      printf "There is NO WARRANTY, to the extent permitted by law.\n"
+      break
+      ;;
+    *)
+      # If quality="audio_only" OR debugging, do not open streamlink as a background process
+      if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
+        stream "$1"
+      else
+        stream "$1" &> /dev/null &
+      fi
+      break
+      ;;
+  esac
+done
 
 printf "%b" "${NC}" && exit 0
