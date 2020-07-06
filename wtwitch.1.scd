@@ -64,15 +64,13 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 ## Miscellaneous
 
+*-d*, *--debug*++
+    Run the program in debug mode, avoiding subshells and printing each command processed. The debug flag must come after the command you are trying to take a log of. You should also probably redirect all output to a _log file_:++
+    e.g. wtwitch -c *-d* _&> debug.log_
+
 *-v*, *--version*++
     Print the version of wtwitch.++
     e.g. wtwitch *-v*
-
-## Debugging
-
-Start wtwitch with the environment variable WTWITCH_DEBUG=on set. You should also redirect all output to a _log file_. You can run it in a one-off command by prefixing your wtwitch command (e.g. wtwitch -c) with WTWITCH_DEBUG=on, like so:
-
-WTWITCH_DEBUG=on wtwitch -c _&> debug.log_
 
 # DEFAULT BEHAVIOR
 
