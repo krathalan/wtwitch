@@ -4,8 +4,6 @@ packages:
   - dash
   - jq
   - mpv
-sources:
-  - https://git.sr.ht/~krathalan/wtwitch#dev
 tasks:
   - test: |
       export LANG="en_US.UTF-8"
