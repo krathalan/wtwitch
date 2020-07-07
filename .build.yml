@@ -5,7 +5,13 @@ packages:
   - jq
   - mpv
 tasks:
-  - test: |
+  - scdoc-test: |
+      cd wtwitch
+      scdoc < wtwitch.1.scd > wtwitch.1
+  - shellcheck-test: |
+      cd wtwitch
+      shellcheck wtwitch
+  - script-test: |
       export LANG="en_US.UTF-8"
       cd wtwitch
       dash test.sh
