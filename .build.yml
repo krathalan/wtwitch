@@ -4,6 +4,8 @@ packages:
   - dash
   - jq
   - mpv
+  - scdoc
+  - shellcheck
 tasks:
   - scdoc-test: |
       cd wtwitch
