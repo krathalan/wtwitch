@@ -1,6 +1,6 @@
 # wtwitch
 
-[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?)
+Build status: [![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?)
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
