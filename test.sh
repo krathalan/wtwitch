@@ -85,6 +85,7 @@ compare_output()
     print_success "$2"
   else
     print_failure "$2"
+    exit 1
   fi
 }
 
@@ -192,7 +193,7 @@ printf "\n%s. Testing change quality functionality...\n" "${stepWithColor}"
 
 testName="Change quality"
 bash wtwitch q 1080p60,720p,best 2>&1 | tee "${TMP_DIR_FILE}"
-compare_output "change_quality_success" "${testName}"
+compare_output "change_quality_failure" "${testName}"
 
 testName="Change quality (invalid quality)"
 bash wtwitch q 1080p,490p 2>&1 | tee "${TMP_DIR_FILE}"
