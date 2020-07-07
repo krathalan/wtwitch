@@ -391,6 +391,24 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "Blocklist",
     "es": "Blocklist",
     "fr": "Blocklist"
+  },
+  "api_token_fetch_failure": {
+    "en": "Failed to fetch API token",
+    "de": "Failed to fetch API token",
+    "es": "Failed to fetch API token",
+    "fr": "Failed to fetch API token"
+  },
+  "info_fetch_failure": {
+    "en": "Failed to fetch information from the Twitch API",
+    "de": "Failed to fetch information from the Twitch API",
+    "es": "Failed to fetch information from the Twitch API",
+    "fr": "Failed to fetch information from the Twitch API"
+  },
+  "check_internet": {
+    "en": "Check your internet connection and try again",
+    "de": "Check your internet connection and try again",
+    "es": "Check your internet connection and try again",
+    "fr": "Check your internet connection and try again"
   }
 }
 EOF
@@ -415,8 +433,12 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
 fi
 
 # Load settings
-read -r apiToken apiTokenExpiry useColors userPlayer userQuality \
-<<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}" | tr "\n" " ")"
+mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}")"
+apiToken="${userSettings[0]}"
+apiTokenExpiry="${userSettings[1]}"
+useColors="${userSettings[2]}"
+userPlayer="${userSettings[3]}"
+userQuality="${userSettings[4]}"
 readonly blocklist="$(<"${BLOCKLIST_FILE}")"
 
 # Deactivate colors if useColors is false
@@ -526,6 +548,10 @@ download_token()
 
   local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
 
+  if [[ -z "${newToken}" ]] || [[ "${newToken}" == "null" ]]; then
+    exit_script_on_failure "$(get_translation api_token_fetch_failure). $(get_translation check_internet)"
+  fi
+
   # Update in-memory api token
   apiToken="${newToken}"
 
@@ -535,8 +561,9 @@ download_token()
 }
 
 # If the API token is null (e.g. there is no token),
+# If the API token is empty,
 # OR if API token is expired
-if [[ "${apiToken}" == "null" ]] || [[ "$(LANG=C date +%s)" -gt "${apiTokenExpiry}" ]]; then
+if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || [[ "$(LANG=C date +%s)" -gt "${apiTokenExpiry}" ]]; then
   download_token
 fi
 
@@ -912,6 +939,10 @@ check_twitch_streams()
 
       local streamerToProcess=""
       streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+
+      # If streamer data is empty (e.g. wtwitch user is offline), exit
+      [[ -z "${streamerToProcess}" ]] &&
+        exit_script_on_failure "$(get_translation info_fetch_failure). $(get_translation check_internet)"
 
       # Don't use subshells when debugging is on
       # Code is duplicated here because testing if DEBUGGING=on every iteration
