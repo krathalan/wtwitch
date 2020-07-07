@@ -1,5 +1,7 @@
 # wtwitch
 
+[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?)
+
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
 ![Screenshot](https://i.imgur.com/nAWbrEg.jpg)
@@ -13,7 +15,11 @@ Table of contents:
 
 ## Usage
 
-Examples: `wtwitch emongg`, `wtwitch s emongg`, `wtwitch c`.
+Examples:
+
+- Watch emongg: `wtwitch w emongg`
+- Subscribe to emongg: `wtwitch s emongg`
+- Check status of subscriptions: `wtwitch c`
 
 ```
 COMMANDS
