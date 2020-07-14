@@ -68,6 +68,7 @@ readonly VERSION="1.7"
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${XDG_CACHE_HOME:-${HOME}/.cache}/${SCRIPT_NAME}"
+readonly LAST_SEEN_DIRECTORY="${CACHE_FILE_DIRECTORY}/lastSeen"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
 
@@ -81,7 +82,6 @@ readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
-readonly LAST_SEEN_DIRECTORY="${CONFIG_FILE_DIRECTORY}/lastSeen"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly BLOCKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blocklist"
 
@@ -419,8 +419,8 @@ EOF
 # -----------------------------------------
 
 # Check files -- create cache/config directories and required files
-# Creating LAST_SEEN_DIRECTORY also creates CONFIG_FILE_DIRECTORY
-mkdir -p "${LAST_SEEN_DIRECTORY}" "${CACHE_FILE_DIRECTORY}"
+# Creating LAST_SEEN_DIRECTORY also creates CACHE_FILE_DIRECTORY
+mkdir -p "${LAST_SEEN_DIRECTORY}" "${CONFIG_FILE_DIRECTORY}"
 touch "${BLOCKLIST_FILE}"
 
 if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
