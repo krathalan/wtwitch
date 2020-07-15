@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 1.7"]
+wtwitch(1) ["Version 2.0.0"]
 
 # NAME
 
@@ -6,19 +6,19 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*p* _player_|*q* _quality_]
+wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*e* _term_|*n* _term_|*p* _player_|*q* _quality_]
 
 # DESCRIPTION
 
-Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account, and without loading or executing Twitch's proprietary JavaScript.
+Wtwitch is a terminal program that uses the Twitch API and the streamlink package to provide Twitch browsing, subscription, and playback functionality without signing up for a Twitch account and without loading or executing Twitch's proprietary JavaScript.
 
 # COMMANDS
 
 ## Viewing and browsing streams
 
-*w* _streamer_++
+*w* _streamer_, *watch* _streamer_++
     Watch the specified _streamer_.++
-    e.g. wtwitch *w* _overwatchleague_
+    e.g. wtwitch *w* _dratnos_
 
 *t*, *top*++
     View the top games and streams on Twitch.++
@@ -29,11 +29,19 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     e.g. wtwitch *g* _"world of warcraft"_++
     e.g. wtwitch *g* _world\\ of\\ warcraft_
 
+*e* _search-term_++
+    Search games and categories for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
+    e.g. wtwitch *e* _warcraft_
+
+*n* _search-term_++
+    Search streamers and channels for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
+    e.g. wtwitch *n* _warcraft_
+
 *b* _streamer_, *block* _streamer_++
-    Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *-b* without specifying a streamer to show your blocklist.++
+    Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *b* without specifying a streamer to show your blocklist.++
     You can block or unblock multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *b* _overwatchleague_ _emongg_ _sleepy_++
-    e.g. wtwitch *b* _overwatchleague_++
+    e.g. wtwitch *b* _dratnos_++
+    e.g. wtwitch *b* _dratnos_ _emongg_ _sleepy_++
     e.g. wtwitch *b*
 
 ## Subscriptions
@@ -41,14 +49,14 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 *s* _streamer_, *sub* _streamer_++
     Subscribe to a specific _streamer_.++
     You can subscribe to multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *s* _overwatchleague_++
-    e.g. wtwitch *s* _overwatchleague_ _emongg_ _sleepy_
+    e.g. wtwitch *s* _dratnos_++
+    e.g. wtwitch *s* _dratnos_ _emongg_ _sleepy_
 
 *u* _streamer_, *unsub* _streamer_++
     Unsubscribe from a specified _streamer_.++
     You can unsubscribe from multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *u* _overwatchleague_++
-    e.g. wtwitch *u* _overwatchleague_ _emongg_ _sleepy_
+    e.g. wtwitch *u* _dratnos_++
+    e.g. wtwitch *u* _dratnos_ _emongg_ _sleepy_
 
 *c*, *check*++
     View your player/quality settings and the status of the streamers you are subscribed to.++
@@ -78,17 +86,11 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
     Print the version of wtwitch.++
     e.g. wtwitch *v*
 
-## Debugging
-
-To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a _log file_. You can run wtwitch in debug mode in a one-off command like so:
-
-WTWITCH_DEBUG=on wtwitch [command] _&> debug.log_
-
 # DEFAULT BEHAVIOR
 
 ## Player
 
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and custom window titles, such as "Watching overwatchleague on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and custom window titles, such as "Watching dratnos on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
 
 You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
 
@@ -99,12 +101,6 @@ Wtwitch tells Streamlink to choose the "best" quality by default. You can set wh
 ## Ads
 
 Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as Twitch takes 50% of the subscription fee.
-
-## Caching
-
-To reduce strain on the Twitch API, the output of wtwitch *c* is kept in the cache directory. The cached response stays valid for up to 60 seconds or until you subscribe to, unsubscribe from, or block a streamer. The last cache update time is stored in the configuration file. If you really want to refresh the cache, simply delete the cache directory before invoking wtwitch *c*.
-
-For the same reason, every game ID/game name pair fetched from the Twitch API is also stored in the cache directory. However, this cache file does not expire.
 
 # FILES
 
@@ -142,9 +138,14 @@ User-contributed translations are welcome!
 
 # BUGS
 
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
-
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch++
 Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
+
+If you are reporting a bug, please attach a debug log.
+
+To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a _log file_. You can run wtwitch in debug mode in a one-off command like so:
+
+WTWITCH_DEBUG=on wtwitch [command] _&> debug.log_
 
 # LICENSES
 
