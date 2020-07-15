@@ -60,7 +60,7 @@ You have a few options:
 
 2. Use a different distribution which provides a more up-to-date Streamlink
 
-3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html):
+3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html#linux-and-bsd):
 
 ```
 $ sudo add-apt-repository ppa:nilarimogard/webupd8
