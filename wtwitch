@@ -340,6 +340,12 @@ readonly TRANSLATIONS="$(cat <<EOF
     "es": "No se especifica ningún canal",
     "fr": "Pas de chaîne spécifiée"
   },
+  "flags_no_search_term": {
+    "en": "No search term specified",
+    "de": "No search term specified",
+    "es": "No search term specified",
+    "fr": "No search term specified"
+  },
   "no_subs": {
     "en": "You aren't subscribed to any channels",
     "de": "You aren't subscribed to any channels",
@@ -411,6 +417,12 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "Search results",
     "es": "Search results",
     "fr": "Search results"
+  },
+  "no_results": {
+    "en": "No results",
+    "de": "No results",
+    "es": "No results",
+    "fr": "No results"
   }
 }
 EOF
@@ -483,10 +495,10 @@ else
   readonly curlFlags="--silent"
 fi
 
-# Why is TITLE_CHARACTERS=11? Because that's how many characters will always
-# be present in a printed line; ergo they must be subtracted from the total
+# Why is TITLE_CHARACTERS=1? Because a ":" character will always
+# be present in a printed line; ergo it must be subtracted from the total
 # terminal width to get the effective maximum stream title length.
-TITLE_CHARACTERS=11
+TITLE_CHARACTERS=1
 
 # Add language-specific ".viewer" character count to TITLE_CHARACTERS
 case "${WTWITCH_LANG}" in
@@ -1105,8 +1117,7 @@ check_twitch_streams_helper()
   # Get streamer-set stream name
   # Truncate stream name if necessary; some streamers have stream titles longer
   # than the terminal width and cause ugly output
-  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} + 7))"
-
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#streamGame} - ${#streamerData[0]} - 2 ))"
   local streamName="${streamerData[2]:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
@@ -1180,11 +1191,8 @@ list_streamers_of_game()
 
   wait
 
-  if [[ -f "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" ]]; then
-    cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
-  else
-    printf " %s %s.\n" "${localizedStrings[1]}" "$1"
-  fi
+  cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null || \
+  printf " %s %s.\n" "${localizedStrings[1]}" "$1"
 }
 
 #######################################
@@ -1216,23 +1224,35 @@ print_stream_info()
   # Get streamer-set stream name
   local streamName=""
 
+  # Format additional information (game name and viewers)
   # Add game name to final string if $5 is present
-  local additionalText=""
   if [[ -n "${5:-}" ]]; then
-    additionalText="$(get_game_name "${streamerData[1]}"), "
+    local -r gameNameText="$(get_game_name "${streamerData[1]}")"
+  fi
+
+  # If game name and viewer # are present, format (game name, viewer# viewers)
+  # Else if viewer # is present, format (viewer# viewers)
+  # Else don't print anything
+  if [[ "${gameNameText:-null}" != "null" ]] && \
+  [[ "${streamerData[0]:-null}" != "null" ]]; then
+    local -r additionalText="(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
+  elif [[ "${streamerData[0]:-null}" != "null" ]]; then
+    local -r additionalText="(${streamerData[0]} ${VIEWERS_TEXT})"
+  else
+    local -r additionalText=""
   fi
 
   # Truncate stream name if necessary; some streamers have stream titles longer
   # than the terminal width and cause ugly output
-  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} - ${#streamerData[0]} ))"
-
-  local streamName="${streamerData[2]:0:${maxTitleLength}}"
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} ))"
+  local streamName="${streamerData[2]:-}"
+  local streamName="${streamName:0:${maxTitleLength}}"
 
   if [[ "${#streamName}" == "${maxTitleLength}" ]]; then
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b(%s%s %s)%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${streamerData[0]}" "${VIEWERS_TEXT}" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b%s%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${NC}" >> "$4"
 }
 
 #######################################
@@ -1366,11 +1386,46 @@ search_categories()
 
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
-  local -r categoriesJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}")"
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}")"
 
-  print_game_info "${categoriesJson}" "${TMP_SEARCH_TEXT_FILE}"
+  print_game_info "${searchJson}" "${TMP_SEARCH_TEXT_FILE}"
 
-  cat "${TMP_SEARCH_TEXT_FILE}"
+  cat "${TMP_SEARCH_TEXT_FILE}" 2> /dev/null || printf " %s.\n" "$(get_translation no_results)"
+}
+
+search_channels()
+{
+  make_tmp
+  readonly TMP_SEARCH_TEXT_FILE="${TMP_DIR}/search.txt"
+
+  printf "\n %s:\n" "$(get_translation search_results)"
+
+  # Replace spaces in search term with %20 for URL
+  local -r searchTerm=${1// /%20}
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/channels?query=${searchTerm}")"
+
+  local whileCounter=0
+
+  local channelName=""
+  channelName="$(jq -r ".data[${whileCounter}].display_name" <<< "${searchJson}")"
+
+  # Reduce number of external program calls
+  readonly VIEWERS_TEXT="$(get_translation viewers)"
+
+  while [[ "${channelName}" != "null" ]]; do
+    # Don't use subshells when debugging is on
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}"
+    else
+      print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}" &
+    fi
+
+    # Refresh data
+    whileCounter="$(( whileCounter + 1 ))"
+    channelName="$(jq -r ".data[${whileCounter}].display_name" <<< "${searchJson}")"
+  done
+
+  cat "${TMP_SEARCH_TEXT_FILE}" 2> /dev/null || printf " %s.\n" "$(get_translation no_results)"
 }
 
 #######################################
@@ -1601,6 +1656,7 @@ ${SCRIPT_NAME} - terminal user interface for Twitch
 => [c]heck             - View your settings and the status of streamers you are
                          subscribed to.
 => [e] [search-term]   - Search games/categories for [search-term].
+=> [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
 => [l]                 - Toggle the usage of colors in wtwitch output.
@@ -1667,8 +1723,11 @@ Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##
 glob "$1" '[-]*' &&
   print_new_usage "$1"
 
-glob "$1" '[ge]*' && [[ -z "${2:-}" ]] &&
+glob "$1" '[g]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_game)"
+
+glob "$1" '[en]*' && [[ -z "${2:-}" ]] &&
+  exit_script_on_failure "$(get_translation flags_no_search_term)"
 
 glob "$1" '[p]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_player)"
@@ -1688,6 +1747,7 @@ case "$1" in
   l*) toggle_colors ;;
   p*) change_player "$2" ;;
   q*) change_quality "$2" ;;
+  n*) search_channels "$2" ;;
   s*) subscribe "$@" ;;
   u*) unsubscribe "$@" ;;
   b*) block "$@" ;;
