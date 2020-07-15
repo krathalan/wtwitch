@@ -97,7 +97,7 @@ To start wtwitch in debug mode, set the environment variable `WTWITCH_DEBUG=on`.
 `WTWITCH_DEBUG=on wtwitch [command] &> debug.log`
 
 ## Contributions
-All contributions are welcome. Please try to adhere to the Google Shell Style Guide (https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at Dylan's Pure Bash Bible (https://github.com/dylanaraps/pure-bash-bible) before using an external program.
+All contributions are welcome. Please try to adhere to the [Google Shell Style Guide](https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at [Dylan's Pure Bash Bible](https://github.com/dylanaraps/pure-bash-bible) before using an external program.
 
 Most needed are translations for languages other than English. No coding knowledge is necessary to submit translations. Anyone can contribute translations in any format they wish, and I will incorporate them into the program.
 
@@ -111,7 +111,7 @@ Since wtwitch is a terminal program, it can be run in any terminal emulator that
 
 When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with both -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~300 MB for Streamlink Twitch GUI.
 
-Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
+Using [`cloc`](https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
 
 > `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/`
 
