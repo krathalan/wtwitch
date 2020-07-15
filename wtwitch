@@ -53,6 +53,7 @@ readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux"
 
 # Many functions in this script spawn subshell processes
 trap "clean_up && kill 0" SIGINT
+trap "clean_up_tmp" EXIT
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuo pipefail
@@ -71,11 +72,6 @@ readonly CACHE_FILE_DIRECTORY="${XDG_CACHE_HOME:-${HOME}/.cache}/${SCRIPT_NAME}"
 readonly LAST_SEEN_DIRECTORY="${CACHE_FILE_DIRECTORY}/lastSeen"
 readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
 readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
-
-# Used by list_streamers_of_game() and list_top()
-readonly CACHE_MISC_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_misc.txt"
-# Used exclusively by list_top()
-readonly CACHE_TOP_STREAMS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_top_streamers.txt"
 
 # Used to reduce strain on Twitch API; see get_game_name()
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
@@ -586,7 +582,14 @@ fi
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}" "${CACHE_MISC_TEXT_FILE}" "${CACHE_TOP_STREAMS_TEXT_FILE}"
+  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
+
+  clean_up_tmp
+}
+
+clean_up_tmp()
+{
+  [[ -d "${TMP_DIR}" ]] && rm -rf "${TMP_DIR}"
 }
 
 #######################################
@@ -702,6 +705,20 @@ glob()
   # Disable this warning as it is the intended behavior.
   # shellcheck disable=2254
   case $1 in $2) return 0; esac; return 1
+}
+
+#######################################
+# Makes a temporary directory for the script to use.
+# Globals:
+#   SCRIPT_NAME
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+make_tmp()
+{
+  readonly TMP_DIR="$(mktemp -d -t "${SCRIPT_NAME}_XXXXXXXX")"
 }
 
 #######################################
@@ -1099,6 +1116,9 @@ check_twitch_streams_helper()
 #######################################
 list_streamers_of_game()
 {
+  make_tmp
+  readonly TMP_STREAMERS_OF_GAME_TEXT_FILE="${TMP_DIR}/streamers_of_game.txt"
+
   mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
@@ -1120,9 +1140,6 @@ list_streamers_of_game()
   # Get streamers
   twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}")"
 
-  # Remove old cache files
-  clean_up
-
   local whileCounter=0
 
   local streamerName=""
@@ -1134,9 +1151,9 @@ list_streamers_of_game()
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
-      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}"
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
     else
-      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${CACHE_MISC_TEXT_FILE}" &
+      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" &
     fi
 
     # Refresh data
@@ -1146,8 +1163,8 @@ list_streamers_of_game()
 
   wait
 
-  if [[ -f "${CACHE_MISC_TEXT_FILE}" ]]; then
-    cat "${CACHE_MISC_TEXT_FILE}"
+  if [[ -f "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" ]]; then
+    cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
   else
     printf " %s %s.\n" "${localizedStrings[1]}" "$1"
   fi
@@ -1218,12 +1235,13 @@ print_stream_info()
 #######################################
 list_top()
 {
+  make_tmp
+  readonly TMP_TOP_GAMES_TEXT_FILE="${TMP_DIR}/top_games.txt"
+  readonly TMP_TOP_STREAMS_TEXT_FILE="${TMP_DIR}/top_streams.txt"
+
   mapfile -t localizedStrings <<< "$(jq -r ".top_games.${WTWITCH_LANG}, .top_streams.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   printf "\n %s:\n" "${localizedStrings[0]}"
-
-  # Remove old cache files
-  clean_up
 
   # Start figuring out top streamers - don't use subshells when debugging is on
   if [[ "${DEBUGGING}" == "on" ]]; then
@@ -1241,7 +1259,7 @@ list_top()
   gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
 
   while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %b%s%b\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${CACHE_MISC_TEXT_FILE}"
+    printf "   %s. %b%s%b\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${TMP_TOP_GAMES_TEXT_FILE}"
 
     # Refresh data
     whileCounter="$(( whileCounter + 1 ))"
@@ -1251,10 +1269,10 @@ list_top()
   # Wait for list_top_streams() to finish
   wait
 
-  cat "${CACHE_MISC_TEXT_FILE}"
+  cat "${TMP_TOP_GAMES_TEXT_FILE}"
 
   printf "\n %s:\n" "${localizedStrings[1]}"
-  cat "${CACHE_TOP_STREAMS_TEXT_FILE}"
+  cat "${TMP_TOP_STREAMS_TEXT_FILE}"
 }
 
 #######################################
@@ -1284,9 +1302,9 @@ list_top_streams()
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
     if [[ "${DEBUGGING}" == "on" ]]; then
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" --print-game
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game
     else
-      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${CACHE_TOP_STREAMS_TEXT_FILE}" --print-game &
+      print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game &
     fi
 
     # Refresh data
