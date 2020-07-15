@@ -31,6 +31,7 @@ COMMANDS
                          You can unsubscribe from multiple streamers in one command.
 => [c]heck             - View your settings and the status of streamers you are
                          subscribed to.
+=> [e] [search-term]   - Search games/categories for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
 => [l]                 - Toggle the usage of colors in wtwitch output.
