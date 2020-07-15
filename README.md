@@ -4,7 +4,7 @@
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
-![Screenshot](https://i.imgur.com/nAWbrEg.jpg)
+![Screenshot](screenshot.jpg)
 
 Table of contents:
 
