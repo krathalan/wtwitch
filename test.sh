@@ -32,8 +32,7 @@
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -eu # (Eo pipefail) is Bash only!
 
-# Clean up if script is interrupted early
-trap "clean_up && kill 0" INT
+trap "clean_up" INT EXIT
 
 # -----------------------------------------
 # ----------- Program variables -----------
@@ -203,5 +202,3 @@ compare_output "change_quality_failure" "${testName}"
 bash wtwitch q best > /dev/null
 
 complete_step
-
-clean_up
