@@ -133,3 +133,18 @@
       being made)
     Speed improvements for -c/--check
     Small man page improvements
+
+1.7.1 (July 6, 2020)
+    Fixed issue #5 where user settings may be read incorrectly
+      https://todo.sr.ht/~krathalan/wtwitch/5
+
+2.0.0 (TBD)
+    New command style ("wtwitch c" instead of "wtwitch -c")
+      Instead of "wtwitch [streamer]" to watch a streamer, use 
+      "wtwitch w [streamer]"
+    (TBI) Add feature to search games and channels
+      wtwitch e [category/game]
+      wtwitch n [channel]
+    Add blocking/subscribing/unsubscribing to more than 1 channel at a time
+    Keep track of last time offline subscriptions were seen online
+    Localized more hardcoded strings (some translations still missing!)

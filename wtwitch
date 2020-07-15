@@ -63,7 +63,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="1.7"
+readonly VERSION="2.0.0"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -92,7 +92,7 @@ readonly TERMINAL_WIDTH="$(tput cols)"
 # Twitch API information
 # This API key is intended to be used for wtwitch only -- do not use this API
 # key for any other reason!
-readonly TWITCH_API_URL="https://api.twitch.tv"
+readonly TWITCH_API_URL="https://api.twitch.tv/helix"
 readonly TWITCH_ID_URL="https://id.twitch.tv/oauth2/token"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 readonly TWITCH_API_SECRET="gaofxvult280l3sbz8n6btvk5fdswp"
@@ -652,7 +652,7 @@ get_game_name()
   # If game id not cached, fetch from Twitch API
   if [[ "${gameName}" == "" ]] || [[ "${gameName}" == "null" ]]; then
     local tmpJson
-    tmpJson="$(download_file "${TWITCH_API_URL}/helix/games?id=$1")"
+    tmpJson="$(download_file "${TWITCH_API_URL}/games?id=$1")"
     gameName="$(jq -r ".data[0].name" <<< "${tmpJson}")"
 
     # Guard against wiping gameid cache
@@ -913,7 +913,7 @@ check_twitch_streams()
       touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
 
       # Build inital request URL
-      local initialRequestURL="${TWITCH_API_URL}/helix/streams?"
+      local initialRequestURL="${TWITCH_API_URL}/streams?"
 
       for stream in "${userSubscriptions[@]}"; do
         initialRequestURL+="user_login=${stream}&"
@@ -1113,12 +1113,12 @@ list_streamers_of_game()
 
   # Get game_id
   local twitchJson
-  twitchJson="$(download_file "${TWITCH_API_URL}/helix/games?name=${gameName}")"
+  twitchJson="$(download_file "${TWITCH_API_URL}/games?name=${gameName}")"
 
   local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
 
   # Get streamers
-  twitchJson="$(download_file "${TWITCH_API_URL}/helix/streams?game_id=${gameID}")"
+  twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}")"
 
   # Remove old cache files
   clean_up
@@ -1233,7 +1233,7 @@ list_top()
   fi
 
   # Figure out top games in foreground
-  local -r topGamesJson="$(download_file "${TWITCH_API_URL}/helix/games/top")"
+  local -r topGamesJson="$(download_file "${TWITCH_API_URL}/games/top")"
 
   local whileCounter=0
 
@@ -1271,7 +1271,7 @@ list_top()
 #######################################
 list_top_streams()
 {
-  local -r topStreamsJson="$(download_file "${TWITCH_API_URL}/helix/streams?first=20")"
+  local -r topStreamsJson="$(download_file "${TWITCH_API_URL}/streams?first=20")"
 
   local whileCounter=0
 
@@ -1324,7 +1324,7 @@ stream()
 
   # Check to make sure streamer is online
   # Get current info of streamer
-  local -r streamerJson="$(download_file "${TWITCH_API_URL}/helix/streams?user_login=$1")"
+  local -r streamerJson="$(download_file "${TWITCH_API_URL}/streams?user_login=$1")"
 
   if [[ "$(jq -r ".data[0].type" <<< "${streamerJson}")" == "null" ]]; then
     stream_failure_notify "$1" "${localizedStrings[2]} $1 ${localizedStrings[3]}."
