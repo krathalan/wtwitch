@@ -48,8 +48,11 @@ COMMANDS
 ### Arch Linux
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
-AUR releases are signed so you'll need to import my GPG key:
-`02AA A23A BDF1 D538 BD88  9D25 1AAD E5E7 28FF C667`
+AUR releases are signed so you'll need to import my GPG key:  
+`<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
+
+Old signing key (for releases before 2.0.0):  
+`<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
 ### Ubuntu
 Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin.
@@ -60,15 +63,7 @@ You have a few options:
 
 2. Use a different distribution which provides a more up-to-date Streamlink
 
-3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html#linux-and-bsd):
-
-```
-$ sudo add-apt-repository ppa:nilarimogard/webupd8
-
-$ sudo apt update
-
-$ sudo apt install streamlink
-```
+3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html#linux-and-bsd)
 
 Afterwards, clone the repo like any distro other than Arch.
 
@@ -89,7 +84,7 @@ Then view the man page:
 > `$ man -l wtwitch.1`
 
 ## Bugs and feature requests
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch  
 Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
 
 If you are reporting a bug, please attach a debug log.
