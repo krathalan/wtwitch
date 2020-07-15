@@ -89,12 +89,12 @@ Then view the man page:
 > `$ man -l wtwitch.1`
 
 ## Bugs and feature requests
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch  
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
 
 If you are reporting a bug, please attach a debug log.
 
-To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a log file. You can run wtwitch in debug mode in a one-off command like so:
+To start wtwitch in debug mode, set the environment variable `WTWITCH_DEBUG=on`. You should also redirect all output to a log file. You can run wtwitch in debug mode in a one-off command like so:
 
 `WTWITCH_DEBUG=on wtwitch [command] &> debug.log`
 
