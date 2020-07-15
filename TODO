@@ -2,10 +2,8 @@
     https://dev.twitch.tv/docs/api/reference/#get-games
     e.g. wtwitch g overwatch next
     Using wtwitch g without a "next" should reset pagination value
-- Add ability to search games and channels
-    https://dev.twitch.tv/docs/api/reference/#search-categories
+- Add ability to search channels
     https://dev.twitch.tv/docs/api/reference/#search-channels
-    wtwitch e/category category
     wtwitch n/channels channel
 
 ===> DONE in dev branch <===
@@ -14,3 +12,4 @@
 - Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
 - Keep track of last time offline subs were seen online
 - Localize all hardcoded strings
+- Add ability to search games

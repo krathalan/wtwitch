@@ -405,6 +405,12 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "Check your internet connection and try again",
     "es": "Check your internet connection and try again",
     "fr": "Check your internet connection and try again"
+  },
+  "search_results": {
+    "en": "Search results",
+    "de": "Search results",
+    "es": "Search results",
+    "fr": "Search results"
   }
 }
 EOF
@@ -568,12 +574,10 @@ fi
 # -----------------------------------------
 
 #######################################
-# Cleans up temporary file(s).
+# Cleans up cache and temporary file(s).
 # Globals:
 #   CACHE_ONLINE_TEXT_FILE
 #   CACHE_OFFLINE_TEXT_FILE
-#   CACHE_MISC_TEXT_FILE
-#   CACHE_TOP_STREAMS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -587,9 +591,18 @@ clean_up()
   clean_up_tmp
 }
 
+#######################################
+# Cleans up temporary file(s).
+# Globals:
+#   TMP_DIR
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 clean_up_tmp()
 {
-  [[ -d "${TMP_DIR}" ]] && rm -rf "${TMP_DIR}"
+  [[ -d "${TMP_DIR:-}" ]] && rm -rf "${TMP_DIR}"
 }
 
 #######################################
@@ -711,6 +724,7 @@ glob()
 # Makes a temporary directory for the script to use.
 # Globals:
 #   SCRIPT_NAME
+#   TMP_DIR
 # Arguments:
 #   none
 # Returns:
@@ -1106,9 +1120,10 @@ check_twitch_streams_helper()
 #   WTWITCH_LANG
 #   TRANSLATIONS
 #   TWITCH_API_URL
-#   CACHE_MISC_TEXT_FILE
 #   DEBUGGING
 #   VIEWERS_TEXT
+#   TMP_DIR
+#   TMP_STREAMERS_OF_GAME_TEXT_FILE
 # Arguments:
 #   $1: game to list top streamers of
 # Returns:
@@ -1219,15 +1234,41 @@ print_stream_info()
 }
 
 #######################################
-# Lists the top games and streams on Twitch.
+# Prints a list of games from json.
 # Globals:
 #   Colors: PURPLE, NC
+# Arguments:
+#   $1: json file containing game data
+#   $2: file to print to
+# Returns:
+#   none
+#######################################
+print_game_info()
+{
+  local whileCounter=0
+
+  local gameName=""
+  gameName="$(jq -r ".data[${whileCounter}].name" <<< "$1")"
+
+  while [[ "${gameName}" != "null" ]]; do
+    printf "   %s. %b%s%b\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "$2"
+
+    # Refresh data
+    whileCounter="$(( whileCounter + 1 ))"
+    gameName="$(jq -r ".data[${whileCounter}].name" <<< "$1")"
+  done
+}
+
+#######################################
+# Lists the top games and streams on Twitch.
+# Globals:
 #   WTWITCH_LANG
 #   TRANSLATIONS
 #   DEBUGGING
 #   TWITCH_API_URL
-#   CACHE_MISC_TEXT_FILE
-#   CACHE_TOP_STREAMS_TEXT_FILE
+#   TMP_DIR
+#   TMP_TOP_GAMES_TEXT_FILE
+#   TMP_TOP_STREAMS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -1252,19 +1293,7 @@ list_top()
 
   # Figure out top games in foreground
   local -r topGamesJson="$(download_file "${TWITCH_API_URL}/games/top")"
-
-  local whileCounter=0
-
-  local gameName=""
-  gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
-
-  while [[ "${gameName}" != "null" ]]; do
-    printf "   %s. %b%s%b\n" $(( whileCounter + 1 )) "${PURPLE}" "${gameName}" "${NC}" >> "${TMP_TOP_GAMES_TEXT_FILE}"
-
-    # Refresh data
-    whileCounter="$(( whileCounter + 1 ))"
-    gameName="$(jq -r ".data[${whileCounter}].name" <<< "${topGamesJson}")"
-  done
+  print_game_info "${topGamesJson}" "${TMP_TOP_GAMES_TEXT_FILE}"
 
   # Wait for list_top_streams() to finish
   wait
@@ -1280,8 +1309,8 @@ list_top()
 # Globals:
 #   TWITCH_API_URL
 #   DEBUGGING
-#   CACHE_TOP_STREAMS_TEXT_FILE
 #   VIEWERS_TEXT
+#   TMP_TOP_STREAMS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -1313,6 +1342,33 @@ list_top_streams()
   done
 
   wait
+}
+
+#######################################
+# Searches categories on Twitch for a specified search term.
+# Globals:
+#   TWITCH_API_URL
+#   TMP_DIR
+#   TMP_SEARCH_TEXT_FILE
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+search_categories()
+{
+  make_tmp
+  readonly TMP_SEARCH_TEXT_FILE="${TMP_DIR}/search.txt"
+
+  printf "\n %s:\n" "$(get_translation search_results)"
+
+  # Replace spaces in search term with %20 for URL
+  local -r searchTerm=${1// /%20}
+  local -r categoriesJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}")"
+
+  print_game_info "${categoriesJson}" "${TMP_SEARCH_TEXT_FILE}"
+
+  cat "${TMP_SEARCH_TEXT_FILE}"
 }
 
 #######################################
@@ -1608,7 +1664,7 @@ Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##
 glob "$1" '[-]*' &&
   print_new_usage "$1"
 
-glob "$1" '[g]*' && [[ -z "${2:-}" ]] &&
+glob "$1" '[ge]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_game)"
 
 glob "$1" '[p]*' && [[ -z "${2:-}" ]] &&
@@ -1624,6 +1680,7 @@ case "$1" in
   -h|--help|h*) print_help ;;
   c*) check_twitch_streams ;;
   g*) list_streamers_of_game "$2" ;;
+  e*) search_categories "$2" ;;
   t*) list_top ;;
   l*) toggle_colors ;;
   p*) change_player "$2" ;;
