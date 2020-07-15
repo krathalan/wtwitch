@@ -89,11 +89,14 @@ Then view the man page:
 > `$ man -l wtwitch.1`
 
 ## Bugs and feature requests
-To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch  
+Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
 
-Please file feature requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+If you are reporting a bug, please attach a debug log.
 
-Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
+To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a log file. You can run wtwitch in debug mode in a one-off command like so:
+
+`WTWITCH_DEBUG=on wtwitch [command] &> debug.log`
 
 ## Contributions
 All contributions are welcome. Please try to adhere to the Google Shell Style Guide (https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at Dylan's Pure Bash Bible (https://github.com/dylanaraps/pure-bash-bible) before using an external program.
