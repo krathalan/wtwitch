@@ -48,10 +48,12 @@ COMMANDS
 ### Arch Linux
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
-AUR releases are signed so you'll need to import my GPG key:  
+AUR releases are signed so you'll need to import my GPG key:
+
 `<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
 
-Old signing key (for releases before 2.0.0):  
+Old signing key (for releases before 2.0.0):
+
 `<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
 ### Ubuntu
@@ -84,7 +86,8 @@ Then view the man page:
 > `$ man -l wtwitch.1`
 
 ## Bugs and feature requests
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch  
+Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
+
 Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
 
 If you are reporting a bug, please attach a debug log.
