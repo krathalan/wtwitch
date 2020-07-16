@@ -4,7 +4,7 @@
 #    Homepage: https://git.sr.ht/~krathalan/wtwitch
 #
 # Copyright (C) 2019-2020:
-readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux"
+readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux, René de Hesselle"
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ readonly TRANSLATIONS="$(cat <<EOF
 {
   "change_player_not_found": {
     "en": "media player not found",
-    "de": "Videospieler nicht gefunden",
+    "de": "Mediaplayer nicht gefunden",
     "es": "reproductor de vídeo no encontrado",
     "fr": "lecteur vidéo non trouvé"
   },
@@ -126,7 +126,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "change_player_player": {
     "en": "player",
-    "de": "Videospieler",
+    "de": "Mediaplayer",
     "es": "reproductor",
     "fr": "lecteur"
   },
@@ -144,7 +144,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "change_quality_error": {
     "en": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
-    "de": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
+    "de": "ist keine verfügbare Qualitätsstufe. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, und audio_only sind die verfügbaren Optionen. Du kannst auch eine kommaseparierte Liste angeben (absteigende Prioriät), z.B. \"720p,480p,worst\"",
     "es": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
     "fr": "n'est pas une qualité acceptable. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, et audio_only sont les qualités acceptables. Vous pouvez spécifier des qualités de repli séparées par des virgules, par exemple : \"720p,480p,worst\""
   },
@@ -174,13 +174,13 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "check_player": {
     "en": "Player set to",
-    "de": "Videospieler eingestellt auf",
+    "de": "Mediaplayer ist eingestellt auf",
     "es": "Reproductor de vídeo configurado en",
     "fr": "Lecteur configuré à"
   },
   "check_quality": {
     "en": "Quality set to",
-    "de": "Qualität eingestellt auf",
+    "de": "Qualität ist eingestellt auf",
     "es": "Calidad configurado en",
     "fr": "Qualité configurée à"
   },
@@ -198,7 +198,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "viewers": {
     "en": "viewers",
-    "de": "Beobachter",
+    "de": "Zuschauer",
     "es": "espectadores",
     "fr": "spectateurs"
   },
@@ -210,7 +210,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "no_channels": {
     "en": "No one is streaming",
-    "de": "No one is streaming",
+    "de": "Niemand streamt gerade.",
     "es": "No one is streaming",
     "fr": "Personne n'est en direct"
   },
@@ -222,13 +222,13 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "print_help": {
     "en": "View the man page at",
-    "de": "View the man page at",
+    "de": "Lese die man page unter",
     "es": "View the man page at",
     "fr": "Voir le manuel à"
   },
   "stream_failure_player_one": {
     "en": "Player",
-    "de": "Videospieler",
+    "de": "Mediaplayer",
     "es": "Reproductor",
     "fr": "Lecteur"
   },
@@ -246,13 +246,13 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "stream_failure_offline_two": {
     "en": "is not online",
-    "de": "is not online",
+    "de": "ist nicht online",
     "es": "is not online",
     "fr": "n'est pas en ligne"
   },
   "stream_failure_quality": {
     "en": "stream does not support quality",
-    "de": "stream does not support quality",
+    "de": "Stream unterstützt die angegebene Qualität nicht.",
     "es": "stream does not support quality",
     "fr": "n'est pas diffusé dans la qualité"
   },
@@ -270,7 +270,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "stream_watching": {
     "en": "Watching",
-    "de": "beobachten",
+    "de": "zuschauen",
     "es": "Viendo",
     "fr": "Visionnage de"
   },
@@ -282,7 +282,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "subscribe_failure": {
     "en": "You are already subscribed to",
-    "de": "You are already subscribed to",
+    "de": "Du abonierst bereits",
     "es": "You are already subscribed to",
     "fr": "Vous êtes déjà abonné à"
   },
@@ -294,7 +294,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "unsubscribe_failure": {
     "en": "You are not subscribed to",
-    "de": "You are not subscribed to",
+    "de": "Du hast kein Abo für",
     "es": "You are not subscribed to",
     "fr": "Vous n'êtes pas abonné à"
   },
@@ -306,13 +306,13 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "colors_off": {
     "en": "Turned colors off",
-    "de": "Abgeschaltete Farben",
+    "de": "keine Farben benutzen",
     "es": "Apagó los colores",
     "fr": "Couleurs désactivées"
   },
   "colors_on": {
     "en": "Turned colors on",
-    "de": "Eingeschaltete Farben",
+    "de": "Farben benutzen",
     "es": "Encendió los colores",
     "fr": "Couleurs activées"
   },
@@ -324,13 +324,13 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "flags_no_player": {
     "en": "No player specified",
-    "de": "Kein Videospeiler angegeben",
+    "de": "Kein Spieler angegeben",
     "es": "No se especifica el reproductor de vídeo",
     "fr": "Pas de lecteur vidéo spécifié"
   },
   "flags_no_quality": {
     "en": "No quality specified",
-    "de": "Kein Qualität angegeben",
+    "de": "Keine Qualität angegeben",
     "es": "No se especifica la calidad",
     "fr": "Pas de qualité spécifiée"
   },
@@ -348,7 +348,7 @@ readonly TRANSLATIONS="$(cat <<EOF
   },
   "no_subs": {
     "en": "You aren't subscribed to any channels",
-    "de": "You aren't subscribed to any channels",
+    "de": "Du hast keine Kanäle aboniert.",
     "es": "You aren't subscribed to any channels",
     "fr": "Vous n'êtes abonné à aucune chaîne"
   },
