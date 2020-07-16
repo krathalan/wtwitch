@@ -19,11 +19,12 @@ https://git.sr.ht/~krathalan/wtwitch/tree/master/FULLCHANGELOG
 
 2.0.0 (TBD)
     New command style ("wtwitch c" instead of "wtwitch -c")
-      Instead of "wtwitch [streamer]" to watch a streamer, use 
+      Instead of "wtwitch [streamer]" to watch a streamer, use
       "wtwitch w [streamer]"
-    (TBI) Add feature to search games and channels
+    Add commands to search games and channels
       wtwitch e [category/game]
       wtwitch n [channel]
+    (TBI) Improve compatibility with macOS
+    Add German localization improvement patch from René de Hesselle
     Add blocking/subscribing/unsubscribing to more than 1 channel at a time
     Keep track of last time offline subscriptions were seen online
-    Localized more hardcoded strings (some translations still missing!)
