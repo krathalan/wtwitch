@@ -77,7 +77,9 @@ You have a few options:
 Afterwards, [clone the repo](#any-distro).
 
 ### Any distro
-Clone the repository: `git clone https://git.sr.ht/~krathalan/wtwitch`
+Clone the repository:
+
+> `git clone https://git.sr.ht/~krathalan/wtwitch`
 
 Then add the cloned wtwitch directory to your `$PATH`, or `ln -s` the `wtwitch` script to somewhere in your `$PATH`.
 
