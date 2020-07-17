@@ -115,6 +115,9 @@ Most needed are translations for languages other than English. No coding knowled
 If you provide a better method of installation for a distro other than Arch, such as an Ubuntu PPA or Fedora Copr repo, please let me know and I will add it to this README.
 
 ## FAQ
+### Will you ever implement chat functionality?
+Probably not. Check out [Chatty](https://chatty.github.io/).
+
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
 Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
 
