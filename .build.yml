@@ -16,4 +16,7 @@ tasks:
   - unit-tests: |
       export LANG="en_US.UTF-8"
       cd wtwitch
+      mkdir -p ~/.cache ~/.config
+      cp -r dummy-data/cache ~/.cache/wtwitch
+      cp -r dummy-data/config ~/.config/wtwitch
       dash unit-test-wtwitch.sh

@@ -980,9 +980,13 @@ check_twitch_streams()
 
     # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
     # if the time between now and the last subscription update is greater than the cache expiry time, OR
-    # if either of the cache files do NOT exist yet
-    if  [[ "${lastSubscriptionUpdate}" == "null" ]] || [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] \
-    || [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]]; then
+    # if either of the cache files do NOT exist yet, OR
+    # if we are unit testing with dummy data
+    if  [[ "${lastSubscriptionUpdate}" == "null" ]] || \
+    [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] || \
+    [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || \
+    [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]] || \
+    [[ -n "${DUMMY_DATA:-}" ]]; then
       # Remove old cache files
       clean_up
 
@@ -997,7 +1001,11 @@ check_twitch_streams()
       done
 
       # Get data of all online streamers (sans game names)
-      local -r allStreamerJson="$(download_file "${initialRequestURL}")"
+      if [[ -n "${DUMMY_DATA:-}" ]]; then
+        local -r allStreamerJson="$(<"${DUMMY_DATA}")"
+      else
+        local -r allStreamerJson="$(download_file "${initialRequestURL}")"
+      fi
 
       # Reduce number of external program calls
       readonly CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"

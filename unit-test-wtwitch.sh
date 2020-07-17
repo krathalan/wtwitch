@@ -202,3 +202,11 @@ compare_output "change_quality_failure" "${testName}"
 bash wtwitch q best > /dev/null
 
 complete_step
+
+printf "\n%s. Testing check_twitch_streams with dummy data...\n" "${stepWithColor}"
+
+testName="check_twitch_streams"
+DUMMY_DATA=dummy-data/check_twitch_streams.json bash wtwitch c 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "check_twitch_streams" "${testName}"
+
+complete_step

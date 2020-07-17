@@ -1,0 +1,55 @@
+{
+  "player": "mpv",
+  "quality": "best",
+  "subscriptions": [
+    {
+      "streamer": "esfandtv"
+    },
+    {
+      "streamer": "kabajiow"
+    },
+    {
+      "streamer": "ms5000watts"
+    },
+    {
+      "streamer": "jdotb"
+    },
+    {
+      "streamer": "drjayfisto"
+    },
+    {
+      "streamer": "a_seagull"
+    },
+    {
+      "streamer": "taliesinandevitel"
+    },
+    {
+      "streamer": "preachlfw"
+    },
+    {
+      "streamer": "dratnos"
+    },
+    {
+      "streamer": "ifrostbolt"
+    },
+    {
+      "streamer": "sleepy"
+    },
+    {
+      "streamer": "quin69"
+    },
+    {
+      "streamer": "asmongold"
+    },
+    {
+      "streamer": "luminumn"
+    },
+    {
+      "streamer": "emongg"
+    }
+  ],
+  "lastSubscriptionUpdate": "1595028423",
+  "colors": "true",
+  "apiToken": "n75mb1othzngv8j39b25xcwtf1muid",
+  "apiTokenExpiry": "1595082362"
+}
