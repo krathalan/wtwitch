@@ -16,4 +16,4 @@ tasks:
   - script-test: |
       export LANG="en_US.UTF-8"
       cd wtwitch
-      dash test.sh
+      dash unit-test-wtwitch.sh
