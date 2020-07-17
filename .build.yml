@@ -7,8 +7,6 @@ packages:
   - scdoc
   - shellcheck
 tasks:
-  - setup: |
-      timedatectl set-timezone America/Los_Angeles
   - scdoc-test: |
       cd wtwitch
       scdoc < wtwitch.1.scd > wtwitch.1
@@ -16,6 +14,7 @@ tasks:
       cd wtwitch
       shellcheck wtwitch
   - unit-tests: |
+      export TZ='UTC'
       export LANG="en_US.UTF-8"
       cd wtwitch
       mkdir -p ~/.cache ~/.config
