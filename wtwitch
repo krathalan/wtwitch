@@ -81,6 +81,10 @@ readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAM
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
 readonly BLOCKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blocklist"
 
+# If exists, source this for additional environment setup.
+# Used primarily on macOS.
+readonly ENVIRONMENT_FILE="${CONFIG_FILE_DIRECTORY}/environment.sh"
+
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
 readonly TERMINAL_WIDTH="$(tput cols)"
@@ -446,6 +450,14 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
 fi
 
+if [[ ! -f "${ENVIRONMENT_FILE}" ]]; then
+  printf '#!/usr/bin/env sh\n\n# You can put commands or variables here for wtwitch to source.\n# This is useful on macOS, for example, to set a custom PATH or PYTHONPATH\n# to support non-standard locations specifically for wtwitch.\n' > "${ENVIRONMENT_FILE}"
+fi
+
+# Don't check the user's file -- their mistakes are their own
+# shellcheck source=/dev/null
+source "${ENVIRONMENT_FILE}"
+
 # Load settings
 mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}")"
 apiToken="${userSettings[0]}"
@@ -491,12 +503,20 @@ if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
-  printf "Starting wtwitch debug log\n"
+  printf "Starting wtwitch %s debug log\n\n" "${VERSION}"
   printf "System: %s\n" "$(uname -sr)"
   printf "Package: %s\n" "${_packageinfo}"
-  printf "Dependencies: bash-%s wtwitch-%s %s\n" "${BASH_VERSION}" "${VERSION}" "$(jq --version) $(streamlink --version)"
+  printf "Dependencies: bash-%s %s\n" "${BASH_VERSION}" "$(jq --version) $(streamlink --version)"
   printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(${DATE_CMD})" "$*"
-  printf "Config file:\n\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
+
+  printf "Environment file:"
+  if [[ -f "${ENVIRONMENT_FILE}" ]]; then
+    printf "\n\n%s\n-----End environment file-----\n\n" "$(<"${ENVIRONMENT_FILE}")"
+  else
+    printf " no\n\n"
+  fi
+
+  printf "Config file:\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
   printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
 
   # Print all commands

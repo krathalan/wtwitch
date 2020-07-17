@@ -108,6 +108,10 @@ Wtwitch supports the XDG Base Directory specification. If your $XDG_CONFIG_HOME 
 
 You should never need to edit these files manually; you should use the commands listed under *COMMANDS* above.
 
+## environment.sh
+
+This file exists in wtwitch's config directory, and wtwitch will source this file before running. You can put commands or variables here for wtwitch to source. This is useful on macOS, for example, to set a custom $PATH or $PYTHONPATH to support non-standard dependency locations specifically for wtwitch.
+
 # SYNCING SUBSCRIPTIONS
 
 Wtwitch does not natively support syncing subscriptions across computers, but syncing subscriptions can be achieved easily using Syncthing and a utility already installed on your GNU/Linux computer. Syncthing is a powerful synchronization program for multiple operating systems licensed under the Mozilla Public License v2, which is FSF approved. You can look at Syncthing's homepage for more information, as well as their user documentation:
