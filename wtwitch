@@ -51,6 +51,10 @@ readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux, René de Hesselle
 
 # This script uses shellcheck: https://www.shellcheck.net/
 
+# Many functions in this script spawn subshell processes
+trap "clean_up && kill 0" SIGINT
+trap "clean_up_tmp" EXIT
+
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuo pipefail
 
@@ -438,11 +442,6 @@ EOF
 # -----------------------------------------
 # ------- Pre-script: check & load --------
 # -----------------------------------------
-
-# Many functions in this script spawn subshell processes
-# A few also use a tmpdir
-trap "clean_up && kill 0" SIGINT
-trap "clean_up_tmp" EXIT
 
 # Check files -- create cache/config directories and required files
 # Creating LAST_SEEN_DIRECTORY also creates CACHE_FILE_DIRECTORY
