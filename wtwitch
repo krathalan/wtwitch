@@ -553,6 +553,11 @@ case "${WTWITCH_LANG}" in
     ;;
 esac
 
+# If unit testing, match builds.sr.ht terminal width
+if [[ -n "${DUMMY_DATA:-}" ]]; then
+  TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 23 ))"
+fi
+
 # -----------------------------------------
 # --------------- API Token ---------------
 # -----------------------------------------
