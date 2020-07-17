@@ -13,7 +13,7 @@ tasks:
   - shellcheck-test: |
       cd wtwitch
       shellcheck wtwitch
-  - script-test: |
+  - unit-tests: |
       export LANG="en_US.UTF-8"
       cd wtwitch
       dash unit-test-wtwitch.sh
