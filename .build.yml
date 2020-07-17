@@ -14,7 +14,7 @@ tasks:
       cd wtwitch
       shellcheck wtwitch
   - unit-tests: |
-      export TZ='UTC'
+      export TZ='America/Los_Angeles'
       export LANG="en_US.UTF-8"
       cd wtwitch
       mkdir -p ~/.cache ~/.config
