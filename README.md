@@ -52,15 +52,13 @@ AUR releases are signed so you'll need to import my GPG key:
 
 `<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
 
-Old signing key (for releases before 2.0.0):
-
-`<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
+<small>Old signing key (for releases before 2.0.0): `<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`</small>
 
 ### macOS
 You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
 
 ```
-brew install bash coreutils jq
+$ brew install bash coreutils jq
 ```
 
 Afterwards, [clone the repo](#any-distro).
@@ -119,11 +117,11 @@ If you provide a better method of installation for a distro other than Arch, suc
 Probably not. Check out [Chatty](https://chatty.github.io/).
 
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
-Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
+Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its size and reliance on Xorg.
 
 Since wtwitch is a terminal program, it can be run in any terminal emulator that supports Wayland for a nice Wayland-native experience. Streamlink Twitch GUI requires Xwayland as it uses Chromium to render and Chromium does not yet support Wayland.
 
-When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with both -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~300 MB for Streamlink Twitch GUI.
+When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 296 M of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Wtwitch takes up less than 1 M.
 
 Using [`cloc`](https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
 
@@ -131,24 +129,17 @@ Using [`cloc`](https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f *
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| JavaScript | 529 | 7759 | 2730 | 33151 |
-| YAML | 47 | 4 | 44 | 3702 |
-| LESS | 52 | 769 | 100 | 3409 |
-| Handlebars | 73 | 47 | 0 | 2415 |
-| JSON | 33 | 8 | 0 | 1702 |
-| HTML | 3 | 2 | 0 | 70 |
-| CSS | 1 | 2 | 2 | 14 |
-| SUM | 738 | 8591 | 2876 | **44463** |
+| JavaScript | 537 | 7863 | 2870 | 34522 |
+| ... | ... | ... | ... | ... |
+| SUM | 750 | 8704 | 3025 | **46442** |
 
 ---
 
-> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/`
+> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/wtwitch`
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 169 | 415 | 781 |
-| Markdown | 1 | 42 | 0 | 74 |
-| SUM | 2 | 211 | 415 | **855** |
+| Bourne Again Shell | 1 | 224 | 601 | **997** |
 
 ---
 
@@ -159,7 +150,7 @@ Wtwitch never collects any usage data or data about the user. Wtwitch only conne
 2. Through `streamlink` to Twitch's video servers to get video data for a streamer you request to watch
 
 ## Technical information
-Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch -c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.)
+Wtwitch is written entirely in Bash, utilizing programs written mostly in C. It doesn't make any connections to any server other than Twitch's servers. As soon as a wtwitch command executes (e.g. `wtwitch c`), wtwitch stops running -- it doesn't stay open. (Wtwitch does stay open when you're watching a stream, but it uses no CPU and less than 5 MB of RAM.)
 
 Here's a list of the CLI programs Wtwitch utilizes to process data and the language they're written in:
 

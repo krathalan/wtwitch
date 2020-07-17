@@ -139,13 +139,14 @@
       https://todo.sr.ht/~krathalan/wtwitch/5
 
 2.0.0 (TBD)
-    New command style ("wtwitch c" instead of "wtwitch -c")
+    New command style: no more flags! ("wtwitch c" instead of "wtwitch -c")
       Instead of "wtwitch [streamer]" to watch a streamer, use
       "wtwitch w [streamer]"
-    Add commands to search games and channels
+    Added commands to search games and channels
       wtwitch e [category/game]
       wtwitch n [channel]
-    (TBI) Improve compatibility with macOS
-    Add German localization improvement patch from René de Hesselle
-    Add blocking/subscribing/unsubscribing to more than 1 channel at a time
+    Improved compatibility with macOS with patches from René de Hesselle
+    (TBI) Added second French localization patch from Léo Villeveygoux
+    Added German localization improvement patch from René de Hesselle
+    Added blocking/subscribing/unsubscribing to more than 1 channel at a time
     Keep track of last time offline subscriptions were seen online
