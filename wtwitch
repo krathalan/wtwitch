@@ -1425,6 +1425,8 @@ search_channels()
     channelName="$(jq -r ".data[${whileCounter}].display_name" <<< "${searchJson}")"
   done
 
+  wait
+
   cat "${TMP_SEARCH_TEXT_FILE}" 2> /dev/null || printf " %s.\n" "$(get_translation no_results)"
 }
 
