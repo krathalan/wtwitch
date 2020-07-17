@@ -1166,7 +1166,7 @@ list_streamers_of_game()
   local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
 
   # Get streamers
-  twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}")"
+  twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=40")"
 
   local whileCounter=0
 
@@ -1213,7 +1213,7 @@ list_streamers_of_game()
 #######################################
 print_stream_info()
 {
-  mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title" <<< "$2")"
+  mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title, .data[$1].is_live" <<< "$2")"
 
   # Do not show streamer if blocked
   [[ "${blocklist}" == *"$(to_lowercase "$3")"* ]] && exit
@@ -1230,12 +1230,15 @@ print_stream_info()
     local -r gameNameText="$(get_game_name "${streamerData[1]}")"
   fi
 
-  # If game name and viewer # are present, format (game name, viewer# viewers)
-  # Else if viewer # is present, format (viewer# viewers)
+  # If game name and viewer # are present, format (game name, viewer# viewers),
+  # Else if streamer is live, format (live)
+  # Else if viewer # is present, format (viewer# viewers),
   # Else don't print anything
   if [[ "${gameNameText:-null}" != "null" ]] && \
   [[ "${streamerData[0]:-null}" != "null" ]]; then
     local -r additionalText="(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
+  elif [[ "${streamerData[3]}" == "true" ]]; then
+    local -r additionalText="(live)"
   elif [[ "${streamerData[0]:-null}" != "null" ]]; then
     local -r additionalText="(${streamerData[0]} ${VIEWERS_TEXT})"
   else
@@ -1386,7 +1389,7 @@ search_categories()
 
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
-  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}")"
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}&first=40")"
 
   print_game_info "${searchJson}" "${TMP_SEARCH_TEXT_FILE}"
 
@@ -1402,7 +1405,7 @@ search_channels()
 
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
-  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/channels?query=${searchTerm}")"
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/channels?query=${searchTerm}&first=40")"
 
   local whileCounter=0
 
