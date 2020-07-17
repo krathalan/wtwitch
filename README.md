@@ -56,6 +56,15 @@ Old signing key (for releases before 2.0.0):
 
 `<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
+### macOS
+You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
+
+```
+brew install bash coreutils jq
+```
+
+Afterwards, [clone the repo](#any-distro).
+
 ### Ubuntu
 Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin.
 
@@ -67,12 +76,14 @@ You have a few options:
 
 3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html#linux-and-bsd)
 
-Afterwards, clone the repo like any distro other than Arch.
+Afterwards, [clone the repo](#any-distro).
 
 ### Any distro
 Clone the repository: `git clone https://git.sr.ht/~krathalan/wtwitch`
 
-Then add the cloned wtwitch directory to your `$PATH`.
+Then add the cloned wtwitch directory to your `$PATH`, or `ln -s` the `wtwitch` script to somewhere in your `$PATH`.
+
+Don't forget to `git pull` every once in a while :)
 
 ## More information
 See `man wtwitch` if you have the AUR package installed.

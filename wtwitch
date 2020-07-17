@@ -466,6 +466,16 @@ if [[ "${useColors}" == "false" ]]; then
   TURQOISE="${NC}"
 fi
 
+# 'date' command
+case "$(uname -s)" in
+  Darwin)
+    readonly DATE_CMD="gdate"
+    ;;
+  *)
+    readonly DATE_CMD="date"
+    ;;
+esac
+
 # Debugging
 if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
   # Avoid subshells, print full curl output, and more behavioral changes
@@ -482,9 +492,10 @@ if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
   fi
 
   printf "Starting wtwitch debug log\n"
+  printf "System: %s\n" "$(uname -sr)"
   printf "Package: %s\n" "${_packageinfo}"
-  printf "Versions: bash-%s wtwitch-%s %s\n" "${BASH_VERSION}" "${VERSION}" "$(jq --version) $(streamlink --version)"
-  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(date)" "$*"
+  printf "Dependencies: bash-%s wtwitch-%s %s\n" "${BASH_VERSION}" "${VERSION}" "$(jq --version) $(streamlink --version)"
+  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(${DATE_CMD})" "$*"
   printf "Config file:\n\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
   printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
 
@@ -571,13 +582,14 @@ download_token()
 
   # Add token to config and update token expiration date
   write_setting ".apiToken" "${newToken}"
-  write_setting ".apiTokenExpiry" "$(LANG=C date -d tomorrow +%s)"
+  write_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
 }
 
 # If the API token is null (e.g. there is no token),
 # If the API token is empty,
 # OR if API token is expired
-if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || [[ "$(LANG=C date +%s)" -gt "${apiTokenExpiry}" ]]; then
+if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || \
+[[ "$(LANG=C ${DATE_CMD} +%s)" -gt "${apiTokenExpiry}" ]]; then
   download_token
 fi
 
@@ -835,7 +847,7 @@ change_player()
   # Get localized strings
   mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}, .change_player_success.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
-  local -r playerName="$(to_lowercase "$1")"
+  local -r playerName="$1"
 
   # Check to make sure user has input player actually installed
   if [[ ! -x "$(command -v "${playerName}")" ]]; then
@@ -942,7 +954,7 @@ check_twitch_streams()
     fi
 
     if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-      local -r currentDate="$(LANG=C date +%s)"
+      local -r currentDate="$(LANG=C ${DATE_CMD} +%s)"
       dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
     fi
 
@@ -968,7 +980,7 @@ check_twitch_streams()
       local -r allStreamerJson="$(download_file "${initialRequestURL}")"
 
       # Reduce number of external program calls
-      readonly CURRENT_TIME_UNIX="$(LANG=C date +%s)"
+      readonly CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"
       readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
 
       # Figure out offline streamers in background
@@ -1079,7 +1091,7 @@ get_offline_streams_helper()
   local -r lastSeenFile="${LAST_SEEN_DIRECTORY}/$1"
 
   if [[ -f "${lastSeenFile}" ]]; then
-    lastSeen=", ${LAST_SEEN_TEXT} $(date -d "@$(<"${lastSeenFile}")" "+%x")"
+    lastSeen=", ${LAST_SEEN_TEXT} $(${DATE_CMD} -d "@$(<"${lastSeenFile}")" "+%x")"
   fi
 
   # If the streamer to check is not found in json, then it is offline
@@ -1694,7 +1706,7 @@ print_version()
   printf "%s" "\
 ${SCRIPT_NAME} v${VERSION}
 
-Copyright (C) ${CONTRIBUTORS} 2019-$(date +%Y)
+Copyright (C) ${CONTRIBUTORS} 2019-$(${DATE_CMD} +%Y)
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 "
