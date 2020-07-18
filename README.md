@@ -143,7 +143,7 @@ Using [`cloc`](https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f *
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 224 | 601 | **997** |
+| Bourne Again Shell | 1 | 226 | 621 | **1018** |
 
 ---
 
