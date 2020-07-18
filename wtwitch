@@ -106,6 +106,10 @@ TURQOISE="\e[96m"
 # Get beginning of $LANG for translations
 WTWITCH_LANG="${LANG%_*}"
 
+# Set internal langs to C to count special character width accurately
+LANG=C
+LC_ALL=C
+
 # -----------------------------------------
 # ------------- Translations --------------
 # -----------------------------------------
@@ -1300,7 +1304,8 @@ print_stream_info()
   # Else don't print anything
   if [[ "${gameNameText:-null}" != "null" ]] && \
   [[ "${streamerData[0]:-null}" != "null" ]]; then
-    local -r additionalText="(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
+    local -r titleCharacters="$(( TITLE_CHARACTERS - ${#ORANGE}))"
+    local -r additionalText="${ORANGE}(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
   elif [[ "${streamerData[3]}" == "true" ]]; then
     local -r titleCharacters="$(( TITLE_CHARACTERS - ${#ORANGE}))"
     local -r additionalText="${ORANGE}(${LIVE_TEXT})"
@@ -1311,6 +1316,7 @@ print_stream_info()
     local -r titleCharacters="$(( TITLE_CHARACTERS - ${#ORANGE}))"
     local -r additionalText="${ORANGE}(${streamerData[0]} ${VIEWERS_TEXT})"
   else
+    local -r titleCharacters=0
     local -r additionalText=""
   fi
 
