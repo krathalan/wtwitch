@@ -210,3 +210,11 @@ DUMMY_DATA=dummy-data/check_twitch_streams.json bash wtwitch c 2>&1 | tee "${TMP
 compare_output "check_twitch_streams" "${testName}"
 
 complete_step
+
+printf "\n%s. Testing list_streamers_of_game with dummy data...\n" "${stepWithColor}"
+
+testName="list_streamers_of_game"
+DUMMY_DATA=dummy-data/list_streamers_of_game.json bash wtwitch g overwatch 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "list_streamers_of_game" "${testName}"
+
+complete_step

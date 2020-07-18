@@ -1001,6 +1001,7 @@ check_twitch_streams()
       done
 
       # Get data of all online streamers (sans game names)
+      # If unit testing, use specified dummy data
       if [[ -n "${DUMMY_DATA:-}" ]]; then
         local -r allStreamerJson="$(<"${DUMMY_DATA}")"
       else
@@ -1206,7 +1207,12 @@ list_streamers_of_game()
   local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
 
   # Get streamers
-  twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=40")"
+  # If unit testing, use specified dummy data
+  if [[ -n "${DUMMY_DATA:-}" ]]; then
+    twitchJson="$(<"${DUMMY_DATA}")"
+  else
+    twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=40")"
+  fi
 
   local whileCounter=0
 
