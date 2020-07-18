@@ -1240,7 +1240,7 @@ list_streamers_of_game()
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
+    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
       print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
     else
       print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" &
@@ -1302,13 +1302,13 @@ print_stream_info()
   [[ "${streamerData[0]:-null}" != "null" ]]; then
     local -r additionalText="(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
   elif [[ "${streamerData[3]}" == "true" ]]; then
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#ORANGE}))"
+    local -r titleCharacters="$(( TITLE_CHARACTERS - ${#ORANGE}))"
     local -r additionalText="${ORANGE}(${LIVE_TEXT})"
   elif [[ "${streamerData[3]}" == "false" ]]; then
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#GREY}))"
+    local -r titleCharacters="$(( TITLE_CHARACTERS - ${#GREY}))"
     local -r additionalText="${GREY}(${OFFLINE_TEXT})"
   elif [[ "${streamerData[0]:-null}" != "null" ]]; then
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#ORANGE}))"
+    local -r titleCharacters="$(( TITLE_CHARACTERS - ${#ORANGE}))"
     local -r additionalText="${ORANGE}(${streamerData[0]} ${VIEWERS_TEXT})"
   else
     local -r additionalText=""
@@ -1316,7 +1316,7 @@ print_stream_info()
 
   # Truncate stream name if necessary; some streamers have stream titles longer
   # than the terminal width and cause ugly output
-  local -r maxTitleLength="$(( TERMINAL_WIDTH - TITLE_CHARACTERS - ${#3} - ${#additionalText} ))"
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - titleCharacters - ${#3} - ${#additionalText} ))"
   local streamName="${streamerData[2]:-}"
   local streamName="${streamName:0:${maxTitleLength}}"
 
@@ -1424,7 +1424,7 @@ list_top_streams()
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
+    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
       print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game
     else
       print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game &
@@ -1512,7 +1512,7 @@ search_channels()
 
   while [[ "${channelName}" != "null" ]]; do
     # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]]; then
+    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
       print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}"
     else
       print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}" &
