@@ -85,10 +85,6 @@ readonly BLOCKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blocklist"
 # Used primarily on macOS.
 readonly ENVIRONMENT_FILE="${CONFIG_FILE_DIRECTORY}/environment.sh"
 
-# Used to calculate output string lengths; see check_twitch_streams_helper()
-# and list_streamers_of_game_helper()
-readonly TERMINAL_WIDTH="$(tput cols)"
-
 # Twitch API information
 # This API key is intended to be used for wtwitch only -- do not use this API
 # key for any other reason!
@@ -536,6 +532,14 @@ if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
 else
   readonly DEBUGGING="off"
   readonly curlFlags="--silent"
+fi
+
+# Used to calculate output string lengths; see check_twitch_streams_helper()
+# and list_streamers_of_game_helper()
+if [[ -n "${DUMMY_DATA:-}" ]]; then
+  readonly TERMINAL_WIDTH=80
+else
+  readonly TERMINAL_WIDTH="$(tput cols)"
 fi
 
 # Why is TITLE_CHARACTERS=1? Because a ":" character will always
