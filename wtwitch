@@ -882,7 +882,7 @@ change_player()
   local -r playerName="$1"
 
   # Check to make sure user has input player actually installed
-  if [[ ! -x "$(command -v "${playerName}")" ]]; then
+  if ! command -v "${playerName}" &> /dev/null; then
     exit_script_on_failure "${localizedStrings[0]}: ${playerName}"
   fi
 
