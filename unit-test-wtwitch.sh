@@ -218,3 +218,19 @@ DUMMY_DATA=dummy-data/list_streamers_of_game.json bash wtwitch g overwatch 2>&1 
 compare_output "list_streamers_of_game" "${testName}"
 
 complete_step
+
+printf "\n%s. Testing search_categories with dummy data...\n" "${stepWithColor}"
+
+testName="search_categories"
+DUMMY_DATA=dummy-data/search_categories.json bash wtwitch e w 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "search_categories" "${testName}"
+
+complete_step
+
+printf "\n%s. Testing search_channels with dummy data...\n" "${stepWithColor}"
+
+testName="search_channels"
+DUMMY_DATA=dummy-data/search_channels.json bash wtwitch n w 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "search_channels" "${testName}"
+
+complete_step
