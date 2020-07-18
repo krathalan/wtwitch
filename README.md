@@ -88,7 +88,9 @@ Don't forget to `git pull` every once in a while :)
 ## More information
 See `man wtwitch` if you have the AUR package installed.
 
-Otherwise, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
+You may also view the man page online at [https://krathalan.net/wtwitch.html](https://krathalan.net/wtwitch.html).
+
+If you want to have a local copy, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
 
 > `$ scdoc < wtwitch.1.scd > wtwitch.1`
 

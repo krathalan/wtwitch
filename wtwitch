@@ -1767,7 +1767,7 @@ ${SCRIPT_NAME} - terminal user interface for Twitch
 => [v]ersion           - Print the current version of wtwitch.
 => [h]elp              - Print this help.
 
-See \"man ${SCRIPT_NAME}\" for more information.
+See \"man ${SCRIPT_NAME}\" or https://krathalan.net/wtwitch.html for more information.
 "
 
   exit 0
