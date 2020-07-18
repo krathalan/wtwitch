@@ -1304,7 +1304,8 @@ print_stream_info()
     TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#GREY}))"
     local -r additionalText="${GREY}(${OFFLINE_TEXT})"
   elif [[ "${streamerData[0]:-null}" != "null" ]]; then
-    local -r additionalText="(${streamerData[0]} ${VIEWERS_TEXT})"
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#ORANGE}))"
+    local -r additionalText="${ORANGE}(${streamerData[0]} ${VIEWERS_TEXT})"
   else
     local -r additionalText=""
   fi
