@@ -3,7 +3,6 @@ packages:
   - curl
   - dash
   - jq
-  - mpv
   - scdoc
   - shellcheck
 tasks:

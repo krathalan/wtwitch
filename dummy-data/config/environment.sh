@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
-# You can put commands or variables here for wtwitch to source.
-# This is useful on macOS, for example, to set a custom PATH or PYTHONPATH
-# to support non-standard locations specifically for wtwitch.
+# This file sets up a dummy mpv binary so builds.sr.ht doesn't have
+# to download and install mpv and its full tree of dependencies for
+# every build :)
+
+TMP_DIR="$(mktemp -d -t "wtwitch_XXXXXXXX")"
+touch "${TMP_DIR}/mpv"
+PATH="${PATH}:${TMP_DIR}"
