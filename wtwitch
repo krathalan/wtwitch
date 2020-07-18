@@ -427,6 +427,18 @@ readonly TRANSLATIONS="$(cat <<EOF
     "de": "No results",
     "es": "No results",
     "fr": "No results"
+  },
+  "live": {
+    "en": "live",
+    "de": "live",
+    "es": "en directo",
+    "fr": "en direct"
+  },
+  "offline": {
+    "en": "offline",
+    "de": "offline",
+    "es": "desconectado",
+    "fr": "déconnecté"
   }
 }
 EOF
@@ -1248,6 +1260,8 @@ list_streamers_of_game()
 #   TERMINAL_WIDTH
 #   TITLE_CHARACTERS
 #   VIEWERS_TEXT
+#   LIVE_TEXT
+#   OFFLINE_TEXT
 # Arguments:
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
@@ -1284,7 +1298,11 @@ print_stream_info()
   [[ "${streamerData[0]:-null}" != "null" ]]; then
     local -r additionalText="(${gameNameText}, ${streamerData[0]} ${VIEWERS_TEXT})"
   elif [[ "${streamerData[3]}" == "true" ]]; then
-    local -r additionalText="(live)"
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#ORANGE}))"
+    local -r additionalText="${ORANGE}(${LIVE_TEXT})"
+  elif [[ "${streamerData[3]}" == "false" ]]; then
+    TITLE_CHARACTERS="$(( TITLE_CHARACTERS - ${#GREY}))"
+    local -r additionalText="${GREY}(${OFFLINE_TEXT})"
   elif [[ "${streamerData[0]:-null}" != "null" ]]; then
     local -r additionalText="(${streamerData[0]} ${VIEWERS_TEXT})"
   else
@@ -1301,7 +1319,7 @@ print_stream_info()
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b%s%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${ORANGE}" "${additionalText}" "${NC}" >> "$4"
+  printf "   %b%s%b: %s %b%b\n" "${TURQOISE}" "$3" "${NC}" "${streamName}" "${additionalText}" "${NC}" >> "$4"
 }
 
 #######################################
@@ -1448,6 +1466,19 @@ search_categories()
   cat "${TMP_SEARCH_TEXT_FILE}" 2> /dev/null || printf " %s.\n" "$(get_translation no_results)"
 }
 
+#######################################
+# Searches channels on Twitch for a specified search term.
+# Globals:
+#   TWITCH_API_URL
+#   TMP_DIR
+#   TMP_SEARCH_TEXT_FILE
+#   LIVE_TEXT
+#   OFFLINE_TEXT
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
 search_channels()
 {
   make_tmp
@@ -1471,7 +1502,8 @@ search_channels()
   channelName="$(jq -r ".data[${whileCounter}].display_name" <<< "${searchJson}")"
 
   # Reduce number of external program calls
-  readonly VIEWERS_TEXT="$(get_translation viewers)"
+  readonly LIVE_TEXT="$(get_translation live)"
+  readonly OFFLINE_TEXT="$(get_translation offline)"
 
   while [[ "${channelName}" != "null" ]]; do
     # Don't use subshells when debugging is on
