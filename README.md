@@ -8,10 +8,10 @@ A terminal program for Twitch. Watch and browse Twitch without proprietary JavaS
 
 Table of contents:
 
-1. [Usage](https://git.sr.ht/~krathalan/wtwitch#usage)
-2. [Install](https://git.sr.ht/~krathalan/wtwitch#install)
-3. [More information](https://git.sr.ht/~krathalan/wtwitch#more-information)
-4. [FAQ](https://git.sr.ht/~krathalan/wtwitch#faq)
+1. [Usage](#usage)
+2. [Install](#install)
+3. [More information](#more-information)
+4. [FAQ](#faq)
 
 ## Usage
 
