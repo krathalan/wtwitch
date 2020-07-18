@@ -16,75 +16,75 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 
 ## Viewing and browsing streams
 
-*w* _streamer_, *watch* _streamer_++
-    Watch the specified _streamer_.++
-    e.g. wtwitch *w* _dratnos_
+*w* _streamer_, *watch* _streamer_
+	Watch the specified _streamer_.++
+e.g. wtwitch *w* _dratnos_
 
-*t*, *top*++
-    View the top games and streams on Twitch.++
-    e.g. wtwitch *t*
+*t*, *top*
+	View the top games and streams on Twitch.++
+e.g. wtwitch *t*
 
-*g* _game_, *game* _game_++
-    View the top streamers for a specified _game_. Game names with spaces must be quoted, or the spaces must be escaped with \\.++
-    e.g. wtwitch *g* _"world of warcraft"_++
-    e.g. wtwitch *g* _world\\ of\\ warcraft_
+*g* _game_, *game* _game_
+	View the top streamers for a specified _game_. Game names with spaces must be quoted, or the spaces must be escaped with \\.++
+e.g. wtwitch *g* _"world of warcraft"_++
+e.g. wtwitch *g* _world\\ of\\ warcraft_
 
-*e* _search-term_++
-    Search games and categories for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
-    e.g. wtwitch *e* _warcraft_
+*e* _search-term_
+	Search games and categories for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
+e.g. wtwitch *e* _warcraft_
 
-*n* _search-term_++
-    Search streamers and channels for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
-    e.g. wtwitch *n* _warcraft_
+*n* _search-term_
+	Search streamers and channels for _search-term_. Search terms with spaces must be quoted, or the spaces must be escaped with \\.++
+e.g. wtwitch *n* _warcraft_
 
-*b* _streamer_, *block* _streamer_++
-    Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *b* without specifying a streamer to show your blocklist.++
-    You can block or unblock multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *b* _dratnos_++
-    e.g. wtwitch *b* _dratnos_ _emongg_ _sleepy_++
-    e.g. wtwitch *b*
+*b* _streamer_, *block* _streamer_
+	Block a specified _streamer_, preventing them from being listed in any output. If the streamer is already blocked, blocking them again will remove them from the blocklist. Use *b* without specifying a streamer to show your blocklist.++
+You can block or unblock multiple streamers at once, by separating them with a space.++
+e.g. wtwitch *b* _dratnos_++
+e.g. wtwitch *b* _dratnos_ _emongg_ _sleepy_++
+e.g. wtwitch *b*
 
 ## Subscriptions
 
-*s* _streamer_, *sub* _streamer_++
-    Subscribe to a specific _streamer_.++
-    You can subscribe to multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *s* _dratnos_++
-    e.g. wtwitch *s* _dratnos_ _emongg_ _sleepy_
+*s* _streamer_, *sub* _streamer_
+	Subscribe to a specific _streamer_.++
+You can subscribe to multiple streamers at once, by separating them with a space.++
+e.g. wtwitch *s* _dratnos_++
+e.g. wtwitch *s* _dratnos_ _emongg_ _sleepy_
 
-*u* _streamer_, *unsub* _streamer_++
-    Unsubscribe from a specified _streamer_.++
-    You can unsubscribe from multiple streamers at once, by separating them with a space.++
-    e.g. wtwitch *u* _dratnos_++
-    e.g. wtwitch *u* _dratnos_ _emongg_ _sleepy_
+*u* _streamer_, *unsub* _streamer_
+	Unsubscribe from a specified _streamer_.++
+You can unsubscribe from multiple streamers at once, by separating them with a space.++
+e.g. wtwitch *u* _dratnos_++
+e.g. wtwitch *u* _dratnos_ _emongg_ _sleepy_
 
-*c*, *check*++
-    View your player/quality settings and the status of the streamers you are subscribed to.++
-    e.g. wtwitch *c*
+*c*, *check*
+	View your player/quality settings and the status of the streamers you are subscribed to.++
+e.g. wtwitch *c*
 
 ## Configuration options
 
-*p* _player_, *player* _player_++
-    Change the default _player_ that gets passed to Streamlink.++
-    e.g. wtwitch *p* _vlc_
+*p* _player_, *player* _player_
+	Change the default _player_ that gets passed to Streamlink.++
+e.g. wtwitch *p* _vlc_
 
-*q* _quality_, *quality* _quality_++
-    Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma.++
-    e.g. wtwitch *q* _720p60,720p,best_
+*q* _quality_, *quality* _quality_
+	Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma.++
+e.g. wtwitch *q* _720p60,720p,best_
 
 *l*
 	Toggle the usage of colors in wtwitch output.++
-    e.g. wtwitch *l*
+e.g. wtwitch *l*
 
 ## Miscellaneous
 
-*h*, *help*++
-    Print a short usage guide.++
-    e.g. wtwitch *h*
+*h*, *help*
+	Print a short usage guide.++
+e.g. wtwitch *h*
 
-*v*, *version*++
-    Print the version of wtwitch.++
-    e.g. wtwitch *v*
+*v*, *version*
+	Print the version of wtwitch.++
+e.g. wtwitch *v*
 
 # DEFAULT BEHAVIOR
 
@@ -131,12 +131,12 @@ pacman -Qc wtwitch
 # LANGUAGES
 
 Full support:++
-    English++
-    French/Français
+	English++
+	French/Français
 
 Partial support:++
-    German/Deutsch++
-    Spanish/Español
+	German/Deutsch++
+	Spanish/Español
 
 User-contributed translations are welcome!
 
