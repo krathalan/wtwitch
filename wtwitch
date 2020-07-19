@@ -93,6 +93,10 @@ readonly TWITCH_ID_URL="https://id.twitch.tv/oauth2/token"
 readonly TWITCH_API_KEY="cotxsalhlctv8z572f7fant4b0sc3u"
 readonly TWITCH_API_SECRET="gaofxvult280l3sbz8n6btvk5fdswp"
 
+# Number of characters always present in print_game_info() output
+# 5 spaces, 1 colon, 2 parantheses
+readonly TITLE_CHARACTERS="8"
+
 # Colors
 GREEN="\e[1m\e[32m"
 GREY="\e[90m"
@@ -540,98 +544,21 @@ fi
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
+# If unit testing, set a fixed terminal width equal to the one on builds.sr.ht
 if [[ -n "${DUMMY_DATA:-}" ]]; then
   readonly TERMINAL_WIDTH=80
 else
   readonly TERMINAL_WIDTH="$(tput cols)"
 fi
 
-# Why is TITLE_CHARACTERS=1? Because a ":" character will always
-# be present in a printed line; ergo it must be subtracted from the total
-# terminal width to get the effective maximum stream title length.
-TITLE_CHARACTERS=1
-
-# Add language-specific ".viewer" character count to TITLE_CHARACTERS
+# Default to English if language isn't supported
 case "${WTWITCH_LANG}" in
-  "de")
-    # Beobachter=10
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 10 ))"
-    ;;
-  "es")
-    # espectadores=12
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 12 ))"
-    ;;
-  "fr")
-    # spectateurs=11
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 11 ))"
+  "de"|"es"|"fr")
     ;;
   *)
-    # Default to English if language isn't supported
     WTWITCH_LANG="en"
-    # viewers=7
-    TITLE_CHARACTERS="$(( TITLE_CHARACTERS + 7 ))"
     ;;
 esac
-
-# -----------------------------------------
-# --------------- API Token ---------------
-# -----------------------------------------
-
-#######################################
-# Writes a setting value to the config file.
-# Globals:
-#   CONFIG_FILE
-# Arguments:
-#   $1: key
-#   $2: value
-# Returns:
-#   none
-#######################################
-write_setting()
-{
-  local -r tmpJson="$(jq "$1 = \"$2\"" "${CONFIG_FILE}")"
-  printf "%s" "${tmpJson}" > "${CONFIG_FILE}"
-}
-
-#######################################
-# Gets an OAuth token for the Twitch API.
-# Globals:
-#   TWITCH_API_KEY
-#   TWITCH_API_SECRET
-#   TWITCH_ID_URL
-#   apiToken
-#   curlFlags
-# Arguments:
-#   none
-# Returns:
-#   none
-#######################################
-download_token()
-{
-  # Get token
-  local -r tmpJson="$(curl "${curlFlags}" -d "client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
-
-  local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
-
-  if [[ -z "${newToken}" ]] || [[ "${newToken}" == "null" ]]; then
-    exit_script_on_failure "$(get_translation api_token_fetch_failure). $(get_translation check_internet)"
-  fi
-
-  # Update in-memory api token
-  apiToken="${newToken}"
-
-  # Add token to config and update token expiration date
-  write_setting ".apiToken" "${newToken}"
-  write_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
-}
-
-# If the API token is null (e.g. there is no token),
-# If the API token is empty,
-# OR if API token is expired
-if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || \
-[[ "$(LANG=C ${DATE_CMD} +%s)" -gt "${apiTokenExpiry}" ]]; then
-  download_token
-fi
 
 # -----------------------------------------
 # --------------- "Library" ---------------
@@ -862,6 +789,50 @@ invalidate_cache()
 {
   write_setting ".lastSubscriptionUpdate" "null"
 }
+
+# -----------------------------------------
+# --------------- API Token ---------------
+# -----------------------------------------
+
+#######################################
+# Gets an OAuth token for the Twitch API.
+# Globals:
+#   TWITCH_API_KEY
+#   TWITCH_API_SECRET
+#   TWITCH_ID_URL
+#   apiToken
+#   curlFlags
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+download_token()
+{
+  # Get token
+  local -r tmpJson="$(curl "${curlFlags}" -d "client_id=${TWITCH_API_KEY}&client_secret=${TWITCH_API_SECRET}&grant_type=client_credentials" "${TWITCH_ID_URL}")"
+
+  local -r newToken="$(jq -r ".access_token" <<< "${tmpJson}")"
+
+  if [[ -z "${newToken}" ]] || [[ "${newToken}" == "null" ]]; then
+    exit_script_on_failure "$(get_translation api_token_fetch_failure). $(get_translation check_internet)"
+  fi
+
+  # Update in-memory api token
+  apiToken="${newToken}"
+
+  # Add token to config and update token expiration date
+  write_setting ".apiToken" "${newToken}"
+  write_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
+}
+
+# If the API token is null (e.g. there is no token),
+# If the API token is empty,
+# OR if API token is expired
+if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || \
+[[ "$(LANG=C ${DATE_CMD} +%s)" -gt "${apiTokenExpiry}" ]]; then
+  download_token
+fi
 
 # -----------------------------------------
 # --------------- Functions ---------------
