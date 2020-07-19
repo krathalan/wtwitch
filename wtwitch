@@ -826,14 +826,6 @@ download_token()
   write_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
 }
 
-# If the API token is null (e.g. there is no token),
-# If the API token is empty,
-# OR if API token is expired
-if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || \
-[[ "$(LANG=C ${DATE_CMD} +%s)" -gt "${apiTokenExpiry}" ]]; then
-  download_token
-fi
-
 # -----------------------------------------
 # --------------- Functions ---------------
 # -----------------------------------------
@@ -1814,6 +1806,17 @@ glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
 
 glob "$1" '[suw]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_streamer)"
+
+# If using a command that requires the Twitch API
+if glob "$1" '[cengt]*'; then
+  # If the API token is empty, OR
+  # If the API token is null (e.g. there is no token), OR
+  # If the API token is expired
+  if [[ -z "${apiToken}" ]] || [[ "${apiToken}" == "null" ]] || \
+  [[ "$(LANG=C ${DATE_CMD} +%s)" -gt "${apiTokenExpiry}" ]]; then
+    download_token
+  fi
+fi
 
 case "$1" in
   -h|--help|h*) print_help ;;
