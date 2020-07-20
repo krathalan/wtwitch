@@ -542,9 +542,13 @@ fi
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
-# If unit testing, set a fixed terminal width equal to the one on builds.sr.ht
+# If unit testing:
+#   set a fixed terminal width equal to the one on builds.sr.ht
+#   set TZ and LANG equal to expected output data
 if [[ -n "${DUMMY_DATA:-}" ]]; then
   readonly TERMINAL_WIDTH=80
+  TZ="America/Los_Angeles"
+  LANG="en_US.UTF-8"
 else
   readonly TERMINAL_WIDTH="$(tput cols)"
 fi
