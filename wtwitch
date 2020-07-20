@@ -97,10 +97,6 @@ readonly TWITCH_API_SECRET="gaofxvult280l3sbz8n6btvk5fdswp"
 # 5 spaces, 1 colon, 2 parantheses
 readonly TITLE_CHARACTERS="8"
 
-# Set internal langs to C to count special character width accurately
-LANG=C
-LC_ALL=C
-
 # -----------------------------------------
 # ------------- Translations --------------
 # -----------------------------------------
@@ -542,9 +538,7 @@ fi
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
-# If unit testing:
-#   set a fixed terminal width equal to the one on builds.sr.ht
-#   set TZ and LANG equal to expected output data
+# If unit testing: set a fixed terminal width equal to the one on builds.sr.ht
 if [[ -n "${DUMMY_DATA:-}" ]]; then
   readonly TERMINAL_WIDTH=80
 else
