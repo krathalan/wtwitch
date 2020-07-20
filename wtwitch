@@ -97,19 +97,6 @@ readonly TWITCH_API_SECRET="gaofxvult280l3sbz8n6btvk5fdswp"
 # 5 spaces, 1 colon, 2 parantheses
 readonly TITLE_CHARACTERS="8"
 
-# Colors
-GREEN="\e[1m\e[32m"
-GREY="\e[90m"
-LIGHTGREEN="\e[92m"
-NC="\e[0m" # No color/turn off all tput attributes
-ORANGE="\e[93m"
-PURPLE="\e[95m"
-RED="\e[1m\e[91m"
-TURQOISE="\e[96m"
-
-# Get beginning of $LANG for translations
-WTWITCH_LANG="${LANG%_*}"
-
 # Set internal langs to C to count special character width accurately
 LANG=C
 LC_ALL=C
@@ -475,23 +462,34 @@ fi
 source "${ENVIRONMENT_FILE}"
 
 # Load settings
+# apiToken must be malleable because it must be updated in-memory if it is expired
+# userPlayer must be malleable because it must be updated if the user's default
+#   player is mpv and they don't have it installed but have vlc installed
 mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}")"
 apiToken="${userSettings[0]}"
-apiTokenExpiry="${userSettings[1]}"
-useColors="${userSettings[2]}"
+readonly apiTokenExpiry="${userSettings[1]}"
+readonly useColors="${userSettings[2]}"
 userPlayer="${userSettings[3]}"
-userQuality="${userSettings[4]}"
+readonly userQuality="${userSettings[4]}"
 readonly blocklist="$(<"${BLOCKLIST_FILE}")"
 
+# Colors
+readonly NC="\e[0m" # No color/turn off all tput attributes
 # Deactivate colors if useColors is false
 if [[ "${useColors}" == "false" ]]; then
-  GREEN="${NC}"
-  GREY="${NC}"
-  LIGHTGREEN="${NC}"
-  ORANGE="${NC}"
-  PURPLE="${NC}"
-  RED="${NC}"
-  TURQOISE="${NC}"
+  readonly GREY="${NC}"
+  readonly LIGHTGREEN="${NC}"
+  readonly ORANGE="${NC}"
+  readonly PURPLE="${NC}"
+  readonly RED="${NC}"
+  readonly TURQOISE="${NC}"
+else
+  readonly GREY="\e[90m"
+  readonly LIGHTGREEN="\e[92m"
+  readonly ORANGE="\e[93m"
+  readonly PURPLE="\e[95m"
+  readonly RED="\e[1m\e[91m"
+  readonly TURQOISE="\e[96m"
 fi
 
 # 'date' command
@@ -552,11 +550,12 @@ else
 fi
 
 # Default to English if language isn't supported
-case "${WTWITCH_LANG}" in
+case "${LANG%_*}" in
   "de"|"es"|"fr")
+    readonly WTWITCH_LANG="${LANG%_*}"
     ;;
   *)
-    WTWITCH_LANG="en"
+    readonly WTWITCH_LANG="en"
     ;;
 esac
 
@@ -800,6 +799,7 @@ invalidate_cache()
 #   TWITCH_API_KEY
 #   TWITCH_API_SECRET
 #   TWITCH_ID_URL
+#   DATE_CMD
 #   apiToken
 #   curlFlags
 # Arguments:
@@ -925,6 +925,7 @@ change_quality()
 #   DEBUGGING
 #   CURRENT_TIME_UNIX
 #   LAST_SEEN_TEXT
+#   DATE_CMD
 #   userPlayer
 #   userQuality
 #   userSubscriptions
@@ -1091,6 +1092,7 @@ get_offline_streams()
 #   LAST_SEEN_DIRECTORY
 #   CACHE_OFFLINE_TEXT_FILE
 #   LAST_SEEN_TEXT
+#   DATE_CMD
 # Arguments:
 #   $1: streamer to check
 #   $2: "${allStreamerJson}" to compare with streamer
@@ -1599,20 +1601,13 @@ toggle_colors()
 {
   # Reverse "colors" value
   if [[ "${useColors}" == "true" ]]; then
-    # "Empty" green
-    GREEN="${NC}"
-
     write_setting ".colors" "false"
-    local -r toPrint="$(get_translation colors_off)"
+    printf "\n %s.\n" "$(get_translation colors_off)"
   else
-    # "Re-fill" green from empty
-    GREEN="\e[1m\e[32m"
-
     write_setting ".colors" "true"
-    local -r toPrint="$(get_translation colors_on)"
+    # Hardcode color since all colors are deactivated right now
+    printf "\n %b%s.%b\n" "\e[1m\e[32m" "$(get_translation colors_on)" "${NC}"
   fi
-
-  printf "\n %b%s.%b\n" "${GREEN}" "${toPrint}" "${NC}"
 
   # Invalidate cache as it may or may not have colors
   invalidate_cache
@@ -1662,6 +1657,8 @@ unsubscribe()
 # Blocks streamer(s).
 # Globals:
 #   BLOCKLIST_FILE
+#   WTWITCH_LANG
+#   TRANSLATIONS
 # Arguments:
 #   $@: streamer(s) to block
 # Returns:
@@ -1748,6 +1745,7 @@ See \"man ${SCRIPT_NAME}\" or https://krathalan.net/wtwitch.html for more inform
 #   SCRIPT_NAME
 #   VERSION
 #   CONTRIBUTORS
+#   DATE_CMD
 # Arguments:
 #   none
 # Returns:
@@ -1807,7 +1805,7 @@ glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
 glob "$1" '[suw]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_streamer)"
 
-# If using a command that requires the Twitch API
+# If using a command that requires the Twitch API, update token
 if glob "$1" '[cengt]*'; then
   # If the API token is empty, OR
   # If the API token is null (e.g. there is no token), OR
