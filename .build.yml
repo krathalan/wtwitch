@@ -13,6 +13,8 @@ tasks:
       cd wtwitch
       shellcheck wtwitch
   - unit-tests: |
+      export LANG="en_US.UTF-8"
+      export TZ="America/Los_Angeles"
       cd wtwitch
       mkdir -p ~/.cache ~/.config
       cp -r dummy-data/cache ~/.cache/wtwitch
