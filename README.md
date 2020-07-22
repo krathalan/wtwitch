@@ -15,7 +15,12 @@ Table of contents:
 Install the official AUR package, maintained by the author of wtwitch (me): https://aur.archlinux.org/packages/wtwitch/
 
 AUR releases are signed so you'll need to import my GPG key:
-`02AA A23A BDF1 D538 BD88  9D25 1AAD E5E7 28FF C667`
+
+`<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
+
+Old signing key (for releases before 2.0.0):
+
+`<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
 ### Ubuntu
 Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin.
