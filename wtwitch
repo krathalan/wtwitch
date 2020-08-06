@@ -749,6 +749,7 @@ to_lowercase() {
 #######################################
 stream_failure_notify()
 {
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_one.${WTWITCH_LANG}, .stream_failure_two.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   notify-send -i "gnome-twitch" "Wtwitch: ${localizedStrings[0]} $1 ${localizedStrings[1]}" "$2"
@@ -844,6 +845,7 @@ change_player()
   local passedCheckMarker="false"
 
   # Get localized strings
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".change_player_not_found.${WTWITCH_LANG}, .change_player_warning.${WTWITCH_LANG}, .change_player_player.${WTWITCH_LANG}, .change_player_warning_text.${WTWITCH_LANG}, .change_player_success.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   local -r playerName="$1"
@@ -933,9 +935,11 @@ change_quality()
 check_twitch_streams()
 {
   # Get subscriptions
+  local userSubscriptions
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
 
   # Get localized strings
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".check_online.${WTWITCH_LANG}, .check_offline.${WTWITCH_LANG}, .check_settings.${WTWITCH_LANG}, .check_player.${WTWITCH_LANG}, .check_quality.${WTWITCH_LANG}, .no_subs.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   if [[ -z "${userSubscriptions[*]}" ]]; then
@@ -1127,6 +1131,7 @@ get_offline_streams_helper()
 #######################################
 check_twitch_streams_helper()
 {
+  local streamerData
   mapfile -t streamerData <<< "$(jq -r ".user_name, .game_id, .title" <<< "$1")"
 
   # Update last seen time value
@@ -1169,6 +1174,7 @@ list_streamers_of_game()
   make_tmp
   readonly TMP_STREAMERS_OF_GAME_TEXT_FILE="${TMP_DIR}/streamers_of_game.txt"
 
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
@@ -1242,6 +1248,7 @@ list_streamers_of_game()
 #######################################
 print_stream_info()
 {
+  local streamerData
   mapfile -t streamerData <<< "$(jq -r ".data[$1].viewer_count, .data[$1].game_id, .data[$1].title, .data[$1].is_live" <<< "$2")"
 
   # Do not show streamer if blocked
@@ -1341,6 +1348,7 @@ list_top()
   readonly TMP_TOP_GAMES_TEXT_FILE="${TMP_DIR}/top_games.txt"
   readonly TMP_TOP_STREAMS_TEXT_FILE="${TMP_DIR}/top_streams.txt"
 
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".top_games.${WTWITCH_LANG}, .top_streams.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   printf "\n %s:\n" "${localizedStrings[0]}"
@@ -1509,6 +1517,7 @@ search_channels()
 stream()
 {
   # Get localized strings
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_player_one.${WTWITCH_LANG}, .stream_failure_player_two.${WTWITCH_LANG}, .stream_failure_offline_one.${WTWITCH_LANG}, .stream_failure_offline_two.${WTWITCH_LANG}, .stream_failure_quality.${WTWITCH_LANG}, .stream_watching.${WTWITCH_LANG}, .stream_on_twitch.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Use VLC as backup player if mpv is not installed
@@ -1663,6 +1672,7 @@ unsubscribe()
 block()
 {
   # Get localized strings
+  local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".removed.${WTWITCH_LANG}, .added.${WTWITCH_LANG}, .from_blocklist.${WTWITCH_LANG}, .to_blocklist.${WTWITCH_LANG}, .blocklist.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   shift
