@@ -77,11 +77,19 @@ You have a few options:
 Afterwards, [clone the repo](#any-distro).
 
 ### Any distro
-Clone the repository:
+Install dependencies:
+
+- `curl`
+- `jq`
+- `streamlink`
+
+Different distros may have different names for these packages.
+
+Then clone the repository:
 
 > `git clone https://git.sr.ht/~krathalan/wtwitch`
 
-Then add the cloned wtwitch directory to your `$PATH`, or `ln -s` the `wtwitch` script to somewhere in your `$PATH`.
+Optionally, add the cloned wtwitch directory to your `$PATH`, or `ln -s` the `wtwitch` script to somewhere in your `$PATH`.
 
 Don't forget to `git pull` every once in a while :)
 

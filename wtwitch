@@ -522,8 +522,12 @@ if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
     readonly _packageinfo="script or unknown"
   fi
 
+  if [[ -f /etc/os-release ]]; then
+    readonly OS_NAME="$(grep -G "^NAME=" /etc/os-release)"
+  fi
+
   printf "Starting wtwitch %s debug log\n\n" "${VERSION}"
-  printf "System: %s\n" "$(uname -sr)"
+  printf "System: %s; %s\n" "${OS_NAME:-}" "$(uname -sr)"
   printf "Package: %s\n" "${_packageinfo}"
   printf "Dependencies: bash-%s %s\n" "${BASH_VERSION}" "$(jq --version) $(streamlink --version)"
   printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(${DATE_CMD})" "$*"
