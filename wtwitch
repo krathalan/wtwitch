@@ -437,8 +437,17 @@ EOF
 
 # Check files -- create cache/config directories and required files
 # Creating LAST_SEEN_DIRECTORY also creates CACHE_FILE_DIRECTORY
-mkdir -p "${LAST_SEEN_DIRECTORY}" "${CONFIG_FILE_DIRECTORY}"
-touch "${BLOCKLIST_FILE}"
+if [[ ! -d "${LAST_SEEN_DIRECTORY}" ]]; then
+  mkdir -p "${LAST_SEEN_DIRECTORY}"
+fi
+
+if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
+  mkdir -p "${CONFIG_FILE_DIRECTORY}"
+fi
+
+if [[ ! -f "${BLOCKLIST_FILE}" ]]; then
+  touch "${BLOCKLIST_FILE}"
+fi
 
 if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
   printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
