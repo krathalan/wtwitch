@@ -1,10 +1,11 @@
+- Add command to list and watch VODs from a specified channel
+    wtwitch v[od] [channel] (creates numbered list of vods?)
+    wtwitch v[od] [channel] [number]
+    Move wtwitch v[ersion] to full wtwitch version, no v[]
 - Allow browsing more than one page of t/g results
     https://dev.twitch.tv/docs/api/reference/#get-games
     e.g. wtwitch g overwatch next
     Using wtwitch g without a "next" should reset pagination value
-- Add ability to search channels
-    https://dev.twitch.tv/docs/api/reference/#search-channels
-    wtwitch n/channels channel
 
 ===> DONE in dev branch <===
 - Switch options to pash command style
@@ -12,4 +13,5 @@
 - Allow blocking/subscribing/unsubscribing to more than 1 channel at a time
 - Keep track of last time offline subs were seen online
 - Localize all hardcoded strings
-- Add ability to search games
+- Add command to search games
+- Add command to search channels
