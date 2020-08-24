@@ -51,7 +51,11 @@ Then add the cloned wtwitch directory to your `$PATH`.
 ## More information
 See `man wtwitch` if you have the AUR package installed.
 
-Otherwise, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
+If not, you may view the man page online: https://krathalan.net/wtwitch.html
+
+For an offline copy, you can build the man page from source.
+
+To build the man page, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
 
 > `$ scdoc < wtwitch.1.scd > wtwitch.1`
 
