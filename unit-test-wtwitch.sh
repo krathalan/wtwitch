@@ -30,10 +30,9 @@
 # This script uses shellcheck: https://www.shellcheck.net/
 
 # See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -u # (Eo pipefail) is Bash only!
+set -eu # (Eo pipefail) is Bash only!
 
-# Clean up if script is interrupted early
-trap "clean_up && kill 0" INT
+trap "clean_up" INT EXIT
 
 # -----------------------------------------
 # ----------- Program variables -----------
@@ -48,7 +47,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 # Other
 readonly SCRIPT_NAME=$(basename "$0")
 readonly TEST_STREAMER="loltyler1"
-readonly CORRECT_OUTPUT_DIR="${PWD}/test-output"
+readonly CORRECT_OUTPUT_DIR="${PWD}/unit-test-output"
 testName=""
 
 # Temporary file to output to for comparison
@@ -85,6 +84,7 @@ compare_output()
     print_success "$2"
   else
     print_failure "$2"
+    exit 1
   fi
 }
 
@@ -143,11 +143,11 @@ fi
 printf "\n%s. Testing blocklist functionality...\n" "${stepWithColor}"
 
 testName="Add to blocklist"
-bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch b "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "blocklist_one" "${testName}"
 
 testName="Remove from blocklist"
-bash wtwitch -b "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch b "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "blocklist_two" "${testName}"
 
 complete_step
@@ -155,11 +155,11 @@ complete_step
 printf "\n%s. Testing subscribe functionality...\n" "${stepWithColor}"
 
 testName="Subscribe to"
-bash wtwitch -s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch s "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "subscribe_success" "${testName}"
 
 testName="Subscribe to (already subscribed)"
-bash wtwitch -s "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch s "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "subscribe_failure" "${testName}"
 
 complete_step
@@ -167,11 +167,11 @@ complete_step
 printf "\n%s. Testing unsubscribe functionality...\n" "${stepWithColor}"
 
 testName="Unsubscribe from"
-bash wtwitch -u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch u "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "unsubscribe_success" "${testName}"
 
 testName="Unsubscribe from (not subscribed)"
-bash wtwitch -u "${TEST_STREAMER}" > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch u "${TEST_STREAMER}" 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "unsubscribe_failure" "${testName}"
 
 complete_step
@@ -179,11 +179,11 @@ complete_step
 printf "\n%s. Testing change player functionality...\n" "${stepWithColor}"
 
 testName="Change player"
-bash wtwitch -p mpv > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch p mpv 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "change_player_success" "${testName}"
 
 testName="Change player (vlc not installed)"
-bash wtwitch -p vlc > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch p vlc 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "change_player_failure" "${testName}"
 
 complete_step
@@ -191,16 +191,46 @@ complete_step
 printf "\n%s. Testing change quality functionality...\n" "${stepWithColor}"
 
 testName="Change quality"
-bash wtwitch -q 1080p60,720p,best > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch q 1080p60,720p,best 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "change_quality_success" "${testName}"
 
 testName="Change quality (invalid quality)"
-bash wtwitch -q 1080p,490p > "${TMP_DIR_FILE}" 2>&1
+bash wtwitch q 1080p,490p 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "change_quality_failure" "${testName}"
 
 # Change back to my setting :)
-bash wtwitch -q best > /dev/null
+bash wtwitch q best > /dev/null
 
 complete_step
 
-clean_up
+printf "\n%s. Testing check_twitch_streams with dummy data...\n" "${stepWithColor}"
+
+testName="check_twitch_streams"
+DUMMY_DATA=dummy-data/check_twitch_streams.json bash wtwitch c 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "check_twitch_streams" "${testName}"
+
+complete_step
+
+printf "\n%s. Testing list_streamers_of_game with dummy data...\n" "${stepWithColor}"
+
+testName="list_streamers_of_game"
+DUMMY_DATA=dummy-data/list_streamers_of_game.json bash wtwitch g overwatch 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "list_streamers_of_game" "${testName}"
+
+complete_step
+
+printf "\n%s. Testing search_categories with dummy data...\n" "${stepWithColor}"
+
+testName="search_categories"
+DUMMY_DATA=dummy-data/search_categories.json bash wtwitch e w 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "search_categories" "${testName}"
+
+complete_step
+
+printf "\n%s. Testing search_channels with dummy data...\n" "${stepWithColor}"
+
+testName="search_channels"
+DUMMY_DATA=dummy-data/search_channels.json bash wtwitch n w 2>&1 | tee "${TMP_DIR_FILE}"
+compare_output "search_channels" "${testName}"
+
+complete_step

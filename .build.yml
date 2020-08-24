@@ -1,0 +1,22 @@
+image: archlinux
+packages:
+  - curl
+  - dash
+  - jq
+  - scdoc
+  - shellcheck
+tasks:
+  - scdoc-test: |
+      cd wtwitch
+      scdoc < wtwitch.1.scd > wtwitch.1
+  - shellcheck-test: |
+      cd wtwitch
+      shellcheck wtwitch
+  - unit-tests: |
+      export LANG="en_US.UTF-8"
+      export TZ="America/Los_Angeles"
+      cd wtwitch
+      mkdir -p ~/.cache ~/.config
+      cp -r dummy-data/cache ~/.cache/wtwitch
+      cp -r dummy-data/config ~/.config/wtwitch
+      dash unit-test-wtwitch.sh
