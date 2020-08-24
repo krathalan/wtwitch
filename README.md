@@ -6,9 +6,39 @@ A terminal program for Twitch. Watch and browse Twitch without proprietary JavaS
 
 Table of contents:
 
-1. [Install](https://git.sr.ht/~krathalan/wtwitch#install)
-2. [More information](https://git.sr.ht/~krathalan/wtwitch#more-information)
-3. [FAQ](https://git.sr.ht/~krathalan/wtwitch#faq)
+1. [How to use](#how-to-use)
+2. [Install](#install)
+3. [More information](#more-information)
+4. [Bugs and feature requests](#bugs-and-feature-requests)
+4. [FAQ](#faq)
+5. [Privacy](#privacy)
+6. [Technical information](#technical-information)
+
+## How to use
+Wtwitch has the following commands:
+
+```
+=> [w]atch [name]      - Watch [name] streamer.
+=> [s]ub [name(s)]     - Subscribe to [name] streamer.
+                         You can subscribe to multiple streamers in one command.
+=> [u]nsub [name(s)]   - Unsubscribe from [name] streamer.
+                         You can unsubscribe from multiple streamers in one command.
+=> [c]heck             - View your settings and the status of streamers you are
+                         subscribed to.
+=> [e] [search-term]   - Search games/categories for [search-term].
+=> [n] [search-term]   - Search streamers/channels for [search-term].
+=> [g]ame [name]       - View the top streamers for [name] game/category.
+=> [t]op               - View the top games and streamers on Twitch.
+=> [l]                 - Toggle the usage of colors in wtwitch output.
+=> [p]layer [program]  - Change the player program that gets passed to streamlink.
+=> [q]uality [quality] - Change the video quality that gets passed to streamlink.
+=> [b]lock [name(s)]   - Block [name] streamer, preventing them from appearing in any
+                         output. You can block multiple streamers in one command.
+=> [v]ersion           - Print the current version of wtwitch.
+=> [h]elp              - Print this help.
+```
+
+See [more information](#more-information) for help viewing the man page.
 
 ## Install
 ### Arch Linux
@@ -53,7 +83,7 @@ See `man wtwitch` if you have the AUR package installed.
 
 If not, you may view the man page online: https://krathalan.net/wtwitch.html
 
-For an offline copy, you can build the man page from source.
+For an offline copy, without the AUR package, you can build the man page from source.
 
 To build the man page, `cd` into the cloned wtwitch directory. Then generate the man page with [scdoc](https://git.sr.ht/~sircmpwn/scdoc/):
 
@@ -64,7 +94,13 @@ Then view the man page:
 > `$ man -l wtwitch.1`
 
 ## Bugs and feature requests
-To take a debug log with wtwitch, append "`-d &> debug.log`" to your command (e.g. `wtwitch -g 'destiny 2' -d &> debug.log`). Then paste the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
+If you are reporting a bug, please attach a debug log.
+
+To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a log file. You can run wtwitch in debug mode in a one-off command like so:
+
+> `$ WTWITCH_DEBUG=on wtwitch [command] &> debug.log`
+
+Then paste/upload the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
 
 Please file feature requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
 
