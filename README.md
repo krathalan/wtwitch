@@ -10,9 +10,10 @@ Table of contents:
 2. [Install](#install)
 3. [More information](#more-information)
 4. [Bugs and feature requests](#bugs-and-feature-requests)
-4. [FAQ](#faq)
-5. [Privacy](#privacy)
-6. [Technical information](#technical-information)
+5. [Contributions](#contributions)
+6. [FAQ](#faq)
+7. [Privacy](#privacy)
+8. [Technical information](#technical-information)
 
 ## How to use
 Wtwitch has the following commands:
