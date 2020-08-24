@@ -108,7 +108,7 @@ Please file feature requests and report any bugs at: https://todo.sr.ht/~krathal
 Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
 
 ## Contributions
-All contributions are welcome. Please try to adhere to the Google Shell Style Guide (https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at Dylan's Pure Bash Bible (https://github.com/dylanaraps/pure-bash-bible) before using an external program.
+All contributions are welcome. Please try to adhere to the [Google Shell Style Guide](https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at [Dylan's Pure Bash Bible](https://github.com/dylanaraps/pure-bash-bible) before using an external program.
 
 Most needed are translations for languages other than English. No coding knowledge is necessary to submit translations. Anyone can contribute translations in any format they wish, and I will incorporate them into the program.
 
