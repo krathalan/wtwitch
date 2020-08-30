@@ -53,6 +53,15 @@ Old signing key (for releases before 2.0.0):
 
 `<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
+### macOS
+You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
+
+```
+brew install bash coreutils jq
+```
+
+Afterwards, [clone the repo](#any-distro).
+
 ### Ubuntu
 Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin.
 
