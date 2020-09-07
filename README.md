@@ -49,9 +49,7 @@ AUR releases are signed so you'll need to import my GPG key:
 
 `<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
 
-Old signing key (for releases before 2.0.0):
-
-`<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
+If you're having keyserver issues, grab it from my website: https://krathalan.net/keys/srht.asc
 
 ### macOS
 You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
@@ -157,6 +155,11 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 | SUM | 2 | 211 | 415 | **855** |
 
 ---
+
+### Old signing key
+For releases before 2.0.0:
+
+`<krathalan@disroot.org> 02AA A23A BDF1 D538 BD88 9D25 1AAD E5E7 28FF C667`
 
 ## Privacy
 Wtwitch never collects any usage data or data about the user. Wtwitch only connects to remote servers for the following reasons:
