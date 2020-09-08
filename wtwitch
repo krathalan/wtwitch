@@ -70,8 +70,7 @@ readonly VERSION="2.1.0"
 readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${XDG_CACHE_HOME:-${HOME}/.cache}/${SCRIPT_NAME}"
 readonly LAST_SEEN_DIRECTORY="${CACHE_FILE_DIRECTORY}/lastSeen"
-readonly CACHE_OFFLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_offline.txt"
-readonly CACHE_ONLINE_TEXT_FILE="${CACHE_FILE_DIRECTORY}/stream_online.txt"
+readonly CACHE_SUBSCRIBERS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/subscription-cache.json"
 
 # Used to reduce strain on Twitch API; see get_game_name()
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
@@ -575,8 +574,7 @@ esac
 #######################################
 # Cleans up cache and temporary file(s).
 # Globals:
-#   CACHE_ONLINE_TEXT_FILE
-#   CACHE_OFFLINE_TEXT_FILE
+#   CACHE_SUBSCRIBERS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -585,7 +583,7 @@ esac
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
+  rm -f "${CACHE_SUBSCRIBERS_TEXT_FILE}"
 
   clean_up_tmp
 }
@@ -922,7 +920,19 @@ change_quality()
   fi
 }
 
-return_online_subscription_json()
+#######################################
+# Caches a Twitch API response for all subscribed streamers.
+# Globals:
+#   CONFIG_FILE
+#   TWITCH_API_URL
+#   DUMMY_DATA
+#   CACHE_SUBSCRIBERS_TEXT_FILE
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+cache_online_subscription_json()
 {
   # Get subscriptions
   local userSubscriptions
@@ -936,7 +946,14 @@ return_online_subscription_json()
   done
 
   # Get data of all online streamers (sans game names)
-  printf "%s" "$(download_file "${initialRequestURL}")"
+  # If unit testing, use specified dummy data
+  if [[ -n "${DUMMY_DATA:-}" ]]; then
+    local -r allStreamerJson="$(<"${DUMMY_DATA}")"
+  else
+    local -r allStreamerJson="$(download_file "${initialRequestURL}")"
+  fi
+
+  printf "%s" "${allStreamerJson}" > "${CACHE_SUBSCRIBERS_TEXT_FILE}"
 }
 
 #######################################
@@ -947,8 +964,9 @@ return_online_subscription_json()
 #   WTWITCH_LANG
 #   TRANSLATIONS
 #   CACHE_EXPIRY_TIME
-#   CACHE_OFFLINE_TEXT_FILE
-#   CACHE_ONLINE_TEXT_FILE
+#   TMP_DIR
+#   TMP_ONLINE_TEXT_FILE
+#   TMP_OFFLINE_TEXT_FILE
 #   TWITCH_API_URL
 #   DEBUGGING
 #   CURRENT_TIME_UNIX
@@ -987,98 +1005,88 @@ check_twitch_streams()
       lastSubscriptionUpdate=0
     fi
 
+    # Reduce number of external program calls
+    readonly CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"
+    readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
+
     if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
-      local -r currentDate="$(LANG=C ${DATE_CMD} +%s)"
-      dateDiff="$(( currentDate - lastSubscriptionUpdate ))"
+      dateDiff="$(( CURRENT_TIME_UNIX - lastSubscriptionUpdate ))"
     fi
 
     # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
     # if the time between now and the last subscription update is greater than the cache expiry time, OR
-    # if either of the cache files do NOT exist yet, OR
+    # if the cache file does NOT exist yet, OR
     # if we are unit testing with dummy data
     if  [[ "${lastSubscriptionUpdate}" == "null" ]] || \
     [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] || \
-    [[ ! -f "${CACHE_ONLINE_TEXT_FILE}" ]] || \
-    [[ ! -f "${CACHE_OFFLINE_TEXT_FILE}" ]] || \
+    [[ ! -f "${CACHE_SUBSCRIBERS_TEXT_FILE}" ]] || \
     [[ -n "${DUMMY_DATA:-}" ]]; then
-      # Remove old cache files
-      clean_up
-
-      # Ensure that both CACHE_ONLINE_TEXT_FILE and CACHE_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
-      touch "${CACHE_ONLINE_TEXT_FILE}" "${CACHE_OFFLINE_TEXT_FILE}"
-
-      # Build inital request URL
-      local initialRequestURL="${TWITCH_API_URL}/streams?"
-
-      for stream in "${userSubscriptions[@]}"; do
-        initialRequestURL+="user_login=${stream}&"
-      done
-
-      # Get data of all online streamers (sans game names)
-      # If unit testing, use specified dummy data
-      if [[ -n "${DUMMY_DATA:-}" ]]; then
-        local -r allStreamerJson="$(<"${DUMMY_DATA}")"
-      else
-        local -r allStreamerJson="$(download_file "${initialRequestURL}")"
-      fi
-
-      # Reduce number of external program calls
-      readonly CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"
-      readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
-
-      # Figure out offline streamers in background
-      if [[ "${DEBUGGING}" == "on" ]]; then
-        get_offline_streams "${allStreamerJson}"
-      else
-        get_offline_streams "${allStreamerJson}" &
-      fi
-
-      # Pass each streamer json data to check_twitch_streams_helper to parse,
-      # get game name for, and print
-      local whileCounter=0
-
-      local streamerToProcess=""
-      streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-
-      # If streamer data is empty (e.g. wtwitch user is offline), exit
-      [[ -z "${streamerToProcess}" ]] &&
-        exit_script_on_failure "$(get_translation info_fetch_failure). $(get_translation check_internet)"
-
-      # Don't use subshells when debugging is on
-      # Code is duplicated here because testing if DEBUGGING=on every iteration
-      # of the while loop takes a lot more time (~20-30% more)
-      if [[ "${DEBUGGING}" == "on" ]]; then
-        while [[ "${streamerToProcess}" != "null" ]]; do
-          check_twitch_streams_helper "${streamerToProcess}"
-
-          # Refresh data
-          whileCounter="$(( whileCounter + 1 ))"
-          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-        done
-      else
-        while [[ "${streamerToProcess}" != "null" ]]; do
-          check_twitch_streams_helper "${streamerToProcess}" &
-
-          # Refresh data
-          whileCounter="$(( whileCounter + 1 ))"
-          streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
-        done
-      fi
-
-      # Wait for all background processes, offline and online, to finish
-      wait
+      # Get a cache of the current online streamers
+      cache_online_subscription_json
 
       # Update lastSubscriptionUpdate time
       write_setting ".lastSubscriptionUpdate" "${CURRENT_TIME_UNIX}" &
     fi
 
+    make_tmp
+    readonly TMP_ONLINE_TEXT_FILE="${TMP_DIR}/streamers_online.txt"
+    readonly TMP_OFFLINE_TEXT_FILE="${TMP_DIR}/streamers_offline.txt"
+
+    # Ensure that both TMP_ONLINE_TEXT_FILE and TMP_OFFLINE_TEXT_FILE get written to; sometimes all streamers are online or offline
+    touch "${TMP_ONLINE_TEXT_FILE}" "${TMP_OFFLINE_TEXT_FILE}"
+
+    # Get cached subscriber json
+    local -r allStreamerJson="$(<"${CACHE_SUBSCRIBERS_TEXT_FILE}")"
+
+    # Figure out offline streamers in background
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      get_offline_streams "${allStreamerJson}"
+    else
+      get_offline_streams "${allStreamerJson}" &
+    fi
+
+    # Pass each streamer json data to check_twitch_streams_helper to parse,
+    # get game name for, and print
+    local whileCounter=0
+
+    local streamerToProcess=""
+    streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+
+    # If streamer data is empty (e.g. wtwitch user is offline), exit
+    [[ -z "${streamerToProcess}" ]] &&
+      exit_script_on_failure "$(get_translation info_fetch_failure). $(get_translation check_internet)"
+
+    # Don't use subshells when debugging is on
+    # Code is duplicated here because testing if DEBUGGING=on every iteration
+    # of the while loop takes a lot more time (~20-30% more)
+    if [[ "${DEBUGGING}" == "on" ]]; then
+      while [[ "${streamerToProcess}" != "null" ]]; do
+        check_twitch_streams_helper "${streamerToProcess}"
+
+        # Refresh data
+        whileCounter="$(( whileCounter + 1 ))"
+        streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+      done
+    else
+      while [[ "${streamerToProcess}" != "null" ]]; do
+        check_twitch_streams_helper "${streamerToProcess}" &
+
+        # Refresh data
+        whileCounter="$(( whileCounter + 1 ))"
+        streamerToProcess="$(jq -r ".data[${whileCounter}]" <<< "${allStreamerJson}")"
+      done
+    fi
+
+    # Wait for all background processes, offline and online, to finish
+    wait
+
     printf "\n"
 
-    sort "${CACHE_ONLINE_TEXT_FILE}" 2> /dev/null
+    sort "${TMP_ONLINE_TEXT_FILE}" 2> /dev/null
 
     printf "\n %s:\n" "${localizedStrings[1]}"
 
-    sort "${CACHE_OFFLINE_TEXT_FILE}" 2> /dev/null
+    sort "${TMP_OFFLINE_TEXT_FILE}" 2> /dev/null
   fi
 
   # Print settings
@@ -1140,7 +1148,7 @@ get_offline_streams_helper()
 
   # If the streamer to check is not found in json, then it is offline
   if [[ "$2" != *"$1"* ]]; then
-    printf "   %b%s%s%b\n" "${GREY}" "$1" "${lastSeen}" "${NC}" >> "${CACHE_OFFLINE_TEXT_FILE}"
+    printf "   %b%s%s%b\n" "${GREY}" "$1" "${lastSeen}" "${NC}" >> "${TMP_OFFLINE_TEXT_FILE}"
   fi
 }
 
@@ -1155,7 +1163,7 @@ get_offline_streams_helper()
 #   TITLE_CHARACTERS
 #   CACHE_ONLINE_TEXT_FILE
 # Arguments:
-#   none
+#   $1: json data for streamer to process
 # Returns:
 #   none
 #######################################
@@ -1181,7 +1189,7 @@ check_twitch_streams_helper()
     streamName+="…"
   fi
 
-  printf "   %b%s%b: %s %b(%s)%b\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${CACHE_ONLINE_TEXT_FILE}"
+  printf "   %b%s%b: %s %b(%s)%b\n" "${LIGHTGREEN}" "${streamerData[0]}" "${NC}" "${streamName}" "${ORANGE}" "${streamGame}" "${NC}" >> "${TMP_ONLINE_TEXT_FILE}"
 }
 
 #######################################
@@ -1824,7 +1832,7 @@ Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##
 [[ -z "${1:-}" ]] && print_help
 
 [[ "$1" == "_completion_return_online_subscription_json" ]] &&
-  return_online_subscription_json &&
+  cache_online_subscription_json &&
   exit 0
 
 glob "$1" '[-]*' &&
