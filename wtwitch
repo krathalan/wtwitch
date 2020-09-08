@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.0.0"
+readonly VERSION="2.1.0"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -920,6 +920,23 @@ change_quality()
   else
     exit_script_on_failure "${specifiedQuality} $(get_translation change_quality_error)."
   fi
+}
+
+return_online_subscription_json()
+{
+  # Get subscriptions
+  local userSubscriptions
+  mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
+
+  # Build inital request URL
+  local initialRequestURL="${TWITCH_API_URL}/streams?"
+
+  for stream in "${userSubscriptions[@]}"; do
+    initialRequestURL+="user_login=${stream}&"
+  done
+
+  # Get data of all online streamers (sans game names)
+  printf "%s" "$(download_file "${initialRequestURL}")"
 }
 
 #######################################
@@ -1805,6 +1822,10 @@ Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##
 
 # Check user input
 [[ -z "${1:-}" ]] && print_help
+
+[[ "$1" == "_completion_return_online_subscription_json" ]] &&
+  return_online_subscription_json &&
+  exit 0
 
 glob "$1" '[-]*' &&
   print_new_usage "$1"

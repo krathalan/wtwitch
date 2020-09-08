@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 2.0.0"]
+wtwitch(1) ["Version 2.1.0"]
 
 # NAME
 
@@ -85,6 +85,12 @@ e.g. wtwitch *h*
 *v*, *version*
 	Print the version of wtwitch.++
 e.g. wtwitch *v*
+
+# TAB COMPLETION
+
+Wtwitch will try its best to complete your input. When tabbing after wtwitch *u*, wtwitch will list/fill in your current subscriptions, since it only makes sense to unsubscribe from someone you're subscribed to.
+
+When tabbing after wtwitch *w*, wtwitch will get a list of your subscriptions that are online, and only list/fill in your subscribed streamers that are currently streaming (even though these are not the only streamers you can watch with *w*).
 
 # DEFAULT BEHAVIOR
 
