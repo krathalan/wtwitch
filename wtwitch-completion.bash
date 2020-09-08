@@ -75,13 +75,13 @@ _wtwitch_completions()
     fi
 
     # Get cache of online subscriptions
-    wtwitch c &> /dev/null
+    wtwitch _completion_cache_online_subscription_json &> /dev/null
 
     # Get a list of online subscriptions
     mapfile -t _user_subscriptions <<< "$(jq -r ".subscriptions[].streamer" "${XDG_CONFIG_HOME:-${HOME}/.config}/wtwitch/config.json")"
 
     _online_subscriptions=()
-    _online_subscriptions_file_text="$(<"${XDG_CACHE_HOME:-${HOME}/.cache}/wtwitch/stream_online.txt")"
+    _online_subscriptions_file_text="$(<"${XDG_CACHE_HOME:-${HOME}/.cache}/wtwitch/subscription-cache.json")"
     _online_subscriptions_file_text="$(_to_lowercase "${_online_subscriptions_file_text}")"
 
     for _subscription in "${_user_subscriptions[@]}"; do
