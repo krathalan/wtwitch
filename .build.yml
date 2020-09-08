@@ -4,7 +4,7 @@ packages:
   - dash
   - jq
   - scdoc
-  - shellcheck
+  - shellcheck-bin
 tasks:
   - scdoc-test: |
       cd wtwitch
