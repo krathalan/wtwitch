@@ -1,9 +1,4 @@
 ===> NEXT RELEASE GOAL <===
-- Add bash completion
-- When using `wtwitch c`, cache the json and not the formatted files
-  - This will better facilitate bash completion so as to not waste API calls
-  - This will make it so that if the user resizes a terminal during the 60 second
-    cache cooldown, the output will always be rerendered to the correct terminal width
 
 ===<<< FUTURE >>>===
 - Add command to list and watch VODs from a specified channel
@@ -23,3 +18,8 @@
 - Localize all hardcoded strings
 - Add command to search games
 - Add command to search channels
+- Add bash completion
+- When using `wtwitch c`, cache the json and not the formatted files
+  - This will better facilitate bash completion so as to not waste API calls
+  - This will make it so that if the user resizes a terminal during the 60 second
+    cache cooldown, the output will always be rerendered to the correct terminal width

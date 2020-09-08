@@ -149,3 +149,7 @@
     Keep track of last time offline subscriptions were seen online
     Improved compatibility with macOS with patches from René de Hesselle
     Added German localization improvement patch from René de Hesselle
+
+2.1.0 (September 7, 2020)
+    Added bash completion file (built in to AUR package)
+      https://todo.sr.ht/~krathalan/wtwitch/7

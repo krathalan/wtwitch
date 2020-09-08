@@ -1,5 +1,7 @@
 # wtwitch
 
+[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
 ![Screenshot](screenshot.jpg)
