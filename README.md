@@ -125,7 +125,7 @@ If you provide a better method of installation for a distro other than Arch, suc
 
 ## FAQ
 ### Are you going to implement Twitch chat?
-No. Check out [Chatty](https://chatty.github.io/), a featureful Twitch chat client written in Java.
+No. Check out [Chatty](https://chatty.github.io/), a featureful Twitch chat client written in Java. It's available in the AUR: https://aur.archlinux.org/packages/chatty/
 
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
 Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
