@@ -124,6 +124,9 @@ Most needed are translations for languages other than English. No coding knowled
 If you provide a better method of installation for a distro other than Arch, such as an Ubuntu PPA or Fedora Copr repo, please let me know and I will add it to this README.
 
 ## FAQ
+### Are you going to implement Twitch chat?
+No. Check out [Chatty](https://chatty.github.io/), a featureful Twitch chat client written in Java.
+
 ### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
 Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
 
