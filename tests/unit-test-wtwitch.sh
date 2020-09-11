@@ -48,6 +48,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 readonly SCRIPT_NAME=$(basename "$0")
 readonly TEST_STREAMER="loltyler1"
 readonly CORRECT_OUTPUT_DIR="$(dirname "$0")/unit-test-output"
+readonly DUMMY_DATA_DIR="$(dirname "$0")/dummy-data"
 testName=""
 
 # Temporary file to output to for comparison
@@ -206,7 +207,7 @@ complete_step
 printf "\n%s. Testing check_twitch_streams with dummy data...\n" "${stepWithColor}"
 
 testName="check_twitch_streams"
-DUMMY_DATA=dummy-data/check_twitch_streams.json bash wtwitch c 2>&1 | tee "${TMP_DIR_FILE}"
+DUMMY_DATA="${DUMMY_DATA_DIR}/check_twitch_streams.json" bash wtwitch c 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "check_twitch_streams" "${testName}"
 
 complete_step
@@ -214,7 +215,7 @@ complete_step
 printf "\n%s. Testing list_streamers_of_game with dummy data...\n" "${stepWithColor}"
 
 testName="list_streamers_of_game"
-DUMMY_DATA=dummy-data/list_streamers_of_game.json bash wtwitch g overwatch 2>&1 | tee "${TMP_DIR_FILE}"
+DUMMY_DATA="${DUMMY_DATA_DIR}/list_streamers_of_game.json" bash wtwitch g overwatch 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "list_streamers_of_game" "${testName}"
 
 complete_step
@@ -222,7 +223,7 @@ complete_step
 printf "\n%s. Testing search_categories with dummy data...\n" "${stepWithColor}"
 
 testName="search_categories"
-DUMMY_DATA=dummy-data/search_categories.json bash wtwitch e w 2>&1 | tee "${TMP_DIR_FILE}"
+DUMMY_DATA="${DUMMY_DATA_DIR}/search_categories.json" bash wtwitch e w 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "search_categories" "${testName}"
 
 complete_step
@@ -230,7 +231,7 @@ complete_step
 printf "\n%s. Testing search_channels with dummy data...\n" "${stepWithColor}"
 
 testName="search_channels"
-DUMMY_DATA=dummy-data/search_channels.json bash wtwitch n w 2>&1 | tee "${TMP_DIR_FILE}"
+DUMMY_DATA="${DUMMY_DATA_DIR}/search_channels.json" bash wtwitch n w 2>&1 | tee "${TMP_DIR_FILE}"
 compare_output "search_channels" "${testName}"
 
 complete_step
