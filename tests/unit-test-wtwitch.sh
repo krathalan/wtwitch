@@ -47,7 +47,7 @@ readonly NC=$(tput sgr0) # No color/turn off all tput attributes
 # Other
 readonly SCRIPT_NAME=$(basename "$0")
 readonly TEST_STREAMER="loltyler1"
-readonly CORRECT_OUTPUT_DIR="${PWD}/unit-test-output"
+readonly CORRECT_OUTPUT_DIR="$(dirname "$0")/unit-test-output"
 testName=""
 
 # Temporary file to output to for comparison
