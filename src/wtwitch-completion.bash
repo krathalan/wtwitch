@@ -80,15 +80,11 @@ _wtwitch_completions()
     # Get a list of online subscriptions
     mapfile -t _user_subscriptions <<< "$(jq -r ".subscriptions[].streamer" "${XDG_CONFIG_HOME:-${HOME}/.config}/wtwitch/config.json")"
 
-    _online_subscriptions=()
     _online_subscriptions_file_text="$(<"${XDG_CACHE_HOME:-${HOME}/.cache}/wtwitch/subscription-cache.json")"
+    # Convert to lowercase for even easier tab completion
     _online_subscriptions_file_text="$(_to_lowercase "${_online_subscriptions_file_text}")"
 
-    for _subscription in "${_user_subscriptions[@]}"; do
-      if [[ "${_online_subscriptions_file_text}" == *"${_subscription}"* ]]; then
-        _online_subscriptions+=("${_subscription}")
-      fi
-    done
+    mapfile -t _online_subscriptions <<< "$(jq -r ".data[].user_name" <<< "${_online_subscriptions_file_text}")"
 
     # Return list of online subscriptions
     mapfile -t COMPREPLY <<< "$(compgen -W "${_online_subscriptions[*]}" "${COMP_WORDS[2]}")"
