@@ -1,6 +1,6 @@
 # wtwitch
 
-[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Donate via Liberapay](https://img.shields.io/liberapay/receives/krathalan.svg?logo=liberapay)](https://liberapay.com/krathalan/donate)
+[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Donate via Liberapay](https://img.shields.io/liberapay/receives/krathalan?label=Donate%20on%20Liberapay&logo=Liberapay)](https://liberapay.com/krathalan/donate)
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
