@@ -7,16 +7,17 @@ packages:
   - shellcheck-bin
 tasks:
   - scdoc-test: |
-      cd wtwitch
+      cd wtwitch/src
       scdoc < wtwitch.1.scd > wtwitch.1
   - shellcheck-test: |
-      cd wtwitch
+      cd wtwitch/src
       shellcheck wtwitch
   - unit-tests: |
       export LANG="en_US.UTF-8"
       export TZ="America/Los_Angeles"
-      cd wtwitch
       mkdir -p ~/.cache ~/.config
+      cd wtwitch/tests
       cp -r dummy-data/cache ~/.cache/wtwitch
       cp -r dummy-data/config ~/.config/wtwitch
-      dash unit-test-wtwitch.sh
+      cd ../src
+      dash ../tests/unit-test-wtwitch.sh

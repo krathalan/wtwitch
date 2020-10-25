@@ -70,7 +70,8 @@ readonly VERSION="2.1.0"
 readonly CACHE_EXPIRY_TIME="60" # In seconds
 readonly CACHE_FILE_DIRECTORY="${XDG_CACHE_HOME:-${HOME}/.cache}/${SCRIPT_NAME}"
 readonly LAST_SEEN_DIRECTORY="${CACHE_FILE_DIRECTORY}/lastSeen"
-readonly CACHE_SUBSCRIBERS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/subscription-cache.json"
+readonly CACHE_CHECK_JSON_TEXT_FILE="${CACHE_FILE_DIRECTORY}/subscription-cache.json"
+readonly CACHE_ONLINE_SUBS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/online-subs"
 
 # Used to reduce strain on Twitch API; see get_game_name()
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
@@ -574,7 +575,7 @@ esac
 #######################################
 # Cleans up cache and temporary file(s).
 # Globals:
-#   CACHE_SUBSCRIBERS_TEXT_FILE
+#   CACHE_CHECK_JSON_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -583,7 +584,7 @@ esac
 clean_up()
 {
   # Clean up
-  rm -f "${CACHE_SUBSCRIBERS_TEXT_FILE}"
+  rm -f "${CACHE_CHECK_JSON_TEXT_FILE}"
 
   clean_up_tmp
 }
@@ -929,7 +930,7 @@ change_quality()
 #   CACHE_EXPIRY_TIME
 #   TWITCH_API_URL
 #   DUMMY_DATA
-#   CACHE_SUBSCRIBERS_TEXT_FILE
+#   CACHE_CHECK_JSON_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -959,7 +960,7 @@ cache_online_subscription_json()
   # if we are unit testing with dummy data
   if  [[ "${lastSubscriptionUpdate}" == "null" ]] || \
   [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] || \
-  [[ ! -f "${CACHE_SUBSCRIBERS_TEXT_FILE}" ]] || \
+  [[ ! -f "${CACHE_CHECK_JSON_TEXT_FILE}" ]] || \
   [[ -n "${DUMMY_DATA:-}" ]]; then
     # Get subscriptions
     local userSubscriptions
@@ -980,7 +981,10 @@ cache_online_subscription_json()
       local -r allStreamerJson="$(download_file "${initialRequestURL}")"
     fi
 
-    printf "%s" "${allStreamerJson}" > "${CACHE_SUBSCRIBERS_TEXT_FILE}"
+    printf "%s" "${allStreamerJson}" > "${CACHE_CHECK_JSON_TEXT_FILE}"
+
+    # Print usernames to cache file for easy mapfile-ing for tab completion
+    jq -r ".data[].user_name" <<< "${allStreamerJson}" >> "${CACHE_ONLINE_SUBS_TEXT_FILE}"
 
     # Update lastSubscriptionUpdate time
     write_setting ".lastSubscriptionUpdate" "${CURRENT_TIME_UNIX}" &
@@ -1031,7 +1035,7 @@ check_twitch_streams()
 
   # Get a cache of the current online streamers
   cache_online_subscription_json
-  local -r allStreamerJson="$(<"${CACHE_SUBSCRIBERS_TEXT_FILE}")"
+  local -r allStreamerJson="$(<"${CACHE_CHECK_JSON_TEXT_FILE}")"
 
   # Format the json cache into a pretty output
   make_tmp
