@@ -1,14 +1,15 @@
 ===> NEXT RELEASE GOAL <===
+- Allow browsing more than one page of t/g results
+    https://dev.twitch.tv/docs/api/reference/#get-games
+    "Press <enter> to view the next X results or any other key to quit"
+    Maybe a setting to disable this and go back to the old way?
+
 
 ===<<< FUTURE >>>===
 - Add command to list and watch VODs from a specified channel
     wtwitch v[od] [channel] (creates numbered list of vods?)
     wtwitch v[od] [channel] [number]
     Move wtwitch v[ersion] to full wtwitch version, no v[]
-- Allow browsing more than one page of t/g results
-    https://dev.twitch.tv/docs/api/reference/#get-games
-    e.g. wtwitch g overwatch next
-    Using wtwitch g without a "next" should reset pagination value
 
 ===> DONE in dev branch <===
 - Switch options to pash command style
