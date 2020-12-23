@@ -1595,7 +1595,7 @@ stream()
       local -r mpvWindowTitle="${localizedStrings[5]} $1 ${localizedStrings[6]}"
     fi
 
-    streamlink -p "${userPlayer}" --title "${mpvWindowTitle} (\\\${{video-params/h}}p \\\${{estimated-vf-fps}}fps)" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
+    streamlink -p "${userPlayer}" --title "${mpvWindowTitle}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   else
     streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   fi
