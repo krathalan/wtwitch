@@ -153,3 +153,6 @@
 2.1.0 (September 7, 2020)
     Added bash completion file (built in to AUR package)
       https://todo.sr.ht/~krathalan/wtwitch/7
+
+2.1.1 (December 22, 2020)
+    Fixed bug with mpv window title due to changes in streamlink 2.0.0
