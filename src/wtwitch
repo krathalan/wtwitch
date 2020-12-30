@@ -444,151 +444,6 @@ EOF
 )"
 
 # -----------------------------------------
-# ------- Pre-script: check & load --------
-# -----------------------------------------
-
-# Check files -- create cache/config directories and required files
-# Creating LAST_SEEN_DIRECTORY also creates CACHE_FILE_DIRECTORY
-if [[ ! -d "${LAST_SEEN_DIRECTORY}" ]]; then
-  mkdir -p "${LAST_SEEN_DIRECTORY}"
-fi
-
-if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
-  mkdir -p "${CONFIG_FILE_DIRECTORY}"
-fi
-
-if [[ ! -f "${BLOCKLIST_FILE}" ]]; then
-  touch "${BLOCKLIST_FILE}"
-fi
-
-if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
-  printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
-fi
-
-if [[ ! -f "${CONFIG_FILE}" ]]; then
-  # Default config
-  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"printOfflineSubscriptions\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
-fi
-
-if [[ ! -f "${ENVIRONMENT_FILE}" ]]; then
-  printf '#!/usr/bin/env sh\n\n# You can put commands or variables here for wtwitch to source.\n# This is useful on macOS, for example, to set a custom PATH or PYTHONPATH\n# to support non-standard locations specifically for wtwitch.\n' > "${ENVIRONMENT_FILE}"
-fi
-
-# Don't check the user's file -- their mistakes are their own
-# shellcheck source=/dev/null
-source "${ENVIRONMENT_FILE}"
-
-# Load settings
-# apiToken must be malleable because it must be updated in-memory if it is expired
-# printOfflineSubscriptions must be malleable because it must be initialized to T/F if it is null (i.e. does not exist in config file yet)
-# userPlayer must be malleable because it must be updated if the user's default
-#   player is mpv and they don't have it installed but have vlc installed
-mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .printOfflineSubscriptions, .player, .quality" "${CONFIG_FILE}")"
-apiToken="${userSettings[0]}"
-readonly apiTokenExpiry="${userSettings[1]}"
-readonly useColors="${userSettings[2]}"
-printOfflineSubscriptions="${userSettings[3]}"
-userPlayer="${userSettings[4]}"
-readonly userQuality="${userSettings[5]}"
-readonly blocklist="$(<"${BLOCKLIST_FILE}")"
-
-# Set printOfflineSubscriptions to true by default
-if [[ "${printOfflineSubscriptions}" == "null" ]]; then
-  write_setting ".printOfflineSubscriptions" "true"
-  printOfflineSubscriptions="true"
-fi
-
-# Colors
-readonly NC="\e[0m" # No color/turn off all tput attributes
-# Deactivate colors if useColors is false
-if [[ "${useColors}" == "false" ]]; then
-  readonly GREY="${NC}"
-  readonly LIGHTGREEN="${NC}"
-  readonly ORANGE="${NC}"
-  readonly PURPLE="${NC}"
-  readonly RED="${NC}"
-  readonly TURQOISE="${NC}"
-else
-  readonly GREY="\e[90m"
-  readonly LIGHTGREEN="\e[92m"
-  readonly ORANGE="\e[93m"
-  readonly PURPLE="\e[95m"
-  readonly RED="\e[1m\e[91m"
-  readonly TURQOISE="\e[96m"
-fi
-
-# 'date' command
-case "$(uname -s)" in
-  Darwin)
-    readonly DATE_CMD="gdate"
-    ;;
-  *)
-    readonly DATE_CMD="date"
-    ;;
-esac
-
-# Debugging
-if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
-  # Avoid subshells, print full curl output, and more behavioral changes
-  readonly DEBUGGING="on"
-  readonly curlFlags="--verbose"
-
-  # Print log information
-  readonly _dashes="-----------------------------------------------------------"
-
-  if pacman -Q wtwitch &> /dev/null; then
-    readonly _packageinfo="installed via pacman"
-  else
-    readonly _packageinfo="script or unknown"
-  fi
-
-  if [[ -f /etc/os-release ]]; then
-    readonly OS_NAME="$(grep -G "^NAME=" /etc/os-release)"
-  fi
-
-  printf "Starting wtwitch %s debug log\n\n" "${VERSION}"
-  printf "System: %s; %s\n" "${OS_NAME:-}" "$(uname -sr)"
-  printf "Package: %s\n" "${_packageinfo}"
-  printf "Dependencies: bash-%s %s\n" "${BASH_VERSION}" "$(jq --version) $(streamlink --version)"
-  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(${DATE_CMD})" "$*"
-
-  printf "Environment file:"
-  if [[ -f "${ENVIRONMENT_FILE}" ]]; then
-    printf "\n\n%s\n-----End environment file-----\n\n" "$(<"${ENVIRONMENT_FILE}")"
-  else
-    printf " no\n\n"
-  fi
-
-  printf "Config file:\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
-  printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
-
-  # Print all commands
-  set -x
-else
-  readonly DEBUGGING="off"
-  readonly curlFlags="--silent"
-fi
-
-# Used to calculate output string lengths; see check_twitch_streams_helper()
-# and list_streamers_of_game_helper()
-# If unit testing: set a fixed terminal width equal to the one on builds.sr.ht
-if [[ -n "${DUMMY_DATA:-}" ]]; then
-  readonly TERMINAL_WIDTH=80
-else
-  readonly TERMINAL_WIDTH="$(tput cols)"
-fi
-
-# Default to English if language isn't supported
-case "${LANG%_*}" in
-  "de"|"es"|"fr")
-    readonly WTWITCH_LANG="${LANG%_*}"
-    ;;
-  *)
-    readonly WTWITCH_LANG="en"
-    ;;
-esac
-
-# -----------------------------------------
 # --------------- "Library" ---------------
 # -----------------------------------------
 
@@ -1876,6 +1731,151 @@ Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##
 
   exit 0
 }
+
+# -----------------------------------------
+# ------- Pre-script: check & load --------
+# -----------------------------------------
+
+# Check files -- create cache/config directories and required files
+# Creating LAST_SEEN_DIRECTORY also creates CACHE_FILE_DIRECTORY
+if [[ ! -d "${LAST_SEEN_DIRECTORY}" ]]; then
+  mkdir -p "${LAST_SEEN_DIRECTORY}"
+fi
+
+if [[ ! -d "${CONFIG_FILE_DIRECTORY}" ]]; then
+  mkdir -p "${CONFIG_FILE_DIRECTORY}"
+fi
+
+if [[ ! -f "${BLOCKLIST_FILE}" ]]; then
+  touch "${BLOCKLIST_FILE}"
+fi
+
+if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
+  printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
+fi
+
+if [[ ! -f "${CONFIG_FILE}" ]]; then
+  # Default config
+  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"printOfflineSubscriptions\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+fi
+
+if [[ ! -f "${ENVIRONMENT_FILE}" ]]; then
+  printf '#!/usr/bin/env sh\n\n# You can put commands or variables here for wtwitch to source.\n# This is useful on macOS, for example, to set a custom PATH or PYTHONPATH\n# to support non-standard locations specifically for wtwitch.\n' > "${ENVIRONMENT_FILE}"
+fi
+
+# Don't check the user's file -- their mistakes are their own
+# shellcheck source=/dev/null
+source "${ENVIRONMENT_FILE}"
+
+# Load settings
+# apiToken must be malleable because it must be updated in-memory if it is expired
+# printOfflineSubscriptions must be malleable because it must be initialized to T/F if it is null (i.e. does not exist in config file yet)
+# userPlayer must be malleable because it must be updated if the user's default
+#   player is mpv and they don't have it installed but have vlc installed
+mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .printOfflineSubscriptions, .player, .quality" "${CONFIG_FILE}")"
+apiToken="${userSettings[0]}"
+readonly apiTokenExpiry="${userSettings[1]}"
+readonly useColors="${userSettings[2]}"
+printOfflineSubscriptions="${userSettings[3]}"
+userPlayer="${userSettings[4]}"
+readonly userQuality="${userSettings[5]}"
+readonly blocklist="$(<"${BLOCKLIST_FILE}")"
+
+# Set printOfflineSubscriptions to true by default
+if [[ "${printOfflineSubscriptions}" == "null" ]]; then
+  write_setting ".printOfflineSubscriptions" "true"
+  printOfflineSubscriptions="true"
+fi
+
+# Colors
+readonly NC="\e[0m" # No color/turn off all tput attributes
+# Deactivate colors if useColors is false
+if [[ "${useColors}" == "false" ]]; then
+  readonly GREY="${NC}"
+  readonly LIGHTGREEN="${NC}"
+  readonly ORANGE="${NC}"
+  readonly PURPLE="${NC}"
+  readonly RED="${NC}"
+  readonly TURQOISE="${NC}"
+else
+  readonly GREY="\e[90m"
+  readonly LIGHTGREEN="\e[92m"
+  readonly ORANGE="\e[93m"
+  readonly PURPLE="\e[95m"
+  readonly RED="\e[1m\e[91m"
+  readonly TURQOISE="\e[96m"
+fi
+
+# 'date' command
+case "$(uname -s)" in
+  Darwin)
+    readonly DATE_CMD="gdate"
+    ;;
+  *)
+    readonly DATE_CMD="date"
+    ;;
+esac
+
+# Debugging
+if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
+  # Avoid subshells, print full curl output, and more behavioral changes
+  readonly DEBUGGING="on"
+  readonly curlFlags="--verbose"
+
+  # Print log information
+  readonly _dashes="-----------------------------------------------------------"
+
+  if pacman -Q wtwitch &> /dev/null; then
+    readonly _packageinfo="installed via pacman"
+  else
+    readonly _packageinfo="script or unknown"
+  fi
+
+  if [[ -f /etc/os-release ]]; then
+    readonly OS_NAME="$(grep -G "^NAME=" /etc/os-release)"
+  fi
+
+  printf "Starting wtwitch %s debug log\n\n" "${VERSION}"
+  printf "System: %s; %s\n" "${OS_NAME:-}" "$(uname -sr)"
+  printf "Package: %s\n" "${_packageinfo}"
+  printf "Dependencies: bash-%s %s\n" "${BASH_VERSION}" "$(jq --version) $(streamlink --version)"
+  printf "Date: %s\n\nCommand: wtwitch %s\n\n" "$(${DATE_CMD})" "$*"
+
+  printf "Environment file:"
+  if [[ -f "${ENVIRONMENT_FILE}" ]]; then
+    printf "\n\n%s\n-----End environment file-----\n\n" "$(<"${ENVIRONMENT_FILE}")"
+  else
+    printf " no\n\n"
+  fi
+
+  printf "Config file:\n%s\n\n" "$(jq -r "." "${CONFIG_FILE}")"
+  printf "%s\n                         Begin log\n%s\n\n" "${_dashes}" "${_dashes}"
+
+  # Print all commands
+  set -x
+else
+  readonly DEBUGGING="off"
+  readonly curlFlags="--silent"
+fi
+
+# Used to calculate output string lengths; see check_twitch_streams_helper()
+# and list_streamers_of_game_helper()
+# If unit testing: set a fixed terminal width equal to the one on builds.sr.ht
+if [[ -n "${DUMMY_DATA:-}" ]]; then
+  readonly TERMINAL_WIDTH=80
+else
+  readonly TERMINAL_WIDTH="$(tput cols)"
+fi
+
+# Default to English if language isn't supported
+case "${LANG%_*}" in
+  "de"|"es"|"fr")
+    readonly WTWITCH_LANG="${LANG%_*}"
+    ;;
+  *)
+    readonly WTWITCH_LANG="en"
+    ;;
+esac
 
 # -----------------------------------------
 # ---------- Parse user options -----------
