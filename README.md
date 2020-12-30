@@ -32,6 +32,7 @@ Wtwitch has the following commands:
 => [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
+=> [f]                 - Toggle the printing of offline subscriptions with [c]heck.
 => [l]                 - Toggle the usage of colors in wtwitch output.
 => [p]layer [program]  - Change the player program that gets passed to streamlink.
 => [q]uality [quality] - Change the video quality that gets passed to streamlink.
