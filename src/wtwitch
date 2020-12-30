@@ -307,6 +307,18 @@ readonly TRANSLATIONS="$(cat <<EOF
     "es": "Encendió los colores",
     "fr": "Couleurs activées"
   },
+  "offline_subs_off": {
+    "en": "Turned printing offline subscriptions with [c]heck off",
+    "de": "Turned printing offline subscriptions with [c]heck off",
+    "es": "Turned printing offline subscriptions with [c]heck off",
+    "fr": "Turned printing offline subscriptions with [c]heck off"
+  },
+  "offline_subs_on": {
+    "en": "Turned printing offline subscriptions with [c]heck on",
+    "de": "Turned printing offline subscriptions with [c]heck on",
+    "es": "Turned printing offline subscriptions with [c]heck on",
+    "fr": "Turned printing offline subscriptions with [c]heck on"
+  },
   "flags_no_game": {
     "en": "No game specified",
     "de": "Kein Spiel angegeben",
@@ -455,7 +467,7 @@ fi
 
 if [[ ! -f "${CONFIG_FILE}" ]]; then
   # Default config
-  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
+  printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"printOfflineSubscriptions\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
 fi
 
 if [[ ! -f "${ENVIRONMENT_FILE}" ]]; then
@@ -468,15 +480,23 @@ source "${ENVIRONMENT_FILE}"
 
 # Load settings
 # apiToken must be malleable because it must be updated in-memory if it is expired
+# printOfflineSubscriptions must be malleable because it must be initialized to T/F if it is null (i.e. does not exist in config file yet)
 # userPlayer must be malleable because it must be updated if the user's default
 #   player is mpv and they don't have it installed but have vlc installed
-mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .player, .quality" "${CONFIG_FILE}")"
+mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .printOfflineSubscriptions, .player, .quality" "${CONFIG_FILE}")"
 apiToken="${userSettings[0]}"
 readonly apiTokenExpiry="${userSettings[1]}"
 readonly useColors="${userSettings[2]}"
-userPlayer="${userSettings[3]}"
-readonly userQuality="${userSettings[4]}"
+printOfflineSubscriptions="${userSettings[3]}"
+userPlayer="${userSettings[4]}"
+readonly userQuality="${userSettings[5]}"
 readonly blocklist="$(<"${BLOCKLIST_FILE}")"
+
+# Set printOfflineSubscriptions to true by default
+if [[ "${printOfflineSubscriptions}" == "null" ]]; then
+  write_setting ".printOfflineSubscriptions" "true"
+  printOfflineSubscriptions="true"
+fi
 
 # Colors
 readonly NC="\e[0m" # No color/turn off all tput attributes
@@ -1046,9 +1066,11 @@ check_twitch_streams()
   touch "${TMP_ONLINE_TEXT_FILE}" "${TMP_OFFLINE_TEXT_FILE}"
 
   # Figure out offline streamers in background
+  # --> always (without subshells) if DEBUGGING=on
+  # --> don't if DEBUGGING!=on and printOfflineSubscriptions=false
   if [[ "${DEBUGGING}" == "on" ]]; then
     get_offline_streams "${allStreamerJson}"
-  else
+  elif [[ "${printOfflineSubscriptions}" == "true" ]]; then
     get_offline_streams "${allStreamerJson}" &
   fi
 
@@ -1091,9 +1113,11 @@ check_twitch_streams()
 
   sort "${TMP_ONLINE_TEXT_FILE}" 2> /dev/null
 
-  printf "\n %s:\n" "${localizedStrings[1]}"
-
-  sort "${TMP_OFFLINE_TEXT_FILE}" 2> /dev/null
+  # Only print offline subs if set to true or debugging on
+  if [[ "${DEBUGGING}" == "on" ]] || [[ "${printOfflineSubscriptions}" == "true" ]]; then
+    printf "\n %s:\n" "${localizedStrings[1]}"
+    sort "${TMP_OFFLINE_TEXT_FILE}" 2> /dev/null
+  fi
 
   # Print settings
   printf "\n %s:\n   %s %s\n   %s %s\n" "${localizedStrings[2]}" "${localizedStrings[3]}" "${userPlayer}" "${localizedStrings[4]}" "${userQuality}"
@@ -1636,6 +1660,28 @@ subscribe()
 }
 
 #######################################
+# Changes the printOfflineSubscriptions value in $CONFIG_FILE that
+# determines if wtwitch outputs offline streamers with [c]heck.
+# Globals:
+#   printOfflineSubscriptions
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+toggle_offline()
+{
+  # Reverse value
+  if [[ "${printOfflineSubscriptions}" == "true" ]]; then
+    write_setting ".printOfflineSubscriptions" "false"
+    printf "\n %s.\n" "$(get_translation offline_subs_off)"
+  else
+    write_setting ".printOfflineSubscriptions" "true"
+    printf "\n %s.\n" "$(get_translation offline_subs_on)"
+  fi
+}
+
+#######################################
 # Changes the useColor value in $CONFIG_FILE that
 # determines if wtwitch output is colorful.
 # Globals:
@@ -1775,6 +1821,7 @@ ${SCRIPT_NAME} - terminal user interface for Twitch
 => [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
+=> [f]                 - Toggle the printing of offline subscriptions with [c]heck.
 => [l]                 - Toggle the usage of colors in wtwitch output.
 => [p]layer [program]  - Change the player program that gets passed to streamlink.
 => [q]uality [quality] - Change the video quality that gets passed to streamlink.
@@ -1877,6 +1924,7 @@ case "$1" in
   g*) list_streamers_of_game "$2" ;;
   e*) search_categories "$2" ;;
   t*) list_top ;;
+  f*) toggle_offline ;;
   l*) toggle_colors ;;
   p*) change_player "$2" ;;
   q*) change_quality "$2" ;;
