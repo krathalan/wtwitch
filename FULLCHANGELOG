@@ -156,3 +156,7 @@
 
 2.1.1 (December 22, 2020)
     Fixed bug with mpv window title due to changes in streamlink 2.0.0
+
+2.2.0 (December 30, 2020)
+    Added ability to hide offline streamers from "wtwitch c" with new "wtwitch f" command
+      https://todo.sr.ht/~krathalan/wtwitch/8
