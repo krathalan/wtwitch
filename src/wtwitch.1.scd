@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 2.1.0"]
+wtwitch(1) ["Version 2.2.0"]
 
 # NAME
 
@@ -71,6 +71,10 @@ e.g. wtwitch *p* _vlc_
 *q* _quality_, *quality* _quality_
 	Change the default _quality_ that gets passed to Streamlink. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma.++
 e.g. wtwitch *q* _720p60,720p,best_
+
+*f*
+	Toggle the printing of offline subscriptions with wtwitch *c*.++
+e.g. wtwitch *f*
 
 *l*
 	Toggle the usage of colors in wtwitch output.++

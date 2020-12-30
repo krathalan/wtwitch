@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.1.0"
+readonly VERSION="2.2.0"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -893,7 +893,7 @@ check_twitch_streams()
   # Reduce number of external program calls
   CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"
   readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
-  
+
   # Get subscriptions
   local userSubscriptions
   mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
