@@ -163,3 +163,7 @@
 
 2.2.1 (February 6, 2021)
     Fixed a bug with [w] tab completion where offline streamers were being recommended
+
+2.2.2 (May 12, 2021)
+    Updated links to Github
+    Fixed minor shellcheck warnings
