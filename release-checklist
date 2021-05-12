@@ -11,9 +11,8 @@
 11. sign_dev TAGNAME.tar.gz
 12. sha256sum TAGNAME.tar.gz*
 13. Copy new CHANGELOG to aur repo
-14. cp TAGNAME.tar.gz.sig ~/downloads
-15. Upload .sig to Github release
-16. Update PKGBUILD for new version number and sums
+14. Upload .sig to Github release
+15. Update PKGBUILD for new version number and sums
 
 === wtwitch.html ===
 1. scdoc < wtwitch.1.scd > wtwitch.1
