@@ -142,9 +142,9 @@ pacman -Qc wtwitch
 
 Full support:++
 	English++
-	French/Français
 
 Partial support:++
+	French/Français++
 	German/Deutsch++
 	Spanish/Español
 
