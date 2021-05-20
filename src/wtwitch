@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Description: Browse and watch Twitch without being tracked.
-#    Homepage: https://git.sr.ht/~krathalan/wtwitch
+#    Homepage: https://github.com/krathalan/wtwitch
 #
 # Copyright (C) 2019-2020:
 readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux, René de Hesselle"
@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.2.0"
+readonly VERSION="2.2.2"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -101,7 +101,7 @@ readonly TITLE_CHARACTERS="8"
 # ------------- Translations --------------
 # -----------------------------------------
 
-readonly TRANSLATIONS="$(cat <<EOF
+TRANSLATIONS="$(cat <<EOF
 {
   "change_player_not_found": {
     "en": "media player not found",
@@ -442,6 +442,7 @@ readonly TRANSLATIONS="$(cat <<EOF
 }
 EOF
 )"
+readonly TRANSLATIONS
 
 # -----------------------------------------
 # --------------- "Library" ---------------
@@ -607,7 +608,8 @@ glob()
 #######################################
 make_tmp()
 {
-  readonly TMP_DIR="$(mktemp -d -t "${SCRIPT_NAME}_XXXXXXXX")"
+  TMP_DIR="$(mktemp -d -t "${SCRIPT_NAME}_XXXXXXXX")"
+  readonly TMP_DIR
 }
 
 #######################################
@@ -859,7 +861,7 @@ cache_online_subscription_json()
     printf "%s" "${allStreamerJson}" > "${CACHE_CHECK_JSON_TEXT_FILE}"
 
     # Print usernames to cache file for easy mapfile-ing for tab completion
-    jq -r ".data[].user_name" <<< "${allStreamerJson}" >> "${CACHE_ONLINE_SUBS_TEXT_FILE}"
+    jq -r ".data[].user_name" <<< "${allStreamerJson}" > "${CACHE_ONLINE_SUBS_TEXT_FILE}"
 
     # Update lastSubscriptionUpdate time
     write_setting ".lastSubscriptionUpdate" "${CURRENT_TIME_UNIX}" &
@@ -892,7 +894,8 @@ check_twitch_streams()
 {
   # Reduce number of external program calls
   CURRENT_TIME_UNIX="$(LANG=C ${DATE_CMD} +%s)"
-  readonly LAST_SEEN_TEXT="$(get_translation last_seen)"
+  LAST_SEEN_TEXT="$(get_translation last_seen)"
+  readonly LAST_SEEN_TEXT
 
   # Get subscriptions
   local userSubscriptions
@@ -1130,7 +1133,8 @@ list_streamers_of_game()
   streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
 
   # Reduce number of external program calls
-  readonly VIEWERS_TEXT="$(get_translation viewers)"
+  VIEWERS_TEXT="$(get_translation viewers)"
+  readonly VIEWERS_TEXT
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -1318,7 +1322,8 @@ list_top_streams()
   streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${topStreamsJson}")"
 
   # Reduce number of external program calls
-  readonly VIEWERS_TEXT="$(get_translation viewers)"
+  VIEWERS_TEXT="$(get_translation viewers)"
+  readonly VIEWERS_TEXT
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -1405,8 +1410,10 @@ search_channels()
   channelName="$(jq -r ".data[${whileCounter}].display_name" <<< "${searchJson}")"
 
   # Reduce number of external program calls
-  readonly LIVE_TEXT="$(get_translation live)"
-  readonly OFFLINE_TEXT="$(get_translation offline)"
+  LIVE_TEXT="$(get_translation live)"
+  OFFLINE_TEXT="$(get_translation offline)"
+  readonly LIVE_TEXT
+  readonly OFFLINE_TEXT
 
   while [[ "${channelName}" != "null" ]]; do
     # Don't use subshells when debugging is on
@@ -1779,7 +1786,8 @@ readonly useColors="${userSettings[2]}"
 printOfflineSubscriptions="${userSettings[3]}"
 userPlayer="${userSettings[4]}"
 readonly userQuality="${userSettings[5]}"
-readonly blocklist="$(<"${BLOCKLIST_FILE}")"
+blocklist="$(<"${BLOCKLIST_FILE}")"
+readonly blocklist
 
 # Set printOfflineSubscriptions to true by default
 if [[ "${printOfflineSubscriptions}" == "null" ]]; then
@@ -1832,7 +1840,8 @@ if [[ -n "${WTWITCH_DEBUG:-}" ]]; then
   fi
 
   if [[ -f /etc/os-release ]]; then
-    readonly OS_NAME="$(grep -G "^NAME=" /etc/os-release)"
+    OS_NAME="$(grep -G "^NAME=" /etc/os-release)"
+    readonly OS_NAME
   fi
 
   printf "Starting wtwitch %s debug log\n\n" "${VERSION}"
@@ -1860,12 +1869,8 @@ fi
 
 # Used to calculate output string lengths; see check_twitch_streams_helper()
 # and list_streamers_of_game_helper()
-# If unit testing: set a fixed terminal width equal to the one on builds.sr.ht
-if [[ -n "${DUMMY_DATA:-}" ]]; then
-  readonly TERMINAL_WIDTH=80
-else
-  readonly TERMINAL_WIDTH="$(tput cols)"
-fi
+TERMINAL_WIDTH="$(tput cols)"
+readonly TERMINAL_WIDTH
 
 # Default to English if language isn't supported
 case "${LANG%_*}" in

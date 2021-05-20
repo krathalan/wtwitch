@@ -1,6 +1,6 @@
 # wtwitch
 
-[![builds.sr.ht status](https://builds.sr.ht/~krathalan/wtwitch.svg)](https://builds.sr.ht/~krathalan/wtwitch?) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Donate via Liberapay](https://img.shields.io/liberapay/receives/krathalan?label=Donate%20on%20Liberapay&logo=Liberapay)](https://liberapay.com/krathalan/donate)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Donate via Liberapay](https://img.shields.io/liberapay/receives/krathalan?label=Donate%20on%20Liberapay&logo=Liberapay)](https://liberapay.com/krathalan/donate)
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
@@ -85,7 +85,7 @@ $ sudo apt install streamlink
 Afterwards, clone the repo like any distro other than Arch.
 
 ### Any distro
-Clone the repository: `git clone https://git.sr.ht/~krathalan/wtwitch`
+Clone the repository: `git clone https://github.com/krathalan/wtwitch`
 
 Then add the cloned wtwitch directory to your `$PATH`.
 
@@ -111,11 +111,9 @@ To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. Y
 
 > `$ WTWITCH_DEBUG=on wtwitch [command] &> debug.log`
 
-Then paste/upload the contents of the `debug.log` file to your favorite paste service (e.g. https://paste.sr.ht/) and provide a link in your report.
+Then paste/upload the contents of the `debug.log` file to your favorite paste service (e.g. https://gist.github.com/) and provide a link in your report.
 
-Please file feature requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch
-
-Alternatively, you may send them via email to: `~krathalan/wtwitch@todo.sr.ht`
+Please file feature requests and report any bugs at: https://github.com/krathalan/wtwitch/issues
 
 ## Contributions
 All contributions are welcome. Please try to adhere to the [Google Shell Style Guide](https://google.github.io/styleguide/shell.xml). Make sure your new code passes Shellcheck with no "shellcheck disable=SCXXXX" lines. Try looking at [Dylan's Pure Bash Bible](https://github.com/dylanaraps/pure-bash-bible) before using an external program.
@@ -152,7 +150,7 @@ Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **
 
 ---
 
-> `$ git clone https://git.sr.ht/~krathalan/wtwitch && cloc wtwitch/`
+> `$ git clone https://github.com/krathalan/wtwitch && cloc wtwitch/`
 
 | Language | files | blank | comment | code |
 | -------- | ----- | ----- | ------- | ---- |

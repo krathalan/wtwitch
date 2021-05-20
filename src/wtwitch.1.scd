@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 2.2.0"]
+wtwitch(1) ["Version 2.2.2"]
 
 # NAME
 
@@ -152,10 +152,9 @@ User-contributed translations are welcome!
 
 # BUGS
 
-Please file requests and report any bugs at: https://todo.sr.ht/~krathalan/wtwitch++
-Alternatively, you may send them via email to: ~krathalan/wtwitch@todo.sr.ht
+Please file requests and report any bugs at: https://github.com/krathalan/wtwitch/issues
 
-If you are reporting a bug, please attach a debug log.
+*If you are reporting a bug, please attach a debug log.*
 
 To start wtwitch in debug mode, set the environment variable WTWITCH_DEBUG=on. You should also redirect all output to a _log file_. You can run wtwitch in debug mode in a one-off command like so:
 
