@@ -135,30 +135,40 @@ When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 M
 
 Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
 
-> `$ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/`
+```
+  $ git clone https://github.com/streamlink/streamlink-twitch-gui.git && cloc streamlink-twitch-gui/src/
 
-| Language | files | blank | comment | code |
-| -------- | ----- | ----- | ------- | ---- |
-| JavaScript | 529 | 7759 | 2730 | 33151 |
-| YAML | 47 | 4 | 44 | 3702 |
-| LESS | 52 | 769 | 100 | 3409 |
-| Handlebars | 73 | 47 | 0 | 2415 |
-| JSON | 33 | 8 | 0 | 1702 |
-| HTML | 3 | 2 | 0 | 70 |
-| CSS | 1 | 2 | 2 | 14 |
-| SUM | 738 | 8591 | 2876 | **44463** |
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+JavaScript                     547           8035           3122          36387
+YAML                            72              7            110           6207
+LESS                            54            782            103           3450
+Handlebars                      75             52              0           2581
+JSON                            34              8              0           2035
+HTML                             3              2              0             71
+CSS                              1              3              3             20
+-------------------------------------------------------------------------------
+SUM:                           786           8889           3338          50751
+-------------------------------------------------------------------------------
+```
 
----
+--- 
 
-> `$ git clone https://github.com/krathalan/wtwitch && cloc wtwitch/`
+```
+  $ git clone https://github.com/krathalan/wtwitch && cloc wtwitch/
 
-| Language | files | blank | comment | code |
-| -------- | ----- | ----- | ------- | ---- |
-| Bourne Again Shell | 1 | 169 | 415 | 781 |
-| Markdown | 1 | 42 | 0 | 74 |
-| SUM | 2 | 211 | 415 | **855** |
+--------------------------------------------------------------------------------
+Language                      files          blank        comment           code
+--------------------------------------------------------------------------------
+Bourne Again Shell                2            239            704           1102
+Markdown                          1             60              0            123
+YAML                              1              0              0             23
+--------------------------------------------------------------------------------
+SUM:                              4            299            704           1248
+--------------------------------------------------------------------------------
 
----
+```
 
 ### Old signing key
 For releases before 2.0.0:
