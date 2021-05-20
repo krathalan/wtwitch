@@ -50,9 +50,9 @@ Install the official AUR package, maintained by the author of wtwitch (me): http
 
 AUR releases are signed so you'll need to import my GPG key:
 
-`<srht@krathalan.net> B46B 3262 73E4 A1D2 1AAA 3F6F 529A C100 50BD 24EF`
+`<dev@krathalan.net> / 0C6B 73F3 91FA 26F0 EBCD 1F75 C0F9 AEE5 6E47 D174`
 
-If you're having keyserver issues, grab it from my website: https://krathalan.net/keys/srht.asc
+If you're having keyserver issues, grab it from my website: https://krathalan.net/keys/dev.asc
 
 ### macOS
 You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
