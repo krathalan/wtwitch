@@ -1,9 +1,6 @@
 See the full changelog at
 https://github.com/krathalan/wtwitch/blob/master/FULLCHANGELOG
 
-2.1.1 (December 22, 2020)
-    Fixed bug with mpv window title due to changes in streamlink 2.0.0
-
 2.2.0 (December 30, 2020)
     Added ability to hide offline streamers from "wtwitch c" with new "wtwitch f" command
       https://todo.sr.ht/~krathalan/wtwitch/8
@@ -14,3 +11,7 @@ https://github.com/krathalan/wtwitch/blob/master/FULLCHANGELOG
 2.2.2 (May 12, 2021)
     Updated links to Github
     Fixed minor shellcheck warnings
+
+2.2.3 (May 20, 2021)
+    Fixed an issue where ampersands (&) in queries (e.g. "wtwitch g 'dungeons & dragons online'") would not resolve correctly in the Twitch API
+      https://github.com/krathalan/wtwitch/issues/1

@@ -167,3 +167,7 @@
 2.2.2 (May 12, 2021)
     Updated links to Github
     Fixed minor shellcheck warnings
+
+2.2.3 (May 20, 2021)
+    Fixed an issue where ampersands (&) in queries (e.g. "wtwitch g 'dungeons & dragons online'") would not resolve correctly in the Twitch API
+      https://github.com/krathalan/wtwitch/issues/1
