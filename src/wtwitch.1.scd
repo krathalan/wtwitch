@@ -141,7 +141,7 @@ pacman -Qc wtwitch
 # LANGUAGES
 
 Full support:++
-	English++
+	English
 
 Partial support:++
 	French/Français++
