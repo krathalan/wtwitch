@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.2.2"
+readonly VERSION="2.2.3"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -1111,7 +1111,9 @@ list_streamers_of_game()
   fi
 
   # Replace spaces in game name with %20 for URL
-  local -r gameName=${1// /%20}
+  local gameName=${1// /%20}
+  # Replace ampersand in game name with %26
+  gameName=${gameName//&/%26}
 
   # Get game_id
   local twitchJson
