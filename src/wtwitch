@@ -905,8 +905,9 @@ check_twitch_streams()
   local localizedStrings
   mapfile -t localizedStrings <<< "$(jq -r ".check_online.${WTWITCH_LANG}, .check_offline.${WTWITCH_LANG}, .check_settings.${WTWITCH_LANG}, .check_player.${WTWITCH_LANG}, .check_quality.${WTWITCH_LANG}, .no_subs.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
-  if [[ -z "${userSubscriptions[*]}" ]]; then
-    printf "\n %s\n" "${localizedStrings[5]}"
+  # Exit if user has no subscriptions
+  if [[ ${#userSubscriptions[@]} -eq 1 ]] && [[ -z "${userSubscriptions[0]}" ]]; then
+    exit_script_on_failure "${localizedStrings[5]}"
   else
     printf "\n %s:" "${localizedStrings[0]}"
   fi
