@@ -1111,7 +1111,7 @@ list_streamers_of_game()
     printf "\n %s %s:\n" "$1" "${localizedStrings[0]}"
   fi
 
-  # Replace spaces in game name with %20 for URL
+  # Replace spaces in game name with %20
   local gameName=${1// /%20}
   # Replace ampersand in game name with %26
   gameName=${gameName//&/%26}
@@ -1119,43 +1119,80 @@ list_streamers_of_game()
   # Get game_id
   local twitchJson
   twitchJson="$(download_file "${TWITCH_API_URL}/games?name=${gameName}")"
-
   local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
-
-  # Get streamers
-  # If unit testing, use specified dummy data
-  if [[ -n "${DUMMY_DATA:-}" ]]; then
-    twitchJson="$(<"${DUMMY_DATA}")"
-  else
-    twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=40")"
-  fi
-
-  local whileCounter=0
-
-  local streamerName=""
-  streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
 
   # Reduce number of external program calls
   VIEWERS_TEXT="$(get_translation viewers)"
   readonly VIEWERS_TEXT
 
-  while [[ "${streamerName}" != "null" ]]; do
-    # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
-      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
-    else
-      print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" &
+  # Used to track if user wants to show the next page
+  local showMoreStreamers="true"
+  # Used to track pagination cursor
+  local paginationText=""
+  # Used to print page user is on
+  local currentPage=2
+
+  while [[ "${showMoreStreamers}" == "true" ]]; do
+    # Calculate number of lines to print out. Try and fit it to the terminal height
+    # but display at least 15 streamers
+    local linesToPrint=15
+    local terminalHeight="$(( $(tput lines) - 6 ))"
+
+    if [[ "${terminalHeight}" -gt "${linesToPrint}" ]]; then
+      linesToPrint="${terminalHeight}"
     fi
 
-    # Refresh data
-    whileCounter="$(( whileCounter + 1 ))"
+    # Get streamers
+    # If unit testing, use specified dummy data
+    if [[ -n "${DUMMY_DATA:-}" ]]; then
+      twitchJson="$(<"${DUMMY_DATA}")"
+    else
+      twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=${linesToPrint}${paginationText}")"
+    fi
+
+    local whileCounter=0
+
+    local streamerName=""
     streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
+
+    while [[ "${streamerName}" != "null" ]]; do
+      # Don't use subshells when debugging is on
+      if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
+        print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
+      else
+        print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" &
+      fi
+
+      # Refresh data
+      whileCounter="$(( whileCounter + 1 ))"
+      streamerName="$(jq -r ".data[${whileCounter}].user_name" <<< "${twitchJson}")"
+    done
+
+    wait
+
+    cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null || \
+    printf " %s %s.\n" "${localizedStrings[1]}" "$1"
+
+    printf "\n Press <N> to show the next page of streamers or press any other key to quit."
+    read -rsn1 userResponse
+
+    case "${userResponse}" in
+      [Nn])
+        showMoreStreamers="true"
+        # Get pagination cursor
+        paginationText="&after=$(jq -r .pagination.cursor <<< "${twitchJson}")"
+        # Clear output file
+        printf "" > "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
+
+        printf "\n\n Page %s:\n" "${currentPage}"
+        currentPage="$(( currentPage + 1 ))"
+        ;;
+      *)
+        showMoreStreamers="false"
+        printf "\n"
+        ;;
+    esac
   done
-
-  wait
-
-  cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null || \
-  printf " %s %s.\n" "${localizedStrings[1]}" "$1"
 }
 
 #######################################
