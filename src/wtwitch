@@ -806,7 +806,6 @@ change_quality()
 #   CONFIG_FILE
 #   CACHE_EXPIRY_TIME
 #   TWITCH_API_URL
-#   DUMMY_DATA
 #   CACHE_CHECK_JSON_TEXT_FILE
 # Arguments:
 #   none
@@ -833,12 +832,10 @@ cache_online_subscription_json()
 
   # If the last subsription update is null (e.g. the subscriptions have never been checked), OR
   # if the time between now and the last subscription update is greater than the cache expiry time, OR
-  # if the cache file does NOT exist yet, OR
-  # if we are unit testing with dummy data
+  # if the cache file does NOT exist yet
   if  [[ "${lastSubscriptionUpdate}" == "null" ]] || \
   [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] || \
-  [[ ! -f "${CACHE_CHECK_JSON_TEXT_FILE}" ]] || \
-  [[ -n "${DUMMY_DATA:-}" ]]; then
+  [[ ! -f "${CACHE_CHECK_JSON_TEXT_FILE}" ]]; then
     # Get subscriptions
     local userSubscriptions
     mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
@@ -851,12 +848,7 @@ cache_online_subscription_json()
     done
 
     # Get data of all online streamers (sans game names)
-    # If unit testing, use specified dummy data
-    if [[ -n "${DUMMY_DATA:-}" ]]; then
-      local -r allStreamerJson="$(<"${DUMMY_DATA}")"
-    else
-      local -r allStreamerJson="$(download_file "${initialRequestURL}")"
-    fi
+    local -r allStreamerJson="$(download_file "${initialRequestURL}")"
 
     printf "%s" "${allStreamerJson}" > "${CACHE_CHECK_JSON_TEXT_FILE}"
 
@@ -1143,12 +1135,7 @@ list_streamers_of_game()
     fi
 
     # Get streamers
-    # If unit testing, use specified dummy data
-    if [[ -n "${DUMMY_DATA:-}" ]]; then
-      twitchJson="$(<"${DUMMY_DATA}")"
-    else
-      twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=${linesToPrint}${paginationText}")"
-    fi
+    twitchJson="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=${linesToPrint}${paginationText}")"
 
     local whileCounter=0
 
@@ -1157,7 +1144,7 @@ list_streamers_of_game()
 
     while [[ "${streamerName}" != "null" ]]; do
       # Don't use subshells when debugging is on
-      if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
+      if [[ "${DEBUGGING}" == "on" ]]; then
         print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
       else
         print_stream_info "${whileCounter}" "${twitchJson}" "${streamerName}" "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" &
@@ -1367,7 +1354,7 @@ list_top_streams()
 
   while [[ "${streamerName}" != "null" ]]; do
     # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
+    if [[ "${DEBUGGING}" == "on" ]]; then
       print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game
     else
       print_stream_info "${whileCounter}" "${topStreamsJson}" "${streamerName}" "${TMP_TOP_STREAMS_TEXT_FILE}" --print-game &
@@ -1401,13 +1388,8 @@ search_categories()
 
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
-
-  # If unit testing, use specified dummy data
-  if [[ -n "${DUMMY_DATA:-}" ]]; then
-    local -r searchJson="$(<"${DUMMY_DATA}")"
-  else
-    local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}&first=40")"
-  fi
+  
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}&first=40")"
 
   print_game_info "${searchJson}" "${TMP_SEARCH_TEXT_FILE}"
 
@@ -1437,12 +1419,7 @@ search_channels()
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
 
-  # If unit testing, use specified dummy data
-  if [[ -n "${DUMMY_DATA:-}" ]]; then
-    local -r searchJson="$(<"${DUMMY_DATA}")"
-  else
-    local -r searchJson="$(download_file "${TWITCH_API_URL}/search/channels?query=${searchTerm}&first=40")"
-  fi
+  local -r searchJson="$(download_file "${TWITCH_API_URL}/search/channels?query=${searchTerm}&first=40")"
 
   local whileCounter=0
 
@@ -1457,7 +1434,7 @@ search_channels()
 
   while [[ "${channelName}" != "null" ]]; do
     # Don't use subshells when debugging is on
-    if [[ "${DEBUGGING}" == "on" ]] || [[ -n "${DUMMY_DATA:-}" ]]; then
+    if [[ "${DEBUGGING}" == "on" ]]; then
       print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}"
     else
       print_stream_info "${whileCounter}" "${searchJson}" "${channelName}" "${TMP_SEARCH_TEXT_FILE}" &
