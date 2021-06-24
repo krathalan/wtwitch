@@ -73,7 +73,7 @@ readonly LAST_SEEN_DIRECTORY="${CACHE_FILE_DIRECTORY}/lastSeen"
 readonly CACHE_CHECK_JSON_TEXT_FILE="${CACHE_FILE_DIRECTORY}/subscription-cache.json"
 readonly CACHE_ONLINE_SUBS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/online-subs"
 
-# Used to reduce strain on Twitch API; see get_game_name()
+# Used to reduce strain on Twitch API; see get_game_name() and get_user_id()
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
 readonly CACHE_USER_ID_FILE="${CACHE_FILE_DIRECTORY}/userids.json"
 
@@ -132,7 +132,7 @@ TRANSLATIONS="$(cat <<EOF
     "en": "Changed player to",
     "de": "Changed player to",
     "es": "Changed player to",
-    "fr": "Changed player to"
+    "fr": "Lecteur changé à"
   },
   "change_quality_error": {
     "en": "is not an acceptable quality. 1080p60, 720p60, 720p, 480p, 360p, 160p, best, worst, and audio_only are acceptable qualities. You can specify fallback qualities separated by a comma, e.g. \"720p,480p,worst\"",
@@ -144,7 +144,7 @@ TRANSLATIONS="$(cat <<EOF
     "en": "Changed quality to",
     "de": "Changed quality to",
     "es": "Changed quality to",
-    "fr": "Changed quality to"
+    "fr": "Qualité changée à"
   },
   "check_online": {
     "en": "Live channels",
@@ -282,7 +282,7 @@ TRANSLATIONS="$(cat <<EOF
     "en": "Subscribed to",
     "de": "Subscribed to",
     "es": "Subscribed to",
-    "fr": "Subscribed to"
+    "fr": "Abonné à"
   },
   "unsubscribe_failure": {
     "en": "You are not subscribed to",
@@ -294,7 +294,7 @@ TRANSLATIONS="$(cat <<EOF
     "en": "Unsubscribed from",
     "de": "Unsubscribed from",
     "es": "Unsubscribed from",
-    "fr": "Unsubscribed from"
+    "fr": "Désabonné de"
   },
   "colors_off": {
     "en": "Turned colors off",
@@ -348,7 +348,7 @@ TRANSLATIONS="$(cat <<EOF
     "en": "No search term specified",
     "de": "No search term specified",
     "es": "No search term specified",
-    "fr": "No search term specified"
+    "fr": "Aucun terme de recherche spécifié"
   },
   "no_subs": {
     "en": "You aren't subscribed to any channels",
@@ -360,73 +360,73 @@ TRANSLATIONS="$(cat <<EOF
     "en": "Twitch API rate limit reached",
     "de": "Twitch API rate limit reached",
     "es": "Twitch API rate limit reached",
-    "fr": "Twitch API rate limit reached"
+    "fr": "Limite de débit de l'API Twitch atteinte"
   },
   "last_seen": {
     "en": "last seen online",
     "de": "last seen online",
     "es": "last seen online",
-    "fr": "last seen online"
+    "fr": "vu en ligne pour la dernière fois"
   },
   "removed": {
     "en": "Removed",
     "de": "Removed",
     "es": "Removed",
-    "fr": "Removed"
+    "fr": ""
   },
   "added": {
     "en": "Added",
     "de": "Added",
     "es": "Added",
-    "fr": "Added"
+    "fr": ""
   },
   "from_blocklist": {
     "en": "from blocklist",
     "de": "from blocklist",
     "es": "from blocklist",
-    "fr": "from blocklist"
+    "fr": "supprimé de la liste de blocage"
   },
   "to_blocklist": {
     "en": "to blocklist",
     "de": "to blocklist",
     "es": "to blocklist",
-    "fr": "to blocklist"
+    "fr": "ajouté à la liste de blocage"
   },
   "blocklist": {
     "en": "Blocklist",
     "de": "Blocklist",
     "es": "Blocklist",
-    "fr": "Blocklist"
+    "fr": "Liste de blocage"
   },
   "api_token_fetch_failure": {
     "en": "Failed to fetch API token",
     "de": "Failed to fetch API token",
     "es": "Failed to fetch API token",
-    "fr": "Failed to fetch API token"
+    "fr": "Échec de l'obtention du jeton d'API"
   },
   "info_fetch_failure": {
     "en": "Failed to fetch information from the Twitch API",
     "de": "Failed to fetch information from the Twitch API",
     "es": "Failed to fetch information from the Twitch API",
-    "fr": "Failed to fetch information from the Twitch API"
+    "fr": "Échec de la récupération d'informations depuis l'API Twitch"
   },
   "check_internet": {
     "en": "Check your internet connection and try again",
     "de": "Check your internet connection and try again",
     "es": "Check your internet connection and try again",
-    "fr": "Check your internet connection and try again"
+    "fr": "Vérifiez votre connexion Internet et réessayez"
   },
   "search_results": {
     "en": "Search results",
     "de": "Search results",
     "es": "Search results",
-    "fr": "Search results"
+    "fr": "Résultats de la recherche"
   },
   "no_results": {
     "en": "No results",
     "de": "No results",
     "es": "No results",
-    "fr": "No results"
+    "fr": "Aucun résultat"
   },
   "live": {
     "en": "live",
