@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.2.4"
+readonly VERSION="2.3.0"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
@@ -75,6 +75,7 @@ readonly CACHE_ONLINE_SUBS_TEXT_FILE="${CACHE_FILE_DIRECTORY}/online-subs"
 
 # Used to reduce strain on Twitch API; see get_game_name()
 readonly CACHE_GAME_ID_FILE="${CACHE_FILE_DIRECTORY}/gameids.json"
+readonly CACHE_USER_ID_FILE="${CACHE_FILE_DIRECTORY}/userids.json"
 
 # Config
 readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
@@ -438,6 +439,12 @@ TRANSLATIONS="$(cat <<EOF
     "de": "offline",
     "es": "desconectado",
     "fr": "déconnecté"
+  },
+  "vod_failure_no_number": {
+    "en": "No VOD number",
+    "de": "No VOD number",
+    "es": "No VOD number",
+    "fr": "No VOD number"
   }
 }
 EOF
@@ -523,7 +530,8 @@ exit_script_on_failure()
 #######################################
 # Returns the game name for a specified game ID.
 # Attempts to get game name from cache, but if game
-# ID is not present, retrieves game name from Twitch API.
+# ID is not present, retrieves game name from Twitch API
+# and saves it in the cache for later.
 # Globals:
 #   CACHE_GAME_ID_FILE
 #   TWITCH_API_URL
@@ -560,6 +568,49 @@ get_game_name()
   fi
 
   printf "%s" "${gameName}"
+}
+
+#######################################
+# Returns the user ID for a specified user login.
+# Attempts to get user ID from cache, but if user
+# ID is not present, retrieves user ID from Twitch API
+# and saves it in the cache for later.
+# Globals:
+#   CACHE_USER_ID_FILE
+#   TWITCH_API_URL
+# Arguments:
+#   $1: user login to get user ID of
+# Returns:
+#   user ID of specified user login
+#######################################
+get_user_id()
+{
+  # Add "id" prefix as jq does not accept numerical identifiers
+  local -r userLogin="$(to_lowercase "$1")"
+
+  # Attempt to extract user ID from cached user logins
+  local userID
+  userID="$(jq -r ".data | add | .${userLogin}" "${CACHE_USER_ID_FILE}")"
+
+  # If user login not cached, fetch from Twitch API
+  if [[ "${userID}" == "" ]] || [[ "${userID}" == "null" ]]; then
+    local tmpJson
+    tmpJson="$(download_file "${TWITCH_API_URL}/users?login=${userLogin}")"
+    userID="$(jq -r ".data[0].id" <<< "${tmpJson}")"
+
+    # Guard against wiping user login cache
+    # This will happen when tmpJson is null as the result of too many Twitch
+    # API queries in a short amount of time
+    if [[ "${userID}" == "" ]] || [[ "${userID}" == "null" ]]; then
+      exit_script_on_failure "$(get_translation twitch_api_limit)"
+    fi
+
+    # Cache result for future reference
+    tmpJson="$(jq ".data[.data | length] |= . + {\"${userLogin}\":\"${userID}\"}" "${CACHE_USER_ID_FILE}")"
+    printf "%s" "${tmpJson}" > "${CACHE_USER_ID_FILE}"
+  fi
+
+  printf "%s" "${userID}"
 }
 
 #######################################
@@ -1670,6 +1721,133 @@ block()
   invalidate_cache
 }
 
+
+#######################################
+# Lists the available VODs for a specified streamer.
+# Globals:
+#   WTWITCH_LANG
+#   TRANSLATIONS
+#   TWITCH_API_URL
+#   TMP_DIR
+#   TMP_VOD_LIST_FILE
+#   DEBUGGING
+# Arguments:
+#   $1: streamer to show vods of
+#   $2: if exists, play the VOD # of that streamer
+# Returns:
+#   none
+#######################################
+list_vods()
+{
+  # Get localized strings
+  local localizedStrings
+  mapfile -t localizedStrings <<< "$(jq -r ".stream_failure_player_one.${WTWITCH_LANG}, .stream_failure_player_two.${WTWITCH_LANG}, .vod_failure_no_number.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+
+  shift
+  local -r streamer="$(to_lowercase "$1")"
+
+  # First get twitch user ID
+  local -r streamerID="$(get_user_id "${streamer}")"
+
+  # Get list of VODs
+  local tmpJson
+  tmpJson="$(download_file "${TWITCH_API_URL}/videos?user_id=${streamerID}")"
+
+  # If $2 exists, play that # VOD. If $2 doesn't exist, list all VODs
+  if [[ $# -lt 2 ]]; then
+    # List all VODs
+    printf "\n %s VODs:\n" "$1"
+
+    make_tmp
+    readonly TMP_VOD_LIST_FILE="${TMP_DIR}/vods.txt"
+    touch "${TMP_VOD_LIST_FILE}"
+
+    local whileCounter=0
+    local vodData
+    vodData="$(jq -r .data[${whileCounter}] <<< "${tmpJson}")"
+
+    while [[ "${vodData}" != "null" ]]; do
+      print_vod_info "${whileCounter}" "${vodData}" "${TMP_VOD_LIST_FILE}" &
+
+      whileCounter=$(( whileCounter + 1 ))
+      vodData="$(jq -r .data[${whileCounter}] <<< "${tmpJson}")"
+    done
+
+    wait
+
+    echo -e "$(sort -n "${TMP_VOD_LIST_FILE}")"
+  else
+    # Watch VOD #{$2}
+    # extract URL from data
+    local -r vodURL="$(jq -r .data[$(( $2 - 1 ))].url <<< "${tmpJson}")"
+
+    if [[ "${vodURL}" == "null" ]]; then
+      exit_script_on_failure "${localizedStrings[2]} $2."
+    fi
+
+    # Use VLC as backup player if mpv is not installed
+    if [[ ! -x "$(command -v "${userPlayer}")" ]]; then
+      if [[ -x "$(command -v "vlc")" ]]; then
+        userPlayer="vlc"
+      else
+        stream_failure_notify "${streamer} VOD" "${localizedStrings[0]} ${userPlayer} ${localizedStrings[1]}."
+      fi
+    fi
+
+    # If using mpv, add auto hwdec and title, and enable wayland if it's running
+    if [[ "${userPlayer}" == "mpv" ]]; then
+      userPlayer+=" --hwdec=auto"
+
+      if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
+        userPlayer+=" --gpu-context=wayland"
+      fi
+
+      if [[ "${DEBUGGING}" == "on" ]]; then
+        ${userPlayer} --title="$(jq -r .data[$(( $2 - 1 ))].title <<< "${tmpJson}")" "${vodURL}"
+      else
+        ${userPlayer} --title="$(jq -r .data[$(( $2 - 1 ))].title <<< "${tmpJson}")" "${vodURL}" &> /dev/null &
+      fi
+    else
+      if [[ "${DEBUGGING}" == "on" ]]; then
+        "${userPlayer}" "${vodURL}"
+      else
+        "${userPlayer}" "${vodURL}" &> /dev/null &
+      fi
+    fi
+  fi
+}
+
+#######################################
+# Facilitates multi-process parsing of json data.
+# Globals:
+#   Colors: TURQOISE, NC, ORANGE
+#   TERMINAL_WIDTH
+#   TITLE_CHARACTERS
+#   VIEWERS_TEXT
+#   LIVE_TEXT
+#   OFFLINE_TEXT
+# Arguments:
+#   $1: index of vod to print info of
+#   $2: json data containing vod data
+#   $3: file to print to
+# Returns:
+#   none
+#######################################
+print_vod_info()
+{
+  # Get title, date, duration
+  mapfile -t vodData <<< "$(jq -r ".title, .created_at, .duration" <<< "$2")"
+
+  local -r dateString="$(date -d "${vodData[1]}" "+%x %X")"
+
+  # Trim VOD title to fit terminal width
+  local -r titleCharacters=11
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - titleCharacters - ${#vodData[0]} - ${#vodData[2]} - ${#dateString} - ${#1} ))"
+  local -r vodTitle="${vodData[0]:0:${maxTitleLength}}"
+
+  printf "  %s. %s[%s]%s %s %s(%s)%s\n" "$(( $1 + 1 ))" "${TURQOISE}" "${dateString}" "${NC}" "${vodTitle}" "${ORANGE}" "${vodData[2]}" "${NC}" >> "$3"
+}
+
 # -----------------------------------------
 # ---------- Informational Texts ----------
 # -----------------------------------------
@@ -1700,6 +1878,7 @@ ${SCRIPT_NAME} - terminal user interface for Twitch
 => [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
+=> [v]od [name]        - List [name]'s VODs.
 => [f]                 - Toggle the printing of offline subscriptions with [c]heck.
 => [l]                 - Toggle the usage of colors in wtwitch output.
 => [p]layer [program]  - Change the player program that gets passed to streamlink.
@@ -1776,6 +1955,10 @@ fi
 
 if [[ ! -f "${CACHE_GAME_ID_FILE}" ]]; then
   printf "{\"data\": []}" > "${CACHE_GAME_ID_FILE}"
+fi
+
+if [[ ! -f "${CACHE_USER_ID_FILE}" ]]; then
+  printf "{\"data\": []}" > "${CACHE_USER_ID_FILE}"
 fi
 
 if [[ ! -f "${CONFIG_FILE}" ]]; then
@@ -1926,7 +2109,7 @@ glob "$1" '[p]*' && [[ -z "${2:-}" ]] &&
 glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_quality)"
 
-glob "$1" '[suw]*' && [[ -z "${2:-}" ]] &&
+[[ "$1" != "version" ]] && glob "$1" '[suvw]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_streamer)"
 
 # If using a command that requires the Twitch API, update token
@@ -1954,7 +2137,8 @@ case "$1" in
   s*) subscribe "$@" ;;
   u*) unsubscribe "$@" ;;
   b*) block "$@" ;;
-  v*) print_version ;;
+  version) print_version ;;
+  v*) list_vods "$@" ;;
   w*)
     if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
       stream "$2"

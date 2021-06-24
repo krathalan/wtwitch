@@ -1,9 +1,6 @@
 See the full changelog at
 https://github.com/krathalan/wtwitch/blob/master/FULLCHANGELOG
 
-2.2.1 (February 6, 2021)
-    Fixed a bug with [w] tab completion where offline streamers were being recommended
-
 2.2.2 (May 12, 2021)
     Updated links to Github
     Fixed minor shellcheck warnings
@@ -14,3 +11,9 @@ https://github.com/krathalan/wtwitch/blob/master/FULLCHANGELOG
 
 2.2.4 (May 20, 2021)
     Fixed scdoc error
+
+2.3.0 (TBD)
+    Added command to show and watch VODs from a streamer
+      To list VODs: wtwitch v [streamer]
+      To watch a VOD: wtwitch v [streamer] [number to watch]
+    Added pagination to "wtwitch g" command to let you browse more streamers

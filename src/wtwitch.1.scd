@@ -1,4 +1,4 @@
-wtwitch(1) ["Version 2.2.4"]
+wtwitch(1) ["Version 2.3.0"]
 
 # NAME
 
@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*e* _term_|*n* _term_|*p* _player_|*q* _quality_]
+wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*e* _term_|*n* _term_|*p* _player_|*q* _quality_|*version*]
 
 # DESCRIPTION
 
@@ -19,6 +19,10 @@ Wtwitch is a terminal program that uses the Twitch API and the streamlink packag
 *w* _streamer_, *watch* _streamer_
 	Watch the specified _streamer_.++
 e.g. wtwitch *w* _dratnos_
+
+*v* _streamer_ [optional VOD number], *vod* _streamer_ [optional VOD number]
+	List the latest VODs from a _streamer_. Optionally, supply the number of the VOD you want to watch to open it in your default player.
+e.g. wtwitch *v* dratnos, wtwitch *v* dratnos 5
 
 *t*, *top*
 	View the top games and streams on Twitch.++
@@ -86,8 +90,8 @@ e.g. wtwitch *l*
 	Print a short usage guide.++
 e.g. wtwitch *h*
 
-*v*, *version*
-	Print the version of wtwitch.++
+*version*
+	Print the current version of wtwitch.++
 e.g. wtwitch *v*
 
 # TAB COMPLETION

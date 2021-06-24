@@ -68,7 +68,7 @@ _wtwitch_completions()
   # COMP_WORDS[1] = cmd (e.g. w, c, etc.)
 
   if [[ "${#COMP_WORDS[@]}" -lt "3" ]]; then
-    mapfile -t COMPREPLY <<< "$(compgen -W "w s u c e n g t l p q b v help" "${COMP_WORDS[1]}")"
+    mapfile -t COMPREPLY <<< "$(compgen -W "w s u c e n g t l p q b v version help" "${COMP_WORDS[1]}")"
   elif _glob "${COMP_WORDS[1]}" "[w]" && [[ "${#COMP_WORDS[@]}" == "3" ]]; then
     if [[ "${#COMP_WORDS[@]}" != "3" ]]; then
       return
