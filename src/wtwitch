@@ -872,11 +872,6 @@ cache_online_subscription_json()
   local lastSubscriptionUpdate
   lastSubscriptionUpdate="$(jq -r ".lastSubscriptionUpdate" "${CONFIG_FILE}")"
 
-  # Check for older (e.g. "Sun Nov  3 14:54:55 PST 2019") style lastSubscriptionUpdate
-  if ! [[ "${lastSubscriptionUpdate}" =~ ^[0-9]+$ ]] ; then
-    lastSubscriptionUpdate=0
-  fi
-
   if [[ "${lastSubscriptionUpdate}" != "null" ]]; then
     dateDiff="$(( CURRENT_TIME_UNIX - lastSubscriptionUpdate ))"
   fi
