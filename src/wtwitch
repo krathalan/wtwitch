@@ -1439,7 +1439,7 @@ search_categories()
 
   # Replace spaces in search term with %20 for URL
   local -r searchTerm=${1// /%20}
-  
+
   local -r searchJson="$(download_file "${TWITCH_API_URL}/search/categories?query=${searchTerm}&first=40")"
 
   print_game_info "${searchJson}" "${TMP_SEARCH_TEXT_FILE}"

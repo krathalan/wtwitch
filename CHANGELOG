@@ -17,3 +17,4 @@ https://github.com/krathalan/wtwitch/blob/master/FULLCHANGELOG
       To list VODs: wtwitch v [streamer]
       To watch a VOD: wtwitch v [streamer] [number to watch]
     Added pagination to "wtwitch g" command to let you browse more streamers
+    Added more French translations from Léo Villeveygoux
