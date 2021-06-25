@@ -887,19 +887,15 @@ cache_online_subscription_json()
   if  [[ "${lastSubscriptionUpdate}" == "null" ]] || \
   [[ ${dateDiff} -gt ${CACHE_EXPIRY_TIME} ]] || \
   [[ ! -f "${CACHE_CHECK_JSON_TEXT_FILE}" ]]; then
-    # Get subscriptions
-    local userSubscriptions
-    mapfile -t userSubscriptions <<< "$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}")"
-
-    # Build inital request URL
-    local initialRequestURL="${TWITCH_API_URL}/streams?"
-
-    for stream in "${userSubscriptions[@]}"; do
-      initialRequestURL+="user_login=${stream}&"
-    done
+    # Make request URL with all streamers followed by &, so the request URL looks something like:
+    # /streams?user_login=streamerone&user_login=streamertwo&user_login=streamerthree
+    local requestURL
+    requestURL="${TWITCH_API_URL}/streams?user_login=$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}" | awk 1 ORS="&user_login=")"
+    # Remove trailing &user_login=
+    requestURL="${requestURL%&user_login=}"
 
     # Get data of all online streamers (sans game names)
-    local -r allStreamerJson="$(download_file "${initialRequestURL}")"
+    local -r allStreamerJson="$(download_file "${requestURL}")"
 
     printf "%s" "${allStreamerJson}" > "${CACHE_CHECK_JSON_TEXT_FILE}"
 
