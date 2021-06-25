@@ -32,13 +32,14 @@ Wtwitch has the following commands:
 => [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
 => [t]op               - View the top games and streamers on Twitch.
+=> [v]od [name] [#]    - List or watch [name]'s VODs.
 => [f]                 - Toggle the printing of offline subscriptions with [c]heck.
 => [l]                 - Toggle the usage of colors in wtwitch output.
 => [p]layer [program]  - Change the player program that gets passed to streamlink.
 => [q]uality [quality] - Change the video quality that gets passed to streamlink.
 => [b]lock [name(s)]   - Block [name] streamer, preventing them from appearing in any
                          output. You can block multiple streamers in one command.
-=> [v]ersion           - Print the current version of wtwitch.
+=> [version]           - Print the current version of wtwitch.
 => [h]elp              - Print this help.
 ```
 
@@ -153,7 +154,7 @@ SUM:                           786           8889           3338          50751
 -------------------------------------------------------------------------------
 ```
 
---- 
+---
 
 ```
   $ git clone https://github.com/krathalan/wtwitch && cloc wtwitch/
