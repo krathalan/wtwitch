@@ -457,8 +457,6 @@ readonly TRANSLATIONS
 
 #######################################
 # Cleans up cache and temporary file(s).
-# Globals:
-#   CACHE_CHECK_JSON_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -474,8 +472,6 @@ clean_up()
 
 #######################################
 # Cleans up temporary file(s).
-# Globals:
-#   TMP_DIR
 # Arguments:
 #   none
 # Returns:
@@ -492,10 +488,6 @@ clean_up_tmp()
 # Downloads a file quietly using curl and passes the
 # TWITCH_API_KEY as a header to the server. Returns the
 # downloaded file.
-# Globals:
-#   TWITCH_API_KEY
-#   apiToken
-#   curlFlags
 # Arguments:
 #   $1: file to download
 # Returns:
@@ -510,8 +502,6 @@ download_file()
 #######################################
 # Prints passed error message before premature exit.
 # Prints everything to >&2 (STDERR).
-# Globals:
-#   Colors: RED, NC
 # Arguments:
 #   $1: error message to print
 # Returns:
@@ -532,9 +522,6 @@ exit_script_on_failure()
 # Attempts to get game name from cache, but if game
 # ID is not present, retrieves game name from Twitch API
 # and saves it in the cache for later.
-# Globals:
-#   CACHE_GAME_ID_FILE
-#   TWITCH_API_URL
 # Arguments:
 #   $1: game ID to get game name of
 # Returns:
@@ -575,9 +562,6 @@ get_game_name()
 # Attempts to get user ID from cache, but if user
 # ID is not present, retrieves user ID from Twitch API
 # and saves it in the cache for later.
-# Globals:
-#   CACHE_USER_ID_FILE
-#   TWITCH_API_URL
 # Arguments:
 #   $1: user login to get user ID of
 # Returns:
@@ -615,9 +599,6 @@ get_user_id()
 
 #######################################
 # Gets a localized string of the requested key.
-# Globals:
-#   WTWITCH_LANG
-#   TRANSLATIONS
 # Arguments:
 #   $1: key of translation; e.g. flags_no_game
 # Returns:
@@ -632,8 +613,6 @@ get_translation()
 # This is a simple wrapper around a case statement to
 # allow for simple string comparisons against globs.
 # Copyright (C) 2016-2019 Dylan Araps
-# Globals:
-#   none
 # Arguments:
 #   $1: string to check against glob
 #   $2: glob
@@ -649,9 +628,6 @@ glob()
 
 #######################################
 # Makes a temporary directory for the script to use.
-# Globals:
-#   SCRIPT_NAME
-#   TMP_DIR
 # Arguments:
 #   none
 # Returns:
@@ -665,8 +641,6 @@ make_tmp()
 
 #######################################
 # Converts a string to lowercase.
-# Globals:
-#   none
 # Arguments:
 #   $1: string to convert
 # Returns:
@@ -678,9 +652,6 @@ to_lowercase() {
 
 #######################################
 # Notifies the user if streaming failed.
-# Globals:
-#   WTWITCH_LANG
-#   TRANSLATIONS
 # Arguments:
 #   $1: name of streamer
 #   $2: error message to print
@@ -698,8 +669,6 @@ stream_failure_notify()
 
 #######################################
 # Writes a setting value to the config file.
-# Globals:
-#   CONFIG_FILE
 # Arguments:
 #   $1: key
 #   $2: value
@@ -714,8 +683,6 @@ write_setting()
 
 #######################################
 # Invalidates the cache generated from [c]heck command.
-# Globals:
-#   none
 # Arguments:
 #   none
 # Returns:
@@ -732,13 +699,6 @@ invalidate_cache()
 
 #######################################
 # Gets an OAuth token for the Twitch API.
-# Globals:
-#   TWITCH_API_KEY
-#   TWITCH_API_SECRET
-#   TWITCH_ID_URL
-#   DATE_CMD
-#   apiToken
-#   curlFlags
 # Arguments:
 #   none
 # Returns:
@@ -770,10 +730,6 @@ download_token()
 #######################################
 # Changes the default player in $CONFIG_FILE that
 # gets passed to streamlink.
-# Globals:
-#   Colors: ORANGE, NC
-#   WTWITCH_LANG
-#   TRANSLATIONS
 # Arguments:
 #   $1: player to set as default
 # Returns:
@@ -813,8 +769,6 @@ change_player()
 #######################################
 # Changes the default quality in $CONFIG_FILE that
 # gets passed to streamlink.
-# Globals:
-#   none
 # Arguments:
 #   $1: quality to set as default, e.g. "1080p60,720p60,best"
 # Returns:
@@ -851,13 +805,6 @@ change_quality()
 
 #######################################
 # Caches a Twitch API response for all subscribed streamers.
-# Globals:
-#   CURRENT_TIME_UNIX
-#   DATE_CMD
-#   CONFIG_FILE
-#   CACHE_EXPIRY_TIME
-#   TWITCH_API_URL
-#   CACHE_CHECK_JSON_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -905,20 +852,6 @@ cache_online_subscription_json()
 #######################################
 # Checks to see which subscribed Twitch streams
 # are online and prints the user's settings.
-# Globals:
-#   CONFIG_FILE
-#   WTWITCH_LANG
-#   TRANSLATIONS
-#   TMP_DIR
-#   TMP_ONLINE_TEXT_FILE
-#   TMP_OFFLINE_TEXT_FILE
-#   DEBUGGING
-#   CURRENT_TIME_UNIX
-#   LAST_SEEN_TEXT
-#   DATE_CMD
-#   userPlayer
-#   userQuality
-#   userSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -1022,8 +955,6 @@ check_twitch_streams()
 #######################################
 # Used by check_twitch_streams to figure out the
 # streamers that are offline.
-# Globals:
-#   DEBUGGING
 # Arguments:
 #   $1: "${allStreamerJson}" to compare with user subscriptions
 # Returns:
@@ -1048,12 +979,6 @@ get_offline_streams()
 #######################################
 # Used by get_offline_streams to figure out the
 # streamers that are offline.
-# Globals:
-#   Colors: NC, GREY
-#   LAST_SEEN_DIRECTORY
-#   CACHE_OFFLINE_TEXT_FILE
-#   LAST_SEEN_TEXT
-#   DATE_CMD
 # Arguments:
 #   $1: streamer to check
 #   $2: "${allStreamerJson}" to compare with streamer
@@ -1078,13 +1003,6 @@ get_offline_streams_helper()
 #######################################
 # Used by check_twitch_streams to facilitate
 # multi-process fetching and parsing of json data.
-# Globals:
-#   Colors: LIGHTGREEN, NC, ORANGE
-#   CURRENT_TIME_UNIX
-#   LAST_SEEN_DIRECTORY
-#   TERMINAL_WIDTH
-#   TITLE_CHARACTERS
-#   CACHE_ONLINE_TEXT_FILE
 # Arguments:
 #   $1: json data for streamer to process
 # Returns:
@@ -1117,14 +1035,6 @@ check_twitch_streams_helper()
 
 #######################################
 # Lists the top streamers for a specified game.
-# Globals:
-#   WTWITCH_LANG
-#   TRANSLATIONS
-#   TWITCH_API_URL
-#   DEBUGGING
-#   VIEWERS_TEXT
-#   TMP_DIR
-#   TMP_STREAMERS_OF_GAME_TEXT_FILE
 # Arguments:
 #   $1: game to list top streamers of
 # Returns:
@@ -1226,13 +1136,6 @@ list_streamers_of_game()
 
 #######################################
 # Facilitates multi-process parsing of json data.
-# Globals:
-#   Colors: TURQOISE, NC, ORANGE
-#   TERMINAL_WIDTH
-#   TITLE_CHARACTERS
-#   VIEWERS_TEXT
-#   LIVE_TEXT
-#   OFFLINE_TEXT
 # Arguments:
 #   $1: index of streamer to print info of
 #   $2: json file containing streamer data
@@ -1299,8 +1202,6 @@ print_stream_info()
 
 #######################################
 # Prints a list of games from json.
-# Globals:
-#   Colors: PURPLE, NC
 # Arguments:
 #   $1: json file containing game data
 #   $2: file to print to
@@ -1325,14 +1226,6 @@ print_game_info()
 
 #######################################
 # Lists the top games and streams on Twitch.
-# Globals:
-#   WTWITCH_LANG
-#   TRANSLATIONS
-#   DEBUGGING
-#   TWITCH_API_URL
-#   TMP_DIR
-#   TMP_TOP_GAMES_TEXT_FILE
-#   TMP_TOP_STREAMS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -1371,11 +1264,6 @@ list_top()
 
 #######################################
 # Lists the top streams on Twitch.
-# Globals:
-#   TWITCH_API_URL
-#   DEBUGGING
-#   VIEWERS_TEXT
-#   TMP_TOP_STREAMS_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -1412,10 +1300,6 @@ list_top_streams()
 
 #######################################
 # Searches categories on Twitch for a specified search term.
-# Globals:
-#   TWITCH_API_URL
-#   TMP_DIR
-#   TMP_SEARCH_TEXT_FILE
 # Arguments:
 #   none
 # Returns:
@@ -1440,12 +1324,6 @@ search_categories()
 
 #######################################
 # Searches channels on Twitch for a specified search term.
-# Globals:
-#   TWITCH_API_URL
-#   TMP_DIR
-#   TMP_SEARCH_TEXT_FILE
-#   LIVE_TEXT
-#   OFFLINE_TEXT
 # Arguments:
 #   none
 # Returns:
@@ -1494,10 +1372,6 @@ search_channels()
 
 #######################################
 # Opens a stream with Streamlink.
-# Globals:
-#   TWITCH_API_URL
-#   userPlayer
-#   userQuality
 # Arguments:
 #   $1: name of streamer to watch
 # Returns:
@@ -1548,8 +1422,6 @@ stream()
 
 #######################################
 # Subscribes to streamer(s).
-# Globals:
-#   CONFIG_FILE
 # Arguments:
 #   $@: streamer(s) to subscribe to
 # Returns:
@@ -1583,8 +1455,6 @@ subscribe()
 #######################################
 # Changes the printOfflineSubscriptions value in $CONFIG_FILE that
 # determines if wtwitch outputs offline streamers with [c]heck.
-# Globals:
-#   printOfflineSubscriptions
 # Arguments:
 #   none
 # Returns:
@@ -1605,9 +1475,6 @@ toggle_offline()
 #######################################
 # Changes the useColor value in $CONFIG_FILE that
 # determines if wtwitch output is colorful.
-# Globals:
-#   Colors: GREEN, NC
-#   useColors
 # Arguments:
 #   none
 # Returns:
@@ -1631,9 +1498,6 @@ toggle_colors()
 
 #######################################
 # Unsubscribes from streamer(s).
-# Globals:
-#   CONFIG_FILE
-#   LAST_SEEN_DIRECTORY
 # Arguments:
 #   $@: streamer(s) to unsubscribe from
 # Returns:
@@ -1671,10 +1535,6 @@ unsubscribe()
 
 #######################################
 # Blocks streamer(s).
-# Globals:
-#   BLOCKLIST_FILE
-#   WTWITCH_LANG
-#   TRANSLATIONS
 # Arguments:
 #   $@: streamer(s) to block
 # Returns:
@@ -1715,13 +1575,6 @@ block()
 
 #######################################
 # Lists the available VODs for a specified streamer.
-# Globals:
-#   WTWITCH_LANG
-#   TRANSLATIONS
-#   TWITCH_API_URL
-#   TMP_DIR
-#   TMP_VOD_LIST_FILE
-#   DEBUGGING
 # Arguments:
 #   $1: streamer to show vods of
 #   $2: if exists, play the VOD # of that streamer
@@ -1744,7 +1597,7 @@ list_vods()
   local tmpJson
   tmpJson="$(download_file "${TWITCH_API_URL}/videos?user_id=${streamerID}")"
 
-  # If $2 exists, play that # VOD. If $2 doesn't exist, list all VODs
+  # If $2 doesn't exist, list all VODs. Otherwise, play vod #{$2}
   if [[ $# -lt 2 ]]; then
     # List all VODs
     printf "\n %s VODs:\n" "$1"
@@ -1816,13 +1669,6 @@ list_vods()
 
 #######################################
 # Facilitates multi-process parsing of json data.
-# Globals:
-#   Colors: TURQOISE, NC, ORANGE
-#   TERMINAL_WIDTH
-#   TITLE_CHARACTERS
-#   VIEWERS_TEXT
-#   LIVE_TEXT
-#   OFFLINE_TEXT
 # Arguments:
 #   $1: index of vod to print info of
 #   $2: json data containing vod data
@@ -1852,8 +1698,6 @@ print_vod_info()
 #######################################
 # Prints information about how to use this script.
 # Copyright (C) 2016-2019 Dylan Araps
-# Globals:
-#   SCRIPT_NAME
 # Arguments:
 #   none
 # Returns:
@@ -1893,11 +1737,6 @@ See \"man ${SCRIPT_NAME}\" or https://krathalan.net/wtwitch.html for more inform
 
 #######################################
 # Prints information this script.
-# Globals:
-#   SCRIPT_NAME
-#   VERSION
-#   CONTRIBUTORS
-#   DATE_CMD
 # Arguments:
 #   none
 # Returns:
@@ -1917,8 +1756,6 @@ exit 0
 
 #######################################
 # Prints information about new command style.
-# Globals:
-#   SCRIPT_NAME
 # Arguments:
 #   $1: user's command
 # Returns:
