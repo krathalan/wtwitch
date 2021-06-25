@@ -1767,7 +1767,12 @@ list_vods()
     vodData="$(jq -r .data[${whileCounter}] <<< "${tmpJson}")"
 
     while [[ "${vodData}" != "null" ]]; do
-      print_vod_info "${whileCounter}" "${vodData}" "${TMP_VOD_LIST_FILE}" &
+      # Do not use subshells when debugging
+      if [[ "${DEBUGGING}" == "on" ]]; then
+        print_vod_info "${whileCounter}" "${vodData}" "${TMP_VOD_LIST_FILE}"
+      else
+        print_vod_info "${whileCounter}" "${vodData}" "${TMP_VOD_LIST_FILE}" &
+      fi
 
       whileCounter=$(( whileCounter + 1 ))
       vodData="$(jq -r .data[${whileCounter}] <<< "${tmpJson}")"
@@ -1775,6 +1780,7 @@ list_vods()
 
     wait
 
+    # Need to use echo -e to get colors to show
     echo -e "$(sort -n "${TMP_VOD_LIST_FILE}")"
   else
     # Watch VOD #{$2}
