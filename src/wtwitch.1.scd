@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [*c*|*t*|*l*|*v*|*h*|*w* _streamer_|*s* _streamer_|*u* _streamer_|*b* _streamer_|*g* _game_|*e* _term_|*n* _term_|*p* _player_|*q* _quality_|*version*]
+wtwitch [COMMAND] [streamer, search term, game, player, quality]
 
 # DESCRIPTION
 
