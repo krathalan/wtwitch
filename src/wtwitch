@@ -445,6 +445,18 @@ TRANSLATIONS="$(cat <<EOF
     "de": "No VOD number",
     "es": "No VOD number",
     "fr": "No VOD number"
+  },
+  "press_n_next_page": {
+    "en": "Press <N> to show the next page of streamers or press any other key to quit.",
+    "de": "Press <N> to show the next page of streamers or press any other key to quit.",
+    "es": "Press <N> to show the next page of streamers or press any other key to quit.",
+    "fr": "Press <N> to show the next page of streamers or press any other key to quit."
+  },
+  "page": {
+    "en": "Page",
+    "de": "Seite",
+    "es": "Página",
+    "fr": "Page"
   }
 }
 EOF
@@ -1046,7 +1058,7 @@ list_streamers_of_game()
   readonly TMP_STREAMERS_OF_GAME_TEXT_FILE="${TMP_DIR}/streamers_of_game.txt"
 
   local localizedStrings
-  mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}, .press_n_next_page.${WTWITCH_LANG}, .page.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
   if [[ "${WTWITCH_LANG}" == "es" ]] || [[ "${WTWITCH_LANG}" == "fr" ]]; then
@@ -1112,7 +1124,7 @@ list_streamers_of_game()
     cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null || \
     printf " %s %s.\n" "${localizedStrings[1]}" "$1"
 
-    printf "\n Press <N> to show the next page of streamers or press any other key to quit."
+    printf "\n %s" "${localizedStrings[2]}"
     read -rsn1 userResponse
 
     case "${userResponse}" in
@@ -1123,7 +1135,7 @@ list_streamers_of_game()
         # Clear output file
         printf "" > "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
 
-        printf "\n\n Page %s:\n" "${currentPage}"
+        printf "\n\n %s %s:\n" "${localizedStrings[3]}" "${currentPage}"
         currentPage="$(( currentPage + 1 ))"
         ;;
       *)
