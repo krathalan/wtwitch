@@ -22,7 +22,7 @@ e.g. wtwitch *w* _dratnos_
 
 *v* _streamer_ [optional VOD number], *vod* _streamer_ [optional VOD number]
 	List the latest VODs from a _streamer_. Optionally, supply the number of the VOD you want to watch to open it in your default player.
-e.g. wtwitch *v* dratnos
+e.g. wtwitch *v* dratnos++
 e.g. wtwitch *v* dratnos 5
 
 *t*, *top*
