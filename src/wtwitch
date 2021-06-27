@@ -1636,8 +1636,7 @@ list_vods()
 
     wait
 
-    # Need to use echo -e to get colors to show
-    echo -e "$(sort -n "${TMP_VOD_LIST_FILE}")"
+    sort -n "${TMP_VOD_LIST_FILE}"
   else
     # Watch VOD #{$2}
     # extract URL from data
@@ -1700,7 +1699,7 @@ print_vod_info()
   local -r maxTitleLength="$(( TERMINAL_WIDTH - titleCharacters - ${#vodData[0]} - ${#vodData[2]} - ${#dateString} - ${#1} ))"
   local -r vodTitle="${vodData[0]:0:${maxTitleLength}}"
 
-  printf "  %s. %s[%s]%s %s %s(%s)%s\n" "$(( $1 + 1 ))" "${TURQOISE}" "${dateString}" "${NC}" "${vodTitle}" "${ORANGE}" "${vodData[2]}" "${NC}" >> "$3"
+  printf "  %s. %b[%s]%b %s %b(%s)%b\n" "$(( $1 + 1 ))" "${TURQOISE}" "${dateString}" "${NC}" "${vodTitle}" "${ORANGE}" "${vodData[2]}" "${NC}" >> "$3"
 }
 
 # -----------------------------------------
