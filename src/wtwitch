@@ -357,10 +357,10 @@ TRANSLATIONS="$(cat <<EOF
     "fr": "Vous n'êtes abonné à aucune chaîne"
   },
   "twitch_api_limit": {
-    "en": "Twitch API rate limit reached",
-    "de": "Twitch API rate limit reached",
-    "es": "Twitch API rate limit reached",
-    "fr": "Limite de débit de l'API Twitch atteinte"
+    "en": "Twitch API rate limit reached, or game/streamer does not exist",
+    "de": "Twitch API rate limit reached, or game/streamer does not exist",
+    "es": "Twitch API rate limit reached, or game/streamer does not exist",
+    "fr": "Limite de débit de l'API Twitch atteinte, or game/streamer does not exist"
   },
   "last_seen": {
     "en": "last seen online",
@@ -581,7 +581,6 @@ get_game_name()
 #######################################
 get_user_id()
 {
-  # Add "id" prefix as jq does not accept numerical identifiers
   local -r userLogin="$(to_lowercase "$1")"
 
   # Attempt to extract user ID from cached user logins
@@ -1604,6 +1603,10 @@ list_vods()
 
   # First get twitch user ID
   local -r streamerID="$(get_user_id "${streamer}")"
+
+  if [[ "${streamerID}" == "" ]] || [[ "${streamerID}" == "null" ]]; then
+    exit 1
+  fi
 
   # Get list of VODs
   local tmpJson
