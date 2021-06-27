@@ -37,8 +37,9 @@ Wtwitch has the following commands:
 => [l]                 - Toggle the usage of colors in wtwitch output.
 => [p]layer [program]  - Change the player program that gets passed to streamlink.
 => [q]uality [quality] - Change the video quality that gets passed to streamlink.
-=> [b]lock [name(s)]   - Block [name] streamer, preventing them from appearing in any
-                         output. You can block multiple streamers in one command.
+=> [b]lock [name(s)]   - Block [name] streamer(s), preventing them from appearing in
+                         any output. You can block multiple streamers in one command.
+                         You can also use this command to unblock streamer(s).
 => [version]           - Print the current version of wtwitch.
 => [h]elp              - Print this help.
 ```
