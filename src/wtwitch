@@ -1962,7 +1962,7 @@ glob "$1" '[q]*' && [[ -z "${2:-}" ]] &&
   exit_script_on_failure "$(get_translation flags_no_streamer)"
 
 # If using a command that requires the Twitch API, update token
-if glob "$1" '[cengt]*'; then
+if glob "$1" '[cengtv]*'; then
   # If the API token is empty, OR
   # If the API token is null (e.g. there is no token), OR
   # If the API token is expired
