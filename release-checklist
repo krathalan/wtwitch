@@ -1,3 +1,6 @@
+flight pre-check
+1. did you add/change commands? review "parse user options" glob checks
+
 1. git checkout dev
 2. Bump version number in script and scdoc man page
 3. Add notes to {,FULL}CHANGELOG
