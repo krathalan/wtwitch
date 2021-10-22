@@ -64,7 +64,7 @@ set -Eeuo pipefail
 
 # Script (self) information
 readonly SCRIPT_NAME="${0##*/}"
-readonly VERSION="2.3.1"
+readonly VERSION="2.3.2"
 
 # Subscription check cache
 readonly CACHE_EXPIRY_TIME="60" # In seconds
