@@ -186,3 +186,8 @@
 
 2.3.1 (October 11, 2021)
     Fixed a bug where wtwitch would try to fetch vod info with an invalid API token if it had not been refreshed
+
+2.3.2 (October 22, 2021)
+    Fixed issue #2 (wrong command when using hyphens)
+    Fixed issue #3 (vod titles cut off)
+    Fixed issue #5 (added tab completion for vods)
