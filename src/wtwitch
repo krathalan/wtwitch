@@ -1695,7 +1695,7 @@ print_vod_info()
   # Get title, date, duration
   mapfile -t vodData <<< "$(jq -r ".title, .created_at, .duration" <<< "$2")"
 
-  local -r dateString="$(date -d "${vodData[1]}" "+%x %X")"
+  local -r dateString="$(${DATE_CMD} -d "${vodData[1]}" "+%x %X")"
 
   # Trim VOD title to fit terminal width
   local -r titleCharacters=11
@@ -1865,7 +1865,7 @@ fi
 
 # 'date' command
 case "$(uname -s)" in
-  Darwin)
+  Darwin|*BSD)
     readonly DATE_CMD="gdate"
     ;;
   *)
