@@ -68,7 +68,7 @@ _wtwitch_completions()
   # COMP_WORDS[1] = cmd (e.g. w, c, etc.)
 
   if [[ "${#COMP_WORDS[@]}" -lt "3" ]]; then
-    mapfile -t COMPREPLY <<< "$(compgen -W "w s u c e n g t l p q b v version help" "${COMP_WORDS[1]}")"
+    mapfile -t COMPREPLY <<< "$(compgen -W "w s u c e n g t l p q b v help" "${COMP_WORDS[1]}")"
   elif _glob "${COMP_WORDS[1]}" "[w]" && [[ "${#COMP_WORDS[@]}" == "3" ]]; then
     if [[ "${#COMP_WORDS[@]}" != "3" ]]; then
       return
@@ -85,7 +85,7 @@ _wtwitch_completions()
 
     # Return list of online subscriptions
     mapfile -t COMPREPLY <<< "$(compgen -W "${_online_subscriptions[*]}" "${COMP_WORDS[2]}")"
-  elif _glob "${COMP_WORDS[1]}" "[u]" && [[ "${#COMP_WORDS[@]}" == "3" ]]; then
+  elif _glob "${COMP_WORDS[1]}" "[uv]" && [[ "${#COMP_WORDS[@]}" == "3" ]]; then
     mapfile -t _user_subscriptions <<< "$(jq -r ".subscriptions[].streamer" "${XDG_CONFIG_HOME:-${HOME}/.config}/wtwitch/config.json")"
     mapfile -t COMPREPLY <<< "$(compgen -W "${_user_subscriptions[*]}" "${COMP_WORDS[2]}")"
   fi

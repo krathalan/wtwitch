@@ -1699,7 +1699,7 @@ print_vod_info()
 
   # Trim VOD title to fit terminal width
   local -r titleCharacters=11
-  local -r maxTitleLength="$(( TERMINAL_WIDTH - titleCharacters - ${#vodData[0]} - ${#vodData[2]} - ${#dateString} - ${#1} ))"
+  local -r maxTitleLength="$(( TERMINAL_WIDTH - titleCharacters - ${#vodData[2]} - ${#dateString} - ${#1} ))"
   local -r vodTitle="${vodData[0]:0:${maxTitleLength}}"
 
   printf "  %s. %b[%s]%b %s %b(%s)%b\n" "$(( $1 + 1 ))" "${TURQOISE}" "${dateString}" "${NC}" "${vodTitle}" "${ORANGE}" "${vodData[2]}" "${NC}" >> "$3"
@@ -1779,7 +1779,7 @@ exit 0
 print_new_usage()
 {
   printf "The commands for wtwitch have changed.
-Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##-}"
+Do not use hyphens anymore; simply execute \"%s %s\".\n" "${SCRIPT_NAME}" "${1##*-}"
 
   exit 0
 }
