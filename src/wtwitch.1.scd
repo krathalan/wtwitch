@@ -22,8 +22,8 @@ e.g. wtwitch *w* _dratnos_
 
 *v* _streamer_ [optional VOD number], *vod* _streamer_ [optional VOD number]
 	List the latest VODs from a _streamer_. Optionally, supply the number of the VOD you want to watch to open it in your default player.++
-e.g. wtwitch *v* dratnos++
-e.g. wtwitch *v* dratnos 5
+e.g. wtwitch *v* _dratnos_++
+e.g. wtwitch *v* _dratnos 5_
 
 *t*, *top*
 	View the top games and streams on Twitch.++
@@ -105,9 +105,9 @@ When tabbing after wtwitch *w*, wtwitch will get a list of your subscriptions th
 
 ## Player
 
-Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and custom window titles, such as "Watching dratnos on Twitch (1080p 60.000fps)". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
+Wtwitch will tell Streamlink to use mpv by default. Wtwitch favors mpv because mpv supports Wayland and custom window titles, such as "Watching dratnos on Twitch". Wtwitch will use VLC automatically if you have VLC installed and don't have mpv installed.
 
-You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is installed.
+You can set which video player you'd like wtwitch to pass to Streamlink with wtwitch *p* _player_. You can pass any player you'd pass to Streamlink, and wtwitch will make sure the player you're trying to set as the default player is in your \$PATH.
 
 ## Quality
 
@@ -115,7 +115,7 @@ Wtwitch tells Streamlink to choose the "best" quality by default. You can set wh
 
 ## Ads
 
-Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as Twitch takes 50% of the subscription fee.
+Wtwitch tells Streamlink to bypass Twitch ads. If you want to support a streamer, consider donating to them directly rather than subscribing to them on Twitch, as Twitch takes a substantial portion (30-50%) of the subscription fee.
 
 # FILES
 
@@ -139,7 +139,7 @@ ln -sf ~/Documents/Config/config.json ~/.config/wtwitch/config.json
 
 # CHANGELOG
 
-View the changes/additions for the latest installed version of wtwitch with the command:
+View the changelog for the latest installed version of wtwitch with the command:
 
 pacman -Qc wtwitch
 
