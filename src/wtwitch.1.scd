@@ -6,7 +6,7 @@ wtwitch - terminal user interface for Twitch
 
 # SYNOPSIS
 
-wtwitch [COMMAND] [streamer, search term, game, player, quality]
+wtwitch *[COMMAND]* _[args]_
 
 # DESCRIPTION
 
@@ -93,7 +93,7 @@ e.g. wtwitch *h*
 
 *version*
 	Print the current version of wtwitch.++
-e.g. wtwitch *v*
+e.g. wtwitch *version*
 
 # TAB COMPLETION
 
