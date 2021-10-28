@@ -130,7 +130,7 @@ TRANSLATIONS="$(cat <<EOF
   },
   "change_player_success": {
     "en": "Changed player to",
-    "de": "Changed player to",
+    "de": "Mediaplayer geändert zu",
     "es": "Changed player to",
     "fr": "Lecteur changé à"
   },
@@ -142,7 +142,7 @@ TRANSLATIONS="$(cat <<EOF
   },
   "change_quality_success": {
     "en": "Changed quality to",
-    "de": "Changed quality to",
+    "de": "Qualität geändert zu",
     "es": "Changed quality to",
     "fr": "Qualité changée à"
   },
@@ -274,13 +274,13 @@ TRANSLATIONS="$(cat <<EOF
   },
   "subscribe_failure": {
     "en": "You are already subscribed to",
-    "de": "Du abonierst bereits",
+    "de": "Du abonnierst bereits",
     "es": "You are already subscribed to",
     "fr": "Vous êtes déjà abonné à"
   },
   "subscribe_success": {
     "en": "Subscribed to",
-    "de": "Subscribed to",
+    "de": "Abonniert",
     "es": "Subscribed to",
     "fr": "Abonné à"
   },
@@ -292,7 +292,7 @@ TRANSLATIONS="$(cat <<EOF
   },
   "unsubscribe_success": {
     "en": "Unsubscribed from",
-    "de": "Unsubscribed from",
+    "de": "Abo gecancelt",
     "es": "Unsubscribed from",
     "fr": "Désabonné de"
   },
@@ -310,13 +310,13 @@ TRANSLATIONS="$(cat <<EOF
   },
   "offline_subs_off": {
     "en": "Turned printing offline subscriptions with [c]heck off",
-    "de": "Turned printing offline subscriptions with [c]heck off",
+    "de": "Offline Abos bei [c]heck anzeigen deaktiviert",
     "es": "Turned printing offline subscriptions with [c]heck off",
     "fr": "Turned printing offline subscriptions with [c]heck off"
   },
   "offline_subs_on": {
     "en": "Turned printing offline subscriptions with [c]heck on",
-    "de": "Turned printing offline subscriptions with [c]heck on",
+    "de": "Offline Abos bei [c]heck anzeigen aktiviert",
     "es": "Turned printing offline subscriptions with [c]heck on",
     "fr": "Turned printing offline subscriptions with [c]heck on"
   },
@@ -346,7 +346,7 @@ TRANSLATIONS="$(cat <<EOF
   },
   "flags_no_search_term": {
     "en": "No search term specified",
-    "de": "No search term specified",
+    "de": "Keine Suchbegriff angegeben",
     "es": "No search term specified",
     "fr": "Aucun terme de recherche spécifié"
   },
@@ -358,73 +358,73 @@ TRANSLATIONS="$(cat <<EOF
   },
   "twitch_api_limit": {
     "en": "Twitch API rate limit reached, or game/streamer does not exist",
-    "de": "Twitch API rate limit reached, or game/streamer does not exist",
+    "de": "Twitch API Limit erreicht, oder Spiel/Streamer existiert nicht",
     "es": "Twitch API rate limit reached, or game/streamer does not exist",
     "fr": "Limite de débit de l'API Twitch atteinte, or game/streamer does not exist"
   },
   "last_seen": {
     "en": "last seen online",
-    "de": "last seen online",
+    "de": "Zuletzt Online gesehen",
     "es": "last seen online",
     "fr": "vu en ligne pour la dernière fois"
   },
   "removed": {
     "en": "Removed",
-    "de": "Removed",
+    "de": "Entfernt",
     "es": "Removed",
     "fr": ""
   },
   "added": {
     "en": "Added",
-    "de": "Added",
+    "de": "Hinzugefügt",
     "es": "Added",
     "fr": ""
   },
   "from_blocklist": {
     "en": "from blocklist",
-    "de": "from blocklist",
+    "de": "Von Blockliste",
     "es": "from blocklist",
     "fr": "supprimé de la liste de blocage"
   },
   "to_blocklist": {
     "en": "to blocklist",
-    "de": "to blocklist",
+    "de": "Zu Blockliste",
     "es": "to blocklist",
     "fr": "ajouté à la liste de blocage"
   },
   "blocklist": {
     "en": "Blocklist",
-    "de": "Blocklist",
+    "de": "Blockliste",
     "es": "Blocklist",
     "fr": "Liste de blocage"
   },
   "api_token_fetch_failure": {
     "en": "Failed to fetch API token",
-    "de": "Failed to fetch API token",
+    "de": "API token beziehen fehlgeschlagen",
     "es": "Failed to fetch API token",
     "fr": "Échec de l'obtention du jeton d'API"
   },
   "info_fetch_failure": {
     "en": "Failed to fetch information from the Twitch API",
-    "de": "Failed to fetch information from the Twitch API",
+    "de": "Information von Twitch API beziehen fehlgeschlagen",
     "es": "Failed to fetch information from the Twitch API",
     "fr": "Échec de la récupération d'informations depuis l'API Twitch"
   },
   "check_internet": {
     "en": "Check your internet connection and try again",
-    "de": "Check your internet connection and try again",
+    "de": "Überprüfe Internetverbindung und versuche es erneut",
     "es": "Check your internet connection and try again",
     "fr": "Vérifiez votre connexion Internet et réessayez"
   },
   "search_results": {
     "en": "Search results",
-    "de": "Search results",
+    "de": "Suchergebnisse",
     "es": "Search results",
     "fr": "Résultats de la recherche"
   },
   "no_results": {
     "en": "No results",
-    "de": "No results",
+    "de": "Keine Ergebnisse",
     "es": "No results",
     "fr": "Aucun résultat"
   },
@@ -442,13 +442,13 @@ TRANSLATIONS="$(cat <<EOF
   },
   "vod_failure_no_number": {
     "en": "No VOD number",
-    "de": "No VOD number",
+    "de": "Keine VOD Nummer",
     "es": "No VOD number",
     "fr": "No VOD number"
   },
   "press_n_next_page": {
     "en": "Press <N> to show the next page of streamers or press any other key to quit.",
-    "de": "Press <N> to show the next page of streamers or press any other key to quit.",
+    "de": "Drücke <N> um die nächste Seite Streamer anzuzeigen oder beliebige andere Taste zu beenden.",
     "es": "Press <N> to show the next page of streamers or press any other key to quit.",
     "fr": "Press <N> to show the next page of streamers or press any other key to quit."
   },
