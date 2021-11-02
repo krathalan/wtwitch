@@ -86,6 +86,9 @@ $ sudo apt install streamlink
 
 Afterwards, clone the repo like any distro other than Arch.
 
+### BSD systems
+You will need to install Bash, the GNU coreutils, `jq`, and `streamlink`.
+
 ### Any distro
 Clone the repository: `git clone https://github.com/krathalan/wtwitch`
 
