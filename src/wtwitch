@@ -457,6 +457,12 @@ TRANSLATIONS="$(cat <<EOF
     "de": "Seite",
     "es": "Página",
     "fr": "Page"
+  },
+  "no_more_streamers": {
+    "en": "No more streamers",
+    "de": "No more streamers",
+    "es": "No more streamers",
+    "fr": "No more streamers"
   }
 }
 EOF
@@ -1057,7 +1063,7 @@ list_streamers_of_game()
   readonly TMP_STREAMERS_OF_GAME_TEXT_FILE="${TMP_DIR}/streamers_of_game.txt"
 
   local localizedStrings
-  mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}, .press_n_next_page.${WTWITCH_LANG}, .page.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
+  mapfile -t localizedStrings <<< "$(jq -r ".channels.${WTWITCH_LANG}, .no_channels.${WTWITCH_LANG}, .press_n_next_page.${WTWITCH_LANG}, .page.${WTWITCH_LANG}, .no_more_streamers.${WTWITCH_LANG}" <<< "${TRANSLATIONS}")"
 
   # Spanish has a different structure
   if [[ "${WTWITCH_LANG}" == "es" ]] || [[ "${WTWITCH_LANG}" == "fr" ]]; then
@@ -1086,6 +1092,8 @@ list_streamers_of_game()
   local paginationText=""
   # Used to print page user is on
   local currentPage=2
+  # Used to track what message to show if the json is empty (i.e. no streamers)
+  local printedStreamersOnce=false
 
   while [[ "${showMoreStreamers}" == "true" ]]; do
     # Calculate number of lines to print out. Try and fit it to the terminal height
@@ -1120,9 +1128,18 @@ list_streamers_of_game()
 
     wait
 
-    cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null || \
-    printf " %s %s.\n" "${localizedStrings[1]}" "$1"
+    if [[ -s "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" ]] ; then
+      cat "${TMP_STREAMERS_OF_GAME_TEXT_FILE}" 2> /dev/null
+    else
+      if [[ "${printedStreamersOnce}" == "false" ]]; then
+        printf " %s %s.\n" "${localizedStrings[1]}" "$1"
+      else
+       printf " %s.\n" "${localizedStrings[4]}"
+      fi
+      exit
+    fi
 
+    printedStreamersOnce=true
     printf "\n %s" "${localizedStrings[2]}"
     read -rsn1 userResponse
 
