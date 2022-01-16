@@ -8,14 +8,23 @@ A terminal program for Twitch. Watch and browse Twitch without proprietary JavaS
 
 Table of contents:
 
-1. [How to use](#how-to-use)
-2. [Install](#install)
-3. [More information](#more-information)
-4. [Bugs and feature requests](#bugs-and-feature-requests)
-5. [Contributions](#contributions)
-6. [FAQ](#faq)
-7. [Privacy](#privacy)
-8. [Technical information](#technical-information)
+1. [Project status](#project-status)
+2. [How to use](#how-to-use)
+3. [Install](#install)
+4. [More information](#more-information)
+5. [Bugs and feature requests](#bugs-and-feature-requests)
+6. [Contributions](#contributions)
+7. [FAQ](#faq)
+8. [Privacy](#privacy)
+9. [Technical information](#technical-information)
+
+## Project status
+Wtwitch is generally considered to be feature-complete. However, there is more work that can be done, in order of importance:
+
+- Maintain compatibility with current Twitch API, including adding support for API request(s) useful to wtwitch users
+- Improve translations
+- Add a configuration menu so there are not a lot of configuration commands
+- Rewrite in a compiled language for speed
 
 ## How to use
 Wtwitch has the following commands:
