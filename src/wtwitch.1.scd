@@ -67,6 +67,10 @@ e.g. wtwitch *u* _dratnos_ _emongg_ _sleepy_
 	View your player/quality settings and the status of the streamers you are subscribed to.++
 e.g. wtwitch *c*
 
+*o*
+	View all online streamers you are subscribed to, and optionally open streams, with fzf. You must have fzf installed to use this feature.++
+e.g. wtwitch *o*
+
 ## Configuration options
 
 *p* _player_, *player* _player_
