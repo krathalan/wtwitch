@@ -867,6 +867,44 @@ cache_online_subscription_json()
 }
 
 #######################################
+# Watch stream by name
+# Arguments:
+#   $1: stream
+# Returns:
+#   none
+#######################################
+watch_stream()
+{
+  if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
+    stream "$1"
+  else
+    stream "$1" &> /dev/null &
+  fi
+}
+
+#######################################
+# Select and open stream with FZF
+# Arguments:
+#   none
+# Returns:
+#   none
+#######################################
+open_selected_stream()
+{
+  if which fzf >/dev/null; then
+    stream=$(check_twitch_streams | fzf --ansi | cut -d: -f1 | sed 's/ *//')
+    if [ -n "$stream" ]; then
+      echo "opening $stream"
+      watch_stream "$stream"
+    else
+      echo no stream selected
+    fi
+  else
+    echo you need to install fzf to use this functionality
+  fi
+}
+
+#######################################
 # Checks to see which subscribed Twitch streams
 # are online and prints the user's settings.
 # Arguments:
@@ -1992,6 +2030,7 @@ fi
 case "$1" in
   -h|--help|h*) print_help ;;
   c*) check_twitch_streams ;;
+  o*) open_selected_stream ;;
   g*) list_streamers_of_game "$2" ;;
   e*) search_categories "$2" ;;
   t*) list_top ;;
@@ -2005,13 +2044,7 @@ case "$1" in
   b*) block "$@" ;;
   version) print_version ;;
   v*) list_vods "$@" ;;
-  w*)
-    if [[ "${userQuality}" == "audio_only" ]] || [[ "${DEBUGGING}" == "on" ]]; then
-      stream "$2"
-    else
-      stream "$2" &> /dev/null &
-    fi
-  ;;
+  w*) watch_stream "$2" ;;
   *) print_help ;;
 esac
 
