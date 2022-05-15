@@ -37,6 +37,8 @@ Wtwitch has the following commands:
                          You can unsubscribe from multiple streamers in one command.
 => [c]heck             - View your settings and the status of streamers you are
                          subscribed to.
+=> [o]                 - Browse online streamers you are subscribed to and open
+                         streams with fzf.
 => [e] [search-term]   - Search games/categories for [search-term].
 => [n] [search-term]   - Search streamers/channels for [search-term].
 => [g]ame [name]       - View the top streamers for [name] game/category.
@@ -140,49 +142,6 @@ If you provide a better method of installation for a distro other than Arch, suc
 ### Are you going to implement Twitch chat?
 No. Check out [Chatty](https://chatty.github.io/), a featureful Twitch chat client written in Java. It's available in the AUR: https://aur.archlinux.org/packages/chatty/
 
-### Why not use [Streamlink Twitch GUI](https://github.com/streamlink/streamlink-twitch-gui)?
-Streamlink Twitch GUI is great for people uncomfortable with the command line. However, I personally was unsatisfied with it because of its weight and reliance on Xorg.
-
-Since wtwitch is a terminal program, it can be run in any terminal emulator that supports Wayland for a nice Wayland-native experience. Streamlink Twitch GUI requires Xorg/Xwayland as it uses Electron (Chromium) to render and Electron does not yet officially support Wayland -- though this is set to change in the (hopefully) near future.
-
-When uncompressed, Streamlink Twitch GUI's files (for Linux x64) take up 225.4 MB of disk space. You can download and uncompress the files from [Streamlink Twitch GUI's GitHub releases page](https://github.com/streamlink/streamlink-twitch-gui/releases). Though, we have to remember that Streamlink Twitch GUI [also requires Streamlink to be installed](https://github.com/streamlink/streamlink-twitch-gui#download), so Streamlink Twitch GUI actually takes up ~230 MB. Wtwitch and its dependencies -- Streamlink and jq -- when installed, take up ~12 MB. You also need a player with both -- mpv takes up ~70 MB -- so the total disk usage for wtwitch is ~82 MB, compared to ~300 MB for Streamlink Twitch GUI.
-
-Using `cloc` (https://github.com/AlDanial/cloc) to **c**ount **l**ines **o**f **c**ode:
-
-```
-  $ git clone https://github.com/streamlink/streamlink-twitch-gui.git \
-    && cloc streamlink-twitch-gui/src/
-
--------------------------------------------------------------------------------
-Language                     files          blank        comment           code
--------------------------------------------------------------------------------
-JavaScript                     547           8025           3123          36390
-YAML                            72              7            110           6207
-LESS                            54            782            103           3450
-Handlebars                      75             52              0           2581
-JSON                            34              8              0           2035
-HTML                             3              2              0             71
-CSS                              1              3              3             20
--------------------------------------------------------------------------------
-SUM:                           786           8879           3339          50754
--------------------------------------------------------------------------------
-```
-
-```
-  $ git clone https://github.com/krathalan/wtwitch && cloc wtwitch/
-
---------------------------------------------------------------------------------
-Language                      files          blank        comment           code
---------------------------------------------------------------------------------
-Bourne Again Shell                2            270            607           1218
-Markdown                          1             59              0            136
---------------------------------------------------------------------------------
-SUM:                              3            329            607           1354
---------------------------------------------------------------------------------
-```
-
-##### Stats updated 6/26/2021.
-
 ### Old signing key
 For releases before 2.0.0:
 
@@ -203,4 +162,4 @@ Here's a list of the CLI programs Wtwitch utilizes to process data and the langu
 - [GNU coreutils](https://github.com/coreutils/coreutils), written nearly entirely in C and shell
 - [jq](https://github.com/stedolan/jq), written nearly entirely in C
 
-Wtwitch utilizes [Streamlink](https://github.com/streamlink/streamlink), which is written in Python, but it's only used when the user actually opens a stream to watch. Streamlink isn't used when doing anything else in wtwitch.
+Wtwitch utilizes [Streamlink](https://github.com/streamlink/streamlink), which is written in Python, but it's only used when the user actually opens a stream to watch. Streamlink isn't used when using any other features of Wtwitch.
