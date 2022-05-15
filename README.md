@@ -103,7 +103,7 @@ You will need to install Bash, the GNU coreutils, `jq`, and `streamlink`.
 ### Any distro
 Clone the repository: `git clone https://github.com/krathalan/wtwitch`
 
-Then add the cloned wtwitch directory to your `$PATH`.
+Then add the `src/` directory in the cloned wtwitch repo to your `$PATH`.
 
 ## More information
 See `man wtwitch` if you have the AUR package installed.
