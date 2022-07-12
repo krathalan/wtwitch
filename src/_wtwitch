@@ -39,17 +39,17 @@ case $state in
     ;;
   (names)
     case $line[1] in
-      w)
+      w|watch)
         wtwitch _completion_cache_online_subscription_json &> /dev/null
         local online_subs_file; online_subs_file="${XDG_CACHE_DIR:-${HOME}/.cache}/wtwitch/online-subs"
         local -a streamers; streamers=("${(fL)$(<$online_subs_file)}")
 
         _describe online streamers && ret=0
         ;;
-      u|v)
+      u|unsub|v|vod)
         _describe sublist subs && ret=0
         ;;
-      q)
+      q|quality)
         local -a qualities=(
           'audio_only'
           'worst'
@@ -68,7 +68,7 @@ case $state in
     ;;
   (multiple)
     case $line[1] in
-      u)
+      u|unsub)
         _describe sublist subs && ret=0
         ;;
     esac
