@@ -1493,7 +1493,13 @@ stream()
       userPlayer+=" --gpu-context=wayland"
     fi
 
-    if [[ "${WTWITCH_LANG}" == "de" ]]; then
+    # If custom title is set in streamlink config, set it as mpvWindowTitle
+    local -r streamlinkConfig="${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config"
+    local -r streamlinkArg="title"
+
+    if grep -q "${streamlinkArg}" "${streamlinkConfig}" 2> /dev/null; then
+      local -r mpvWindowTitle="$(grep "${streamlinkArg}" "${streamlinkConfig}" | sed 's/title=//' )"
+    elif [[ "${WTWITCH_LANG}" == "de" ]]; then
       local -r mpvWindowTitle="$1 ${localizedStrings[6]} ${localizedStrings[5]}"
     else
       local -r mpvWindowTitle="${localizedStrings[5]} $1 ${localizedStrings[6]}"
