@@ -1497,8 +1497,8 @@ stream()
     local -r streamlinkConfig="${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config"
     local -r streamlinkArg="title"
 
-    if grep -q "${streamlinkArg}" "${streamlinkConfig}" 2> /dev/null; then
-      local -r mpvWindowTitle="$(grep "${streamlinkArg}" "${streamlinkConfig}" | sed 's/title=//' )"
+    if grep -xq "${streamlinkArg}=.*" "${streamlinkConfig}" 2> /dev/null; then
+      local -r mpvWindowTitle="$(grep -x "${streamlinkArg}.*" "${streamlinkConfig}" | sed 's/title=//' )"
     elif [[ "${WTWITCH_LANG}" == "de" ]]; then
       local -r mpvWindowTitle="$1 ${localizedStrings[6]} ${localizedStrings[5]}"
     else
