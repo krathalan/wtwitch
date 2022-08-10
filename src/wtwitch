@@ -1161,6 +1161,7 @@ list_streamers_of_game()
   gameName=${gameName//&/%26}
 
   # Get game_id
+  declare -A jsonArr
   local twitchJson
   twitchJson="$(download_file "${TWITCH_API_URL}/games?name=${gameName}")"
   local -r gameID="$(jq -r ".data[0].id" <<< "${twitchJson}")"
@@ -1189,7 +1190,7 @@ list_streamers_of_game()
     fi
 
     # Get streamers
-    declare -Ar jsonArr=([twitchJson]="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=${linesToPrint}${paginationText}")")
+    jsonArr[twitchJson]="$(download_file "${TWITCH_API_URL}/streams?game_id=${gameID}&first=${linesToPrint}${paginationText}")"
 
     local whileCounter=0
 
@@ -1230,7 +1231,7 @@ list_streamers_of_game()
       [Nn])
         showMoreStreamers="true"
         # Get pagination cursor
-        paginationText="&after=$(jq -r .pagination.cursor <<< "${twitchJson}")"
+        paginationText="&after=$(jq -r .pagination.cursor <<< "${jsonArr[twitchJson]}")"
         # Clear output file
         printf "" > "${TMP_STREAMERS_OF_GAME_TEXT_FILE}"
 
