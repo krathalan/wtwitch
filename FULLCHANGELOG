@@ -210,3 +210,7 @@
     
 2.5.1 (July 15, 2022)
     Added full command name completion to new zsh completion from elig0n (PR#10)
+
+2.6.0 (September 12, 2022)
+    If custom title is set in streamlink config, set it as the mpv window title from michaeldxyz (PR#15)
+    Show streamer names as formatted in Twitch chat from michaeldxyz (PR#16)
