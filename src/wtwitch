@@ -4,7 +4,7 @@
 #    Homepage: https://github.com/krathalan/wtwitch
 #
 # Copyright (C) 2019-2020:
-readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux, René de Hesselle, incompetentcoder, yazgoo, michaeldxyz, elig0n"
+readonly CONTRIBUTORS="krathalan, nycko123, Léo Villeveygoux, René de Hesselle, incompetentcoder, yazgoo, michaeldxyz, elig0n, ruitcatarino"
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ readonly CACHE_USER_ID_FILE="${CACHE_FILE_DIRECTORY}/userids.json"
 # Config
 readonly CONFIG_FILE_DIRECTORY="${XDG_CONFIG_HOME:-${HOME}/.config}/${SCRIPT_NAME}"
 readonly CONFIG_FILE="${CONFIG_FILE_DIRECTORY}/config.json"
+readonly API_FILE="${CONFIG_FILE_DIRECTORY}/api.json"
 readonly BLOCKLIST_FILE="${CONFIG_FILE_DIRECTORY}/blocklist"
 
 # If exists, source this for additional environment setup.
@@ -741,6 +742,20 @@ write_setting()
 }
 
 #######################################
+# Writes a setting value to the api file.
+# Arguments:
+#   $1: key
+#   $2: value
+# Returns:
+#   none
+#######################################
+write_api_setting()
+{
+  local -r tmpJson="$(jq "$1 = \"$2\"" "${API_FILE}")"
+  printf "%s" "${tmpJson}" > "${API_FILE}"
+}
+
+#######################################
 # Invalidates the cache generated from [c]heck command.
 # Arguments:
 #   none
@@ -778,8 +793,8 @@ download_token()
   apiToken="${newToken}"
 
   # Add token to config and update token expiration date
-  write_setting ".apiToken" "${newToken}"
-  write_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
+  write_api_setting ".apiToken" "${newToken}"
+  write_api_setting ".apiTokenExpiry" "$(LANG=C ${DATE_CMD} -d tomorrow +%s)"
 }
 
 # -----------------------------------------
@@ -1937,6 +1952,11 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   printf "{\"player\": \"mpv\",\"quality\": \"best\",\"colors\": \"true\",\"printOfflineSubscriptions\": \"true\",\"subscriptions\": []}" > "${CONFIG_FILE}"
 fi
 
+if [[ ! -f "${API_FILE}" ]]; then
+  # Default config
+  printf "{}" > "${API_FILE}"
+fi
+
 if [[ ! -f "${ENVIRONMENT_FILE}" ]]; then
   printf '#!/usr/bin/env sh\n\n# You can put commands or variables here for wtwitch to source.\n# This is useful on macOS, for example, to set a custom PATH or PYTHONPATH\n# to support non-standard locations specifically for wtwitch.\n' > "${ENVIRONMENT_FILE}"
 fi
@@ -1950,13 +1970,14 @@ source "${ENVIRONMENT_FILE}"
 # printOfflineSubscriptions must be malleable because it must be initialized to T/F if it is null (i.e. does not exist in config file yet)
 # userPlayer must be malleable because it must be updated if the user's default
 #   player is mpv and they don't have it installed but have vlc installed
-mapfile -t userSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry, .colors, .printOfflineSubscriptions, .player, .quality" "${CONFIG_FILE}")"
-apiToken="${userSettings[0]}"
-readonly apiTokenExpiry="${userSettings[1]}"
-readonly useColors="${userSettings[2]}"
-printOfflineSubscriptions="${userSettings[3]}"
-userPlayer="${userSettings[4]}"
-readonly userQuality="${userSettings[5]}"
+mapfile -t userSettings <<< "$(jq -r ".colors, .printOfflineSubscriptions, .player, .quality" "${CONFIG_FILE}")"
+mapfile -t apiSettings <<< "$(jq -r ".apiToken, .apiTokenExpiry" "${API_FILE}")"
+apiToken="${apiSettings[0]}"
+readonly apiTokenExpiry="${apiSettings[1]}"
+readonly useColors="${userSettings[0]}"
+printOfflineSubscriptions="${userSettings[1]}"
+userPlayer="${userSettings[2]}"
+readonly userQuality="${userSettings[3]}"
 blocklist="$(<"${BLOCKLIST_FILE}")"
 readonly blocklist
 
