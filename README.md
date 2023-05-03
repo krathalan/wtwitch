@@ -67,43 +67,29 @@ AUR releases are signed so you'll need to import my GPG key:
 
 If you're having keyserver issues, grab it from my website: https://krathalan.net/keys/dev.asc
 
+### Ubuntu
+Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin. See more information here: https://github.com/streamlink/streamlink/issues/4670
+
+You may need to install `curl` and `jq`. You may be able to install `streamlink` as an AppImage: https://github.com/streamlink/streamlink-appimage
+
+Afterwards, [clone the repo](#other_distros).
+
+### Other distros
+Clone the repository: `git clone https://github.com/krathalan/wtwitch`
+
+Then add the `src/` directory in the cloned wtwitch repo to your `$PATH`. You may need to install `curl`, `jq`, and `streamlink`. See this page for distro-specific streamlink installation instructions: https://streamlink.github.io/install.html
+
 ### macOS
 You need to install additional dependencies through e.g. [homebrew](https://brew.sh/):
 
-```
-brew install bash coreutils jq
-```
+> `$ brew install bash coreutils curl jq streamlink`
 
-Afterwards, [clone the repo](#any-distro).
-
-### Ubuntu
-Please note that Ubuntu ships an older version of Streamlink that does not have bug fixes in it for the Twitch plugin.
-
-You have a few options:
-
-1. Contact the maintainer of Streamlink for Ubuntu
-
-2. Use a different distribution which provides a more up-to-date Streamlink
-
-3. Use the Streamlink installation instructions for Ubuntu [from Streamlink's website](https://streamlink.github.io/install.html):
-
-```
-$ sudo add-apt-repository ppa:nilarimogard/webupd8
-
-$ sudo apt update
-
-$ sudo apt install streamlink
-```
-
-Afterwards, clone the repo like any distro other than Arch.
+Afterwards, [clone the repo](#other_distros).
 
 ### BSD systems
-You will need to install Bash, the GNU coreutils, `jq`, and `streamlink`.
+You will need to install Bash, the GNU coreutils, `curl`, `jq`, and `streamlink`.
 
-### Any distro
-Clone the repository: `git clone https://github.com/krathalan/wtwitch`
-
-Then add the `src/` directory in the cloned wtwitch repo to your `$PATH`.
+Afterwards, [clone the repo](#other_distros).
 
 ## More information
 See `man wtwitch` if you have the AUR package installed.
