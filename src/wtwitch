@@ -1585,9 +1585,11 @@ subscribe()
   while [[ $# -gt 0 ]]; do
     streamerToSubscribeTo="$(to_lowercase "$1")"
 
-    # Check to make sure user isn't already subscribed
-    glob "$(<"${CONFIG_FILE}")" "*${streamerToSubscribeTo}*" &&
+    # Check to make sure user isn't subscribed first
+    # Do not use glob, have to use grep to fix issue #21
+    if jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep "^${streamerToSubscribeTo}$"; then
       exit_script_on_failure "$(get_translation subscribe_failure) ${streamerToSubscribeTo}."
+    fi
 
     # Add subscription (can't use write_setting here due to unique jq syntax)
     tmpJson="$(jq ".subscriptions[.subscriptions | length] |= . + {\"streamer\":\"$streamerToSubscribeTo\"}" "${CONFIG_FILE}")"
@@ -1663,8 +1665,10 @@ unsubscribe()
     streamerToUnsubscribeFrom="$(to_lowercase "$1")"
 
     # Check to make sure user is subscribed before unsubscribing
-    glob "$(<"${CONFIG_FILE}")" "*${streamerToUnsubscribeFrom}*" ||
+    # Do not use glob, have to use grep to fix issue #21
+    if ! jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep "^${streamerToUnsubscribeFrom}$"; then
       exit_script_on_failure "$(get_translation unsubscribe_failure) ${streamerToUnsubscribeFrom}."
+    fi
 
     # Remove subscription
     tmpJson="$(jq "del(.subscriptions[] | select(.streamer == \"${streamerToUnsubscribeFrom}\"))" "${CONFIG_FILE}")"
