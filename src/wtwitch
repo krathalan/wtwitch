@@ -520,8 +520,26 @@ clean_up_tmp()
 #######################################
 download_file()
 {
-  curl "${curlFlags}" --header "Client-ID: ${TWITCH_API_KEY}" \
-  --header "Authorization: Bearer ${apiToken}" "$1"
+  local fileToReturn
+  fileToReturn="$(curl "${curlFlags}" --header "Client-ID: ${TWITCH_API_KEY}" \
+  --header "Authorization: Bearer ${apiToken}" "$1")"
+
+  # Fix issue #20
+  local checkTokenError
+  checkTokenError="$(jq -r '.error' <<< "${fileToReturn}")"
+
+  if [[ "${checkTokenError}" == "Unauthorized" ]]; then
+    checkTokenError="$(jq -r '.message' <<< "${fileToReturn}")"
+
+    if [[ "${checkTokenError}" == "Invalid OAuth token" ]]; then
+      download_token
+
+      fileToReturn="$(curl "${curlFlags}" --header "Client-ID: ${TWITCH_API_KEY}" \
+      --header "Authorization: Bearer ${apiToken}" "$1")"
+    fi
+  fi
+
+  printf "%s" "${fileToReturn}"
 }
 
 #######################################
