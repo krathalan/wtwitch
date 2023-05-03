@@ -19,12 +19,12 @@ Table of contents:
 9. [Technical information](#technical-information)
 
 ## Project status
-Wtwitch is generally considered to be feature-complete. However, there is more work that can be done, in order of importance:
+Wtwitch is generally considered to be feature-complete. I will continue to fix bugs, though the fixes may take a while. However, I will happily review and accept PRs. There is more work that can be done, in order of importance:
 
 - Maintain compatibility with current Twitch API, including adding support for API request(s) useful to wtwitch users
 - Improve translations
 - Add a configuration menu so there are not a lot of configuration commands
-- Rewrite in a compiled language for speed
+- Any [requested enhancements](https://github.com/krathalan/wtwitch/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 ## How to use
 Wtwitch has the following commands:
