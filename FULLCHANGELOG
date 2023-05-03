@@ -217,3 +217,7 @@
     
 2.6.1 (February 05, 2023)
     Use a separate file for API token from ruitcatarino (PR#19)
+
+2.6.2 (May 03, 2023)
+    Fix issue #21 (subscribing to a substring of an already subscribed channel fails)
+    Attempt a fix for issue #20 (commands fail when the Twitch API returns a 401 "Invalid OAuth Token")
