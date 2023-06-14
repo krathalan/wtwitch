@@ -4,7 +4,7 @@
 
 A terminal program for Twitch. Watch and browse Twitch without proprietary JavaScript and without being tracked.
 
-![Screenshot](https://krathalan.net/wtwitch.webp)
+![Screenshot](https://krathalan.net/wtwitch1.webp)
 
 Table of contents:
 
