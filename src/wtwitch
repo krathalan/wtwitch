@@ -1605,7 +1605,7 @@ subscribe()
 
     # Check to make sure user isn't subscribed first
     # Do not use glob, have to use grep to fix issue #21
-    if jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep "^${streamerToSubscribeTo}$"; then
+    if jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep -q "^${streamerToSubscribeTo}$"; then
       exit_script_on_failure "$(get_translation subscribe_failure) ${streamerToSubscribeTo}."
     fi
 
@@ -1684,7 +1684,7 @@ unsubscribe()
 
     # Check to make sure user is subscribed before unsubscribing
     # Do not use glob, have to use grep to fix issue #21
-    if ! jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep "^${streamerToUnsubscribeFrom}$"; then
+    if ! jq -r '.subscriptions[].streamer' "${CONFIG_FILE}" | grep -q "^${streamerToUnsubscribeFrom}$"; then
       exit_script_on_failure "$(get_translation unsubscribe_failure) ${streamerToUnsubscribeFrom}."
     fi
 
