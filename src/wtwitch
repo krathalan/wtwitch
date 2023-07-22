@@ -1563,10 +1563,10 @@ stream()
 
   # If using mpv: add window title, enable hardware dec, and use wayland if possible
   if [[ "${userPlayer}" == "mpv" ]]; then
-    userPlayer+=" --hwdec=auto"
+    playerArgs="--hwdec=auto"
 
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
-      userPlayer+=" --gpu-context=wayland"
+      playerArgs+=" --gpu-context=wayland"
     fi
 
     # If custom title is set in streamlink config, set it as mpvWindowTitle
@@ -1581,7 +1581,7 @@ stream()
       local -r mpvWindowTitle="${localizedStrings[5]} $1 ${localizedStrings[6]}"
     fi
 
-    streamlink -p "${userPlayer}" --title "${mpvWindowTitle}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
+    streamlink -p "${userPlayer}" -a "${playerArgs}" --title "${mpvWindowTitle}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   else
     streamlink -p "${userPlayer}" --twitch-disable-ads "https://www.twitch.tv/$1" "${userQuality}" || stream_failure_notify "$1" "$1's ${localizedStrings[4]} ${userQuality}."
   fi
