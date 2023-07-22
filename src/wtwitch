@@ -1563,7 +1563,7 @@ stream()
 
   # If using mpv: add window title, enable hardware dec, and use wayland if possible
   if [[ "${userPlayer}" == "mpv" ]]; then
-    playerArgs+=" --hwdec=auto"
+    playerArgs="--hwdec=auto"
 
     if [[ $(pgrep wayland) || $(pgrep sway) ]]; then
       playerArgs+=" --gpu-context=wayland"
