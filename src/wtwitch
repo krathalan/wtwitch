@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#
 # Description: Browse and watch Twitch without being tracked.
 #    Homepage: https://github.com/krathalan/wtwitch
 #
@@ -924,17 +923,22 @@ cache_online_subscription_json()
     # Make request URL with all streamers followed by &, so the request URL looks something like:
     # /streams?user_login=streamerone&user_login=streamertwo&user_login=streamerthree
     local requestURL
-    requestURL="${TWITCH_API_URL}/streams?user_login=$(jq -r ".subscriptions[].streamer" "${CONFIG_FILE}" | awk 1 ORS="&user_login=")"
-    # Remove trailing &user_login=
-    requestURL="${requestURL%&user_login=}"
+    local allStreamerJson=""
+    printf "" > "${CACHE_CHECK_JSON_TEXT_FILE}.tmp"
+    jq -r ".subscriptions[].streamer" "${CONFIG_FILE}" | xargs -n 99 | while read -r page
+    do
+      requestURL="${TWITCH_API_URL}/streams?user_login=$(echo "$page"| tr '\n' ' ' | sed 's/ /\&user_login=/g')"
 
-    # Get data of all online streamers (sans game names)
-    local -r allStreamerJson="$(download_file "${requestURL}")"
+      # Remove trailing &user_login=
+      requestURL="${requestURL%&user_login=}"
 
-    printf "%s" "${allStreamerJson}" > "${CACHE_CHECK_JSON_TEXT_FILE}"
+      # Get data of all online streamers (sans game names)
+      printf "%s" "$(download_file "${requestURL}")"  >> "${CACHE_CHECK_JSON_TEXT_FILE}.tmp"
+    done
 
+    sed 's/\],"pagination".*{"data":\[/,/g' < "${CACHE_CHECK_JSON_TEXT_FILE}.tmp" > "${CACHE_CHECK_JSON_TEXT_FILE}"
     # Print usernames to cache file for easy mapfile-ing for tab completion
-    jq -r ".data[].user_login" <<< "${allStreamerJson}" > "${CACHE_ONLINE_SUBS_TEXT_FILE}"
+    jq -r ".data[].user_login" < "${CACHE_CHECK_JSON_TEXT_FILE}" > "${CACHE_ONLINE_SUBS_TEXT_FILE}"
 
     # Update lastSubscriptionUpdate time
     write_setting ".lastSubscriptionUpdate" "${CURRENT_TIME_UNIX}" &
