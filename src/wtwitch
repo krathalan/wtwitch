@@ -923,7 +923,6 @@ cache_online_subscription_json()
     # Make request URL with all streamers followed by &, so the request URL looks something like:
     # /streams?user_login=streamerone&user_login=streamertwo&user_login=streamerthree
     local requestURL
-    local allStreamerJson=""
     printf "" > "${CACHE_CHECK_JSON_TEXT_FILE}.tmp"
     jq -r ".subscriptions[].streamer" "${CONFIG_FILE}" | xargs -n 99 | while read -r page
     do
