@@ -935,7 +935,8 @@ cache_online_subscription_json()
       printf "%s" "$(download_file "${requestURL}")"  >> "${CACHE_CHECK_JSON_TEXT_FILE}.tmp"
     done
 
-    sed 's/\],"pagination".*{"data":\[/,/g' < "${CACHE_CHECK_JSON_TEXT_FILE}.tmp" > "${CACHE_CHECK_JSON_TEXT_FILE}"
+    # merge all data arrays into one
+    sed 's/\],"pagination".*{"data":\[\]/]/g' < "${CACHE_CHECK_JSON_TEXT_FILE}.tmp" | sed 's/\],"pagination".*{"data":\[/,/g' > "${CACHE_CHECK_JSON_TEXT_FILE}"
     # Print usernames to cache file for easy mapfile-ing for tab completion
     jq -r ".data[].user_login" < "${CACHE_CHECK_JSON_TEXT_FILE}" > "${CACHE_ONLINE_SUBS_TEXT_FILE}"
 
