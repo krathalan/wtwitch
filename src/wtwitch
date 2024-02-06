@@ -463,12 +463,6 @@ TRANSLATIONS="$(cat <<EOF
     "de": "No more streamers",
     "es": "No more streamers",
     "fr": "No more streamers"
-  },
-  "install_fzf_first": {
-    "en": "You need to install fzf to use this feature.",
-    "de": "You need to install fzf to use this feature.",
-    "es": "You need to install fzf to use this feature.",
-    "fr": "You need to install fzf to use this feature."
   }
 }
 EOF
@@ -946,19 +940,52 @@ cache_online_subscription_json()
 }
 
 #######################################
-# Select and open online streams with FZF.
+# Select and open online streams (uses FZF if available)
 # Arguments:
 #   none
 # Returns:
 #   none
 #######################################
+
+remove_ansi_escape_codes() {
+  sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" 
+}
+
+nofzf() {
+  local choices
+  choices=$(cat)
+  local filter=""
+  while true
+  do
+    clear >&2
+    echo "$choices" | grep -i --color=always "$filter" >&2
+    echo -en "\n> $filter" >&2
+    read -rsn1 key </dev/tty >&2
+    case "$key" in
+      ' ') filter="$filter " ;;
+      '') 
+        echo "$choices" | grep -i "$filter" | tail -1 | head -1 | remove_ansi_escape_codes 
+        break
+      ;;
+      $'\x7f') filter="${filter%?}" ;;
+      *) filter="$filter$key" ;;
+    esac
+  done
+}
+
 open_selected_stream()
 {
+  local selector
   if ! command -v "fzf" &> /dev/null; then
-    exit_script_on_failure "$(get_translation install_fzf_first)"
+    selector=nofzf
+  else
+    selector="fzf --ansi"
   fi
 
-  stream="$(check_twitch_streams --online-only | fzf --ansi | cut -d: -f1 | sed 's/ *//')"
+  stream="$(check_twitch_streams --online-only | $selector | cut -d: -f1 | sed 's/ *//')"
+
+  clear
+  echo "opening stream: $stream"
 
   if [ -n "$stream" ]; then
     watch_stream "$stream"
