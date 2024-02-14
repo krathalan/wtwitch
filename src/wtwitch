@@ -952,7 +952,6 @@ remove_ansi_escape_codes() {
 }
 
 
-
 fsh() {
   # https://github.com/yazgoo/fuzzysh/
 
